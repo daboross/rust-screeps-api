@@ -40,3 +40,4 @@ nb-configuration.xml
 *.sublime-project
 *.sublime-workspace
 Cargo.lock
+.env

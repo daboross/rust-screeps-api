@@ -8,3 +8,5 @@ The API provided for screeps.com is unofficial, and not officially documented, b
 Documentation for the API calls that rust-screeps-api makes can be found at https://github.com/screepers/python-screeps/blob/master/docs/Endpoints.md.
 
 When this library is relatively stable, I will post the rust docs online and provide some example usages. For now, the library does not do enough to warrant this.
+
+To run tests, provide SCREEPS_API_USERNAME and SCREEPS_API_PASSWORD in .env or as environmental variables. These variables are only ever used when running tests, and are never included in the compiled library.

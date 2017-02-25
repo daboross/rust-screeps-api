@@ -1,13 +1,14 @@
 extern crate hyper;
 extern crate serde_json;
 
+use std::error::Error as StdError;
 use std::fmt;
 use std::io;
-use std::error::Error as StdError;
-use self::Error::*;
+use self::ErrorType::*;
 
 #[derive(Debug)]
-pub enum Error {
+pub enum ErrorType {
+    Unauthorized,
     SerdeJson(serde_json::error::Error),
     Hyper(hyper::error::Error),
     Io(io::Error),
@@ -15,44 +16,99 @@ pub enum Error {
     Api(ApiError),
 }
 
+#[derive(Debug)]
+pub struct Error {
+    pub err: ErrorType,
+    pub url: Option<hyper::Url>,
+}
+
+impl Error {
+    pub fn new<T: Into<Error>>(err: T, url: Option<hyper::Url>) -> Error {
+        Error {
+            err: err.into().err,
+            url: url,
+        }
+    }
+}
+
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-
 impl From<serde_json::error::Error> for Error {
-    fn from(err: serde_json::error::Error) -> Error { Error::SerdeJson(err) }
+    fn from(err: serde_json::error::Error) -> Error {
+        Error {
+            err: ErrorType::SerdeJson(err),
+            url: None,
+            }
+        }
 }
 
 impl From<hyper::error::Error> for Error {
-    fn from(err: hyper::error::Error) -> Error { Error::Hyper(err) }
+    fn from(err: hyper::error::Error) -> Error {
+        Error {
+            err: ErrorType::Hyper(err),
+            url: None,
+        }
+    }
+}
+
+impl From<hyper::error::ParseError> for Error {
+    fn from(err: hyper::error::ParseError) -> Error {
+        Error {
+            err: ErrorType::Hyper(hyper::Error::Uri(err)),
+            url: None,
+        }
+    }
 }
 
 impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error { Error::Io(err) }
+    fn from(err: io::Error) -> Error {
+        Error {
+            err: ErrorType::Io(err),
+            url: None,
+        }
+    }
 }
 
 impl From<hyper::status::StatusCode> for Error {
-    fn from(code: hyper::status::StatusCode) -> Error { Error::StatusCode(code) }
+    fn from(code: hyper::status::StatusCode) -> Error {
+        Error {
+            err: {
+                if code == hyper::status::StatusCode::Unauthorized {
+                    ErrorType::Unauthorized
+                } else {
+                    ErrorType::StatusCode(code)
+                }
+            },
+            url: None,
+        }
+    }
 }
 
 impl From<ApiError> for Error {
-    fn from(err: ApiError) -> Error { Error::Api(err) }
+    fn from(err: ApiError) -> Error {
+        Error {
+            err: ErrorType::Api(err),
+            url: None,
+        }
+    }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
+        match self.err {
             SerdeJson(ref err) => fmt::Display::fmt(err, f),
             Hyper(ref err) => fmt::Display::fmt(err, f),
             Io(ref err) => fmt::Display::fmt(err, f),
             StatusCode(ref status) => fmt::Display::fmt(status, f),
             Api(ref err) => fmt::Display::fmt(err, f),
+            Unauthorized => write!(f, "access not authorized: token expired, username/password incorrect or no login provided"),
         }
     }
 }
 
 impl StdError for Error {
     fn description(&self) -> &str {
-        match *self {
+        match self.err {
             SerdeJson(ref err) => err.description(),
             Hyper(ref err) => err.description(),
             Io(ref err) => err.description(),
@@ -81,16 +137,18 @@ impl StdError for Error {
                 return "status code error";
             },
             Api(ref err) => err.description(),
+            Unauthorized => "access not authorized: token expired, username/password incorrect or no login provided",
         }
     }
 
     fn cause(&self) -> Option<&StdError> {
-        match *self {
+        match self.err {
             SerdeJson(ref err) => Some(err),
             Hyper(ref err) => Some(err),
             Io(ref err) => Some(err),
             StatusCode(_) => None,
             Api(ref err) => Some(err),
+            Unauthorized => None,
         }
     }
 }
