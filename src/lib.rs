@@ -7,14 +7,12 @@ extern crate serde_json;
 mod error;
 mod endpoints;
 
-
 use endpoints::{login, my_info};
 pub use endpoints::login::Details as LoginDetails;
 pub use endpoints::my_info::MyInfo;
 pub use error::{Error, Result};
 use error::ApiError;
 use hyper::header::{Headers, ContentType};
-
 
 /// API Object, stores the current API token and allows access to making requests.
 #[derive(Debug)]
@@ -150,7 +148,7 @@ mod tests {
         let login = LoginDetails::new("username", "password");
         let mut api = API::new(&client);
 
-        match result {
+        match api.login(&login) {
             Err(Error { err: ErrorType::Unauthorized, .. }) => (),
             other => panic!("Expected unauthorized error, found {:?}", other),
         }

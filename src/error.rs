@@ -170,7 +170,6 @@ pub enum ApiError {
     MissingField(&'static str),
 }
 
-
 impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
