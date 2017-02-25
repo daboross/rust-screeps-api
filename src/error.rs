@@ -124,28 +124,20 @@ impl StdError for Error {
             Hyper(ref err) => err.description(),
             Io(ref err) => err.description(),
             StatusCode(ref status) => {
-                if let Some(reason) = status.canonical_reason() {
-                    return reason;
+                match status.canonical_reason() {
+                    Some(reason) => reason,
+                    None => {
+                        use hyper::status::StatusClass::*;
+                        match status.class() {
+                            Informational => "status code error: informational",
+                            Success => "status code error: success",
+                            Redirection => "status code error: redirection",
+                            ClientError => "status code error: client error",
+                            ServerError => "status code error: server error",
+                            NoClass => "status code error: strange status",
+                        }
+                    }
                 }
-                if status.is_success() {
-                    return "status code error: success";
-                }
-                if status.is_informational() {
-                    return "status code error: informational";
-                }
-                if status.is_redirection() {
-                    return "status code error: redirection";
-                }
-                if status.is_client_error() {
-                    return "status code error: client error";
-                }
-                if status.is_server_error() {
-                    return "status code error: server error";
-                }
-                if status.is_strange_status() {
-                    return "status code error: strange status";
-                }
-                return "status code error";
             }
             Api(ref err) => err.description(),
             Unauthorized => "access not authorized: token expired, username/password incorrect or no login provided",
