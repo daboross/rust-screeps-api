@@ -14,7 +14,7 @@ impl<'a> Details<'a> {
     pub fn new<'b, T1: Into<Cow<'b, str>>, T2: Into<Cow<'b, str>>>(email: T1, password: T2) -> Details<'b> {
         Details {
             email: email.into(),
-            password: password.into()
+            password: password.into(),
         }
     }
 }

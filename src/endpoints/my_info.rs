@@ -17,11 +17,10 @@
 //!     twitter: { username, followers_count }
 //! }
 
+use serde_json;
 use std::marker::PhantomData;
-use ::serde_json;
 
 /// User info result struct.
-
 #[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
 pub struct Response {

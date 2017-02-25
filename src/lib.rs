@@ -7,11 +7,11 @@ extern crate serde_json;
 mod error;
 mod endpoints;
 
-pub use error::{Error, Result};
-pub use endpoints::login::Details as LoginDetails;
-pub use endpoints::my_info::MyInfo;
 
 use endpoints::{login, my_info};
+pub use endpoints::login::Details as LoginDetails;
+pub use endpoints::my_info::MyInfo;
+pub use error::{Error, Result};
 use error::ApiError;
 use hyper::header::{Headers, ContentType};
 
@@ -41,7 +41,10 @@ impl<'a> API<'a> {
         })
     }
 
-    fn make_post_request<T: serde::Serialize, R: serde::Deserialize>(&mut self, endpoint: &str, request_text: T) -> Result<R> {
+    fn make_post_request<T: serde::Serialize, R: serde::Deserialize>(&mut self,
+                                                                     endpoint: &str,
+                                                                     request_text: T)
+                                                                     -> Result<R> {
         let body = serde_json::to_string(&request_text)?;
 
         let mut headers = Headers::new();
@@ -51,7 +54,8 @@ impl<'a> API<'a> {
             headers.set_raw("X-Username", vec![token.clone()]);
         }
 
-        let mut response = self.client.post(self.url.join(endpoint)?)
+        let mut response = self.client
+            .post(self.url.join(endpoint)?)
             .body(&body)
             .headers(headers)
             .send()?;
@@ -68,9 +72,7 @@ impl<'a> API<'a> {
 
         let result: R = match serde_json::from_reader(&mut response) {
             Ok(v) => v,
-            Err(e) => {
-                return Err(Error::new(e, Some(response.url.clone())))
-            }
+            Err(e) => return Err(Error::new(e, Some(response.url.clone()))),
         };
 
         Ok(result)
@@ -83,7 +85,8 @@ impl<'a> API<'a> {
             headers.set_raw("X-Username", vec![token.clone()]);
         }
 
-        let mut response = self.client.get(self.url.join(endpoint)?)
+        let mut response = self.client
+            .get(self.url.join(endpoint)?)
             .headers(headers)
             .send()?;
 
@@ -99,9 +102,7 @@ impl<'a> API<'a> {
 
         let result: R = match serde_json::from_reader(&mut response) {
             Ok(v) => v,
-            Err(e) => {
-                return Err(Error::new(e, Some(response.url.clone())))
-            }
+            Err(e) => return Err(Error::new(e, Some(response.url.clone()))),
         };
 
         Ok(result)
@@ -130,8 +131,8 @@ impl<'a> API<'a> {
 
 #[cfg(test)]
 mod tests {
-    use ::{API, LoginDetails};
-    use ::error::{Error, ErrorType};
+    use {API, LoginDetails};
+    use error::{Error, ErrorType};
     extern crate hyper;
     extern crate hyper_rustls;
     use hyper::client::Client;

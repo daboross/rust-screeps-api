@@ -1,10 +1,10 @@
 extern crate hyper;
 extern crate serde_json;
 
+use self::ErrorType::*;
 use std::error::Error as StdError;
 use std::fmt;
 use std::io;
-use self::ErrorType::*;
 
 #[derive(Debug)]
 pub enum ErrorType {
@@ -47,8 +47,8 @@ impl From<serde_json::error::Error> for Error {
         Error {
             err: ErrorType::SerdeJson(err),
             url: None,
-            }
         }
+    }
 }
 
 impl From<hyper::error::Error> for Error {
@@ -110,7 +110,9 @@ impl fmt::Display for Error {
             Io(ref err) => fmt::Display::fmt(err, f),
             StatusCode(ref status) => fmt::Display::fmt(status, f),
             Api(ref err) => fmt::Display::fmt(err, f),
-            Unauthorized => write!(f, "access not authorized: token expired, username/password incorrect or no login provided"),
+            Unauthorized => {
+                write!(f, "access not authorized: token expired, username/password incorrect or no login provided")
+            }
         }
     }
 }
@@ -144,7 +146,7 @@ impl StdError for Error {
                     return "status code error: strange status";
                 }
                 return "status code error";
-            },
+            }
             Api(ref err) => err.description(),
             Unauthorized => "access not authorized: token expired, username/password incorrect or no login provided",
         }
