@@ -14,6 +14,20 @@ fn env(var: &str) -> String {
     }
 }
 
+fn opt_env(var: &str) -> bool {
+    dotenv::dotenv().ok();
+    match ::std::env::var(var) {
+        Ok(value) => match value.chars().next() {
+            Some('t') => true,
+            Some('T') => true,
+            Some('1') => true,
+            Some(_) => false,
+            None => false,
+        },
+        Err(_) => false,
+    }
+}
+
 fn create_secure_client() -> hyper::Client {
     Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()))
 }
@@ -32,12 +46,18 @@ fn logged_in<'a>(client: &'a hyper::Client) -> screeps_api::API<'a> {
 
 #[test]
 fn test_logging_in() {
+    if opt_env("NO_AUTH_TESTS") {
+        return;
+    }
     let client = create_secure_client();
     let _ = logged_in(&client);
 }
 
 #[test]
 fn test_my_info() {
+    if opt_env("NO_AUTH_TESTS") {
+        return;
+    }
     let client = create_secure_client();
     let mut api = logged_in(&client);
 
@@ -46,6 +66,9 @@ fn test_my_info() {
 
 #[test]
 fn test_token_reretrieval() {
+    if opt_env("NO_AUTH_TESTS") {
+        return;
+    }
     let client = create_secure_client();
     let mut api = logged_in(&client);
 

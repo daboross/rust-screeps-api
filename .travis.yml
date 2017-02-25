@@ -1,0 +1,15 @@
+language: rust
+sudo: false
+rust:
+- stable
+- beta
+- nightly
+cache: cargo
+before_script:
+- cargo install rustfmt || true
+- export PATH="$PATH:$HOME/.cargo/bin"
+- 'if [ "$TRAVIS_PULL_REQUEST != "false" ]; then export NO_AUTH_TESTS=1; fi'
+script:
+- 'if [ "$NO_AUTH_TESTS" ]; then echo "WARNING: Tests requiring authentication disabled"; fi'
+- cargo fmt -- --write-mode=diff
+- cargo test
