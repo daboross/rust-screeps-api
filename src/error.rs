@@ -33,6 +33,15 @@ impl Error {
 
 pub type Result<T> = ::std::result::Result<T, Error>;
 
+impl From<ErrorType> for Error {
+    fn from(err: ErrorType) -> Error {
+        Error {
+            err: err,
+            url: None,
+        }
+    }
+}
+
 impl From<serde_json::error::Error> for Error {
     fn from(err: serde_json::error::Error) -> Error {
         Error {

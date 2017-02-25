@@ -33,5 +33,25 @@ fn logged_in<'a>(client: &'a hyper::Client) -> screeps_api::API<'a> {
 #[test]
 fn test_logging_in() {
     let client = create_secure_client();
-    let _api = logged_in(&client);
+    let _ = logged_in(&client);
+}
+
+#[test]
+fn test_my_info() {
+    let client = create_secure_client();
+    let mut api = logged_in(&client);
+
+    let _ = api.my_info().unwrap();
+}
+
+#[test]
+fn test_token_reretrieval() {
+    let client = create_secure_client();
+    let mut api = logged_in(&client);
+
+    let _ = api.my_info().unwrap();
+
+    let _ = api.my_info().unwrap();
+
+    let _ = api.my_info().unwrap();
 }

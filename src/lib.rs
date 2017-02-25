@@ -6,7 +6,7 @@ extern crate serde_json;
 
 mod error;
 
-pub use error::{Error, ApiError, Result};
+pub use error::{Error, ErrorType, ApiError, Result};
 use std::borrow::Cow;
 use hyper::header::{Headers, ContentType};
 
@@ -36,19 +36,39 @@ struct LoginResponse {
     token: Option<String>,
 }
 
+/// User info result struct.
+// { ok, _id, email, username, cpu, badge: { type, color1, color2, color3, param, flip }, password, notifyPrefs: { sendOnline, errorsInterval, disabledOnMessages, disabled, interval }, gcl, credits, lastChargeTime, lastTweetTime, github: { id, username }, twitter: { username, followers_count } }
+#[derive(Deserialize, Debug)]
+#[allow(non_snake_case)]
+pub struct MyInfo {
+    ok: i32,
+    _id: String,
+    username: String,
+    password: bool,
+    cpu: i32,
+    gcl: i32,
+    credits: f64,
+    lastChargeTime: Option<String>,
+    lastTweetTime: Option<String>,
+    badge: Option<serde_json::Value>,
+    github: Option<serde_json::Value>,
+    twitter: Option<serde_json::Value>,
+    notifyPrefs: Option<serde_json::Value>,
+}
+
 /// API Object, stores the current API token and allows access to making requests.
 #[derive(Debug)]
 pub struct API<'a> {
     pub url: hyper::Url,
     client: &'a hyper::Client,
-    pub token: Option<String>,
+    pub token: Option<Vec<u8>>,
 }
 
 impl<'a> API<'a> {
     pub fn new<'b>(client: &'b hyper::Client) -> API<'b> {
         API {
             //"https://httpbin.org/post"
-            url: hyper::Url::parse("https://screeps.com/api").expect("expected pre-set url to parse, parsing failed"),
+            url: hyper::Url::parse("https://screeps.com/api/").expect("expected pre-set url to parse, parsing failed"),
             client: client,
             token: None,
         }
@@ -62,14 +82,14 @@ impl<'a> API<'a> {
         })
     }
 
-    fn make_request<T: serde::Serialize, R: serde::Deserialize>(&mut self, endpoint: &str, request_text: &T) -> Result<R> {
-        let body = serde_json::to_string(request_text)?;
+    fn make_post_request<T: serde::Serialize, R: serde::Deserialize>(&mut self, endpoint: &str, request_text: T) -> Result<R> {
+        let body = serde_json::to_string(&request_text)?;
 
         let mut headers = Headers::new();
         headers.set(ContentType::json());
         if let Some(ref token) = self.token {
-            headers.set_raw("X-Token", vec![token.as_bytes().to_vec()]);
-            headers.set_raw("X-Username", vec![token.as_bytes().to_vec()]);
+            headers.set_raw("X-Token", vec![token.clone()]);
+            headers.set_raw("X-Username", vec![token.clone()]);
         }
 
         let mut response = self.client.post(self.url.join(endpoint)?)
@@ -79,6 +99,43 @@ impl<'a> API<'a> {
 
         if !response.status.is_success() {
             return Err(Error::new(response.status, Some(response.url.clone())));
+        }
+
+        if let Some(token_vec) = response.headers.get_raw("X-Token") {
+            if let Some(token_bytes) = token_vec.first() {
+                self.token = Some(Vec::from(&**token_bytes));
+            }
+        }
+
+        let result: R = match serde_json::from_reader(&mut response) {
+            Ok(v) => v,
+            Err(e) => {
+                return Err(Error::new(e, Some(response.url.clone())))
+            }
+        };
+
+        Ok(result)
+    }
+    fn make_get_request<R: serde::Deserialize>(&mut self, endpoint: &str) -> Result<R> {
+        let mut headers = Headers::new();
+        headers.set(ContentType::json());
+        if let Some(ref token) = self.token {
+            headers.set_raw("X-Token", vec![token.clone()]);
+            headers.set_raw("X-Username", vec![token.clone()]);
+        }
+
+        let mut response = self.client.get(self.url.join(endpoint)?)
+            .headers(headers)
+            .send()?;
+
+        if !response.status.is_success() {
+            return Err(Error::new(response.status, Some(response.url.clone())));
+        }
+
+        if let Some(token_vec) = response.headers.get_raw("X-Token") {
+            if let Some(token_bytes) = token_vec.first() {
+                self.token = Some(Vec::from(&**token_bytes));
+            }
         }
 
         let result: R = match serde_json::from_reader(&mut response) {
@@ -92,7 +149,7 @@ impl<'a> API<'a> {
     }
 
     pub fn login(&mut self, login_details: &LoginDetails) -> Result<()> {
-        let result: LoginResponse = self.make_request("/api/auth/signin", login_details)?;
+        let result: LoginResponse = self.make_post_request("auth/signin", login_details)?;
 
         if result.ok != 1 {
             return Err(ApiError::NotOk(result.ok).into());
@@ -104,6 +161,11 @@ impl<'a> API<'a> {
         } else {
             Err(ApiError::MissingField("token").into())
         }
+    }
+
+    pub fn my_info(&mut self) -> Result<MyInfo> {
+        let result: MyInfo = self.make_get_request("auth/me")?;
+        Ok(result)
     }
 }
 
