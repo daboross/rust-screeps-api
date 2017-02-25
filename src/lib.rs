@@ -27,7 +27,6 @@ pub struct API<'a> {
 impl<'a> API<'a> {
     pub fn new<'b>(client: &'b hyper::Client) -> API<'b> {
         API {
-            //"https://httpbin.org/post"
             url: hyper::Url::parse("https://screeps.com/api/").expect("expected pre-set url to parse, parsing failed"),
             client: client,
             token: None,
@@ -149,10 +148,9 @@ mod tests {
         let client = Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()));
         let login = LoginDetails::new("username", "password");
         let mut api = API::new(&client);
-        let result = api.login(&login);
 
         match result {
-            Err(Error { err: ErrorType::Unauthorized, .. }) => println!("Success!"),
+            Err(Error { err: ErrorType::Unauthorized, .. }) => (),
             other => panic!("Expected unauthorized error, found {:?}", other),
         }
     }
