@@ -5,56 +5,16 @@ extern crate serde;
 extern crate serde_json;
 
 mod error;
+mod endpoints;
 
-pub use error::{Error, ErrorType, ApiError, Result};
-use std::borrow::Cow;
+pub use error::{Error, Result};
+pub use endpoints::login::Details as LoginDetails;
+pub use endpoints::my_info::MyInfo;
+
+use endpoints::{login, my_info};
+use error::ApiError;
 use hyper::header::{Headers, ContentType};
 
-
-/// Login details
-#[derive(Serialize, Debug)]
-pub struct LoginDetails<'a> {
-    /// The email or username to log in with (either works)
-    pub email: Cow<'a, str>,
-    /// The password to log in with (steam auth is not supported)
-    pub password: Cow<'a, str>,
-}
-
-impl<'a> LoginDetails<'a> {
-    /// Create a new login details with the given username and password
-    pub fn new<'b, T1: Into<Cow<'b, str>>, T2: Into<Cow<'b, str>>>(email: T1, password: T2) -> LoginDetails<'b> {
-        LoginDetails {
-            email: email.into(),
-            password: password.into()
-        }
-    }
-}
-
-#[derive(Deserialize, Debug)]
-struct LoginResponse {
-    ok: i32,
-    token: Option<String>,
-}
-
-/// User info result struct.
-// { ok, _id, email, username, cpu, badge: { type, color1, color2, color3, param, flip }, password, notifyPrefs: { sendOnline, errorsInterval, disabledOnMessages, disabled, interval }, gcl, credits, lastChargeTime, lastTweetTime, github: { id, username }, twitter: { username, followers_count } }
-#[derive(Deserialize, Debug)]
-#[allow(non_snake_case)]
-pub struct MyInfo {
-    ok: i32,
-    _id: String,
-    username: String,
-    password: bool,
-    cpu: i32,
-    gcl: i32,
-    credits: f64,
-    lastChargeTime: Option<String>,
-    lastTweetTime: Option<String>,
-    badge: Option<serde_json::Value>,
-    github: Option<serde_json::Value>,
-    twitter: Option<serde_json::Value>,
-    notifyPrefs: Option<serde_json::Value>,
-}
 
 /// API Object, stores the current API token and allows access to making requests.
 #[derive(Debug)]
@@ -149,7 +109,7 @@ impl<'a> API<'a> {
     }
 
     pub fn login(&mut self, login_details: &LoginDetails) -> Result<()> {
-        let result: LoginResponse = self.make_post_request("auth/signin", login_details)?;
+        let result: login::Response = self.make_post_request("auth/signin", login_details)?;
 
         if result.ok != 1 {
             return Err(ApiError::NotOk(result.ok).into());
@@ -164,8 +124,8 @@ impl<'a> API<'a> {
     }
 
     pub fn my_info(&mut self) -> Result<MyInfo> {
-        let result: MyInfo = self.make_get_request("auth/me")?;
-        Ok(result)
+        let result: my_info::Response = self.make_get_request("auth/me")?;
+        Ok(result.into())
     }
 }
 
