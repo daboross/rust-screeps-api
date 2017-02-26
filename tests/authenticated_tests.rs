@@ -17,13 +17,15 @@ fn env(var: &str) -> String {
 fn opt_env(var: &str) -> bool {
     dotenv::dotenv().ok();
     match ::std::env::var(var) {
-        Ok(value) => match value.chars().next() {
-            Some('t') => true,
-            Some('T') => true,
-            Some('1') => true,
-            Some(_) => false,
-            None => false,
-        },
+        Ok(value) => {
+            match value.chars().next() {
+                Some('t') => true,
+                Some('T') => true,
+                Some('1') => true,
+                Some(_) => false,
+                None => false,
+            }
+        }
         Err(_) => false,
     }
 }
