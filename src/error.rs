@@ -24,9 +24,10 @@ pub struct Error {
 
 impl Error {
     pub fn new<T: Into<Error>>(err: T, url: Option<hyper::Url>) -> Error {
+        let err = err.into();
         Error {
-            err: err.into().err,
-            url: url,
+            err: err.err,
+            url: url.or(err.url),
         }
     }
 }
