@@ -17,6 +17,7 @@
 //!     twitter: { username, followers_count }
 //! }
 
+use data::Badge;
 use error::ApiError;
 use serde_json;
 use std::marker::PhantomData;
@@ -34,7 +35,7 @@ pub struct Response {
     credits: Option<f64>,
     lastChargeTime: Option<String>,
     lastTweetTime: Option<String>,
-    badge: Option<serde_json::Value>,
+    badge: Option<Badge>,
     github: Option<serde_json::Value>,
     twitter: Option<serde_json::Value>,
     notifyPrefs: Option<serde_json::Value>,

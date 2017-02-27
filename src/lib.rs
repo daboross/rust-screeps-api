@@ -2,10 +2,12 @@
 extern crate serde_derive;
 extern crate hyper;
 extern crate serde;
+#[cfg_attr(test, macro_use)]
 extern crate serde_json;
 
 mod error;
 mod endpoints;
+mod data;
 
 use endpoints::{login, my_info};
 pub use endpoints::login::Details as LoginDetails;
