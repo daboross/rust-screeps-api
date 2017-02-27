@@ -47,15 +47,6 @@ fn logged_in<'a>(client: &'a hyper::Client) -> screeps_api::API<'a> {
 }
 
 #[test]
-fn test_logging_in() {
-    if opt_env("NO_AUTH_TESTS") {
-        return;
-    }
-    let client = create_secure_client();
-    let _ = logged_in(&client);
-}
-
-#[test]
 fn test_my_info() {
     if opt_env("NO_AUTH_TESTS") {
         return;

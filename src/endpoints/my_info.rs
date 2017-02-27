@@ -85,14 +85,22 @@ impl Response {
     }
 }
 
+/// Result of a call to get the information for the logged in user.
 #[derive(Clone, Debug)]
 pub struct MyInfo {
+    /// Unique user ID referring to this user.
     pub user_id: String,
+    /// Unique username referring to this user.
     pub username: String,
+    /// Whether or not a password can be used to login for this user.
     pub has_password: bool,
+    /// This user's current CPU allowance.
     pub cpu: i32,
+    /// This user's current GCL.
     pub gcl: i32,
+    /// This user's current credit balance.
     pub credits: f64,
+    /// Phantom data in order to allow adding any additional fields in the future.
     #[doc(hidden)]
     pub _phantom: PhantomData<()>,
 }

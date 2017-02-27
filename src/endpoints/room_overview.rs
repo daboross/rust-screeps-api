@@ -40,6 +40,7 @@
 
 use data::Badge;
 use error::ApiError;
+use std::marker::PhantomData;
 
 /// Room overview result struct
 #[derive(Deserialize, Debug)]
@@ -137,6 +138,7 @@ impl Response {
                                   energy_spent_construction: stats_max.energyConstruction8,
                                   creep_parts_produced: stats_max.creepsProduced8,
                                   creep_parts_lost: stats_max.creepsLost8,
+                                  _phantom: PhantomData,
                               },
                               TotalStats {
                                   time_period: 180,
@@ -146,6 +148,7 @@ impl Response {
                                   energy_spent_construction: stats_max.energyConstruction180,
                                   creep_parts_produced: stats_max.creepsProduced180,
                                   creep_parts_lost: stats_max.creepsLost180,
+                                  _phantom: PhantomData,
                               },
                               TotalStats {
                                   time_period: 1440,
@@ -155,7 +158,9 @@ impl Response {
                                   energy_spent_construction: stats_max.energyConstruction1440,
                                   creep_parts_produced: stats_max.creepsProduced1440,
                                   creep_parts_lost: stats_max.creepsLost1440,
+                                  _phantom: PhantomData,
                               }],
+            _phantom: PhantomData,
         })
     }
 }
@@ -164,52 +169,39 @@ impl Response {
 #[derive(Debug, Clone)]
 pub struct RoomOverview {
     /// The username of the owner of the room.
-    owner: Option<String>,
+    pub owner: Option<String>,
     /// The owner's badge
-    owner_badge: Option<Badge>,
+    pub owner_badge: Option<Badge>,
     /// The interval between each data point
-    data_interval: u32,
+    pub data_interval: u32,
     /// Energy harvested during each interval
-    energy_harvested: Vec<StatPoint>,
+    pub energy_harvested: Vec<StatPoint>,
     /// Energy spent on creeps during each interval
-    energy_spent_creeps: Vec<StatPoint>,
+    pub energy_spent_creeps: Vec<StatPoint>,
     /// Energy spent on control during each interval
-    energy_spent_control: Vec<StatPoint>,
+    pub energy_spent_control: Vec<StatPoint>,
     /// Energy spent on construction during each interval
-    energy_spent_construction: Vec<StatPoint>,
+    pub energy_spent_construction: Vec<StatPoint>,
     /// Number of creep parts produced during each interval
-    creep_parts_produced: Vec<StatPoint>,
+    pub creep_parts_produced: Vec<StatPoint>,
     /// Number of creep parts lost during each interval
-    creep_parts_lost: Vec<StatPoint>,
+    pub creep_parts_lost: Vec<StatPoint>,
     /// A list of all total statistics provided (usually hour long, day long, and week long returned)
-    total_stats: Vec<TotalStats>,
+    pub total_stats: Vec<TotalStats>,
+    /// Phantom data in order to allow adding any additional fields in the future.
+    #[doc(hidden)]
+    pub _phantom: PhantomData<()>,
 }
 
 #[derive(Debug, Copy, Clone)]
 pub struct StatPoint {
     /// The amount of whatever quantity this stat point is for
-    amount: u32,
+    pub amount: u32,
     /// The end time that this stat point is for.
-    end_time: u32,
-}
-
-// Total stats over a specific time period.
-#[derive(Debug, Copy, Clone)]
-pub struct TotalStats {
-    /// Time period. Currently either "8" for hour long stats, "180" for day long stats, or "1440" for week-long stats.
-    time_period: u32,
-    /// Energy harvested during this time period
-    energy_harvested: u32,
-    /// Energy spent on creeps during this time period
-    energy_spent_creeps: u32,
-    /// Energy spent on control during this time period
-    energy_spent_control: u32,
-    /// Energy spent on construction during this time period
-    energy_spent_construction: u32,
-    /// Creep parts produced during this time period
-    creep_parts_produced: u32,
-    /// Creep parts lots during this time period
-    creep_parts_lost: u32,
+    pub end_time: u32,
+    /// Phantom data in order to allow adding any additional fields in the future.
+    #[doc(hidden)]
+    pub _phantom: PhantomData<()>,
 }
 
 impl From<StatPointResponse> for StatPoint {
@@ -217,6 +209,29 @@ impl From<StatPointResponse> for StatPoint {
         StatPoint {
             amount: stat.value,
             end_time: stat.endTime,
+            _phantom: PhantomData,
         }
     }
+}
+
+// Total stats over a specific time period.
+#[derive(Debug, Copy, Clone)]
+pub struct TotalStats {
+    /// Time period. Currently either "8" for hour long stats, "180" for day long stats, or "1440" for week-long stats.
+    pub time_period: u32,
+    /// Energy harvested during this time period
+    pub energy_harvested: u32,
+    /// Energy spent on creeps during this time period
+    pub energy_spent_creeps: u32,
+    /// Energy spent on control during this time period
+    pub energy_spent_control: u32,
+    /// Energy spent on construction during this time period
+    pub energy_spent_construction: u32,
+    /// Creep parts produced during this time period
+    pub creep_parts_produced: u32,
+    /// Creep parts lots during this time period
+    creep_parts_lost: u32,
+    /// Phantom data in order to allow adding any additional fields in the future.
+    #[doc(hidden)]
+    pub _phantom: PhantomData<()>,
 }
