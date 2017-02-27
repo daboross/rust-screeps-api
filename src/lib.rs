@@ -9,9 +9,10 @@ mod error;
 mod endpoints;
 mod data;
 
-use endpoints::{login, my_info};
+use endpoints::{login, my_info, room_overview};
 pub use endpoints::login::Details as LoginDetails;
 pub use endpoints::my_info::MyInfo;
+pub use endpoints::room_overview::RoomOverview;
 pub use error::{Error, Result};
 use error::ApiError;
 use hyper::header::{Headers, ContentType};
@@ -77,7 +78,11 @@ impl<'a> API<'a> {
 
         Ok(result)
     }
-    fn make_get_request<R: serde::Deserialize>(&mut self, endpoint: &str) -> Result<R> {
+
+    fn make_get_request<R: serde::Deserialize>(&mut self,
+                                               endpoint: &str,
+                                               query_pairs: Option<&[(&str, String)]>)
+                                               -> Result<R> {
         let mut headers = Headers::new();
         headers.set(ContentType::json());
         if let Some(ref token) = self.token {
@@ -85,8 +90,14 @@ impl<'a> API<'a> {
             headers.set_raw("X-Username", vec![token.clone()]);
         }
 
+        let mut url = self.url.join(endpoint)?;
+
+        if let Some(pairs) = query_pairs {
+            url.query_pairs_mut().extend_pairs(pairs).finish();
+        }
+
         let mut response = self.client
-            .get(self.url.join(endpoint)?)
+            .get(url)
             .headers(headers)
             .send()?;
 
@@ -124,8 +135,14 @@ impl<'a> API<'a> {
     }
 
     pub fn my_info(&mut self) -> Result<MyInfo> {
-        let result: my_info::Response = self.make_get_request("auth/me")?;
+        let result: my_info::Response = self.make_get_request("auth/me", None)?;
         Ok(result.into_info()?)
+    }
+
+    pub fn room_overview(&mut self, room_name: &str, request_interval: u32) -> Result<RoomOverview> {
+        let result: room_overview::Response = self.make_get_request("game/room-overview",
+                              Some(&[("room", room_name.to_string()), ("interval", request_interval.to_string())]))?;
+        Ok(result.into_info(request_interval)?)
     }
 }
 

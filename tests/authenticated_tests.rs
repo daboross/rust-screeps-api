@@ -80,3 +80,23 @@ fn test_token_reretrieval() {
 
     let _ = api.my_info().unwrap();
 }
+
+#[test]
+fn test_room_overview() {
+    if opt_env("NO_AUTH_TESTS") {
+        return;
+    }
+    let client = create_secure_client();
+    let mut api = logged_in(&client);
+
+    for &interval in &[8u32, 180u32, 1440u32] {
+        // At the time of writing, a room owned by a user who does not have a custom badge.
+        api.room_overview("W1N1", interval).unwrap();
+
+        // At time of writing, one of dissi's rooms, a user who has a custom badge.
+        api.room_overview("W3N9", interval).unwrap();
+
+        // A room that can't be owned on the official server.
+        api.room_overview("W0N0", interval).unwrap();
+    }
+}
