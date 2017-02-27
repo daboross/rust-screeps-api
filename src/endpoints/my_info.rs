@@ -17,6 +17,7 @@
 //!     twitter: { username, followers_count }
 //! }
 
+use error::ApiError;
 use serde_json;
 use std::marker::PhantomData;
 
@@ -25,18 +26,62 @@ use std::marker::PhantomData;
 #[allow(non_snake_case)]
 pub struct Response {
     pub ok: i32,
-    _id: String,
-    username: String,
-    password: bool,
-    cpu: i32,
-    gcl: i32,
-    credits: f64,
+    _id: Option<String>,
+    username: Option<String>,
+    password: Option<bool>,
+    cpu: Option<i32>,
+    gcl: Option<i32>,
+    credits: Option<f64>,
     lastChargeTime: Option<String>,
     lastTweetTime: Option<String>,
     badge: Option<serde_json::Value>,
     github: Option<serde_json::Value>,
     twitter: Option<serde_json::Value>,
     notifyPrefs: Option<serde_json::Value>,
+}
+
+impl Response {
+    pub fn into_info(self) -> Result<MyInfo, ApiError> {
+        let Response { ok, _id, username, password, cpu, gcl, credits, .. } = self;
+
+        if ok != 1 {
+            return Err(ApiError::NotOk(ok));
+        }
+        let user_id = match _id {
+            Some(v) => v,
+            None => return Err(ApiError::MissingField("_id")),
+        };
+        let username = match username {
+            Some(v) => v,
+            None => return Err(ApiError::MissingField("username")),
+        };
+        let password = match password {
+            Some(v) => v,
+            None => return Err(ApiError::MissingField("password")),
+        };
+        let cpu = match cpu {
+            Some(v) => v,
+            None => return Err(ApiError::MissingField("cpu")),
+        };
+        let gcl = match gcl {
+            Some(v) => v,
+            None => return Err(ApiError::MissingField("gcl")),
+        };
+        let credits = match credits {
+            Some(v) => v,
+            None => return Err(ApiError::MissingField("cerdits")),
+        };
+
+        Ok(MyInfo {
+            user_id: user_id,
+            username: username,
+            has_password: password,
+            cpu: cpu,
+            gcl: gcl,
+            credits: credits,
+            _phantom: PhantomData,
+        })
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -49,18 +94,4 @@ pub struct MyInfo {
     pub credits: f64,
     #[doc(hidden)]
     pub _phantom: PhantomData<()>,
-}
-
-impl From<Response> for MyInfo {
-    fn from(result: Response) -> MyInfo {
-        MyInfo {
-            user_id: result._id,
-            username: result.username,
-            has_password: result.password,
-            cpu: result.cpu,
-            gcl: result.gcl,
-            credits: result.credits,
-            _phantom: PhantomData,
-        }
-    }
 }

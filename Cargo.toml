@@ -11,4 +11,4 @@ serde_json = "0.9"
 
 [dev-dependencies]
 hyper-rustls = "0.3"
-dotenv = "*"
+dotenv = "0.8"

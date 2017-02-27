@@ -123,7 +123,7 @@ impl<'a> API<'a> {
 
     pub fn my_info(&mut self) -> Result<MyInfo> {
         let result: my_info::Response = self.make_get_request("auth/me")?;
-        Ok(result.into())
+        Ok(result.into_info()?)
     }
 }
 
