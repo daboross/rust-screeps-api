@@ -193,12 +193,14 @@ impl StdError for Error {
 }
 
 /// Error representing some abnormal response from the API.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum ApiError {
     /// The server responded with an "ok" code which was not `1`.
     NotOk(i32),
     /// The server response was missing a top-level JSON field that was expected.
     MissingField(&'static str),
+    /// A malformed response in inner data
+    MalformedResponse(String),
     /// A marker variant that tells the compiler that users of this enum cannot match it exhaustively.
     #[doc(hidden)]
     __Nonexhaustive,
@@ -209,6 +211,7 @@ impl fmt::Display for ApiError {
         match *self {
             ApiError::NotOk(code) => write!(f, "non-ok result from api call: {}", code),
             ApiError::MissingField(field) => write!(f, "missing field from api call: {}", field),
+            ApiError::MalformedResponse(ref desc) => write!(f, "malformed field from api call: {}", desc),
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }
@@ -219,6 +222,7 @@ impl StdError for ApiError {
         match *self {
             ApiError::NotOk(_) => "non-ok result from api call",
             ApiError::MissingField(_) => "missing field from api call",
+            ApiError::MalformedResponse(_) => "malformed field from api call",
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }

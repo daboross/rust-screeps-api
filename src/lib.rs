@@ -20,7 +20,9 @@
 //! # }
 //! ```
 //!
-//! As you can tell, you'll need to pre-create a hyper client in order to use rust-screeps-api. While it strictly could create a client itself, this way you can provide any backend connection implementation you want, as well as use any of the available https implementations.
+//! As you can tell, you'll need to pre-create a hyper client in order to use rust-screeps-api. While it strictly could
+//! create a client itself, this way you can provide any backend connection implementation you want, as well as use
+//! any of the available https implementations.
 //!
 //! Here's an example using hyper and hyper-rustls to create a client. hyper-rustls provides a pure-rust https backend,
 //! but it, as of yet, is not as well vetted as other projects, such as hyper-openssl.
@@ -52,18 +54,22 @@ extern crate hyper;
 extern crate serde;
 #[cfg_attr(test, macro_use)]
 extern crate serde_json;
+extern crate time;
 
 mod error;
 mod endpoints;
 mod data;
 
-use endpoints::{login, my_info, room_overview};
+use endpoints::{login, my_info, room_overview, room_terrain, room_status};
 pub use endpoints::login::Details as LoginDetails;
 pub use endpoints::my_info::MyInfo;
 pub use endpoints::room_overview::RoomOverview;
+pub use endpoints::room_status::{RoomStatus, RoomState};
+pub use endpoints::room_terrain::{RoomTerrain, TerrainType};
 pub use error::{Error, Result};
 use error::ApiError;
 use hyper::header::{Headers, ContentType};
+use std::borrow::Cow;
 
 /// API Object, stores the current API token and allows access to making requests.
 #[derive(Debug)]
@@ -195,7 +201,6 @@ impl<'a> API<'a> {
         }
     }
 
-
     /// Gets user information on the user currently logged in, including username and user id.
     pub fn my_info(&mut self) -> Result<MyInfo> {
         let result: my_info::Response = self.make_get_request("auth/me", None)?;
@@ -208,10 +213,35 @@ impl<'a> API<'a> {
     /// All Allowed request_intervals are not known, but at least `8`, `180` and `1440` are allowed. The returned data,
     /// at the time of writing, includes 8 data points of each type, representing equal portions of the time period
     /// requested (hour for `8`, day for `180`, week for `1440`).
-    pub fn room_overview(&mut self, room_name: &str, request_interval: u32) -> Result<RoomOverview> {
+    pub fn room_overview<'b, T>(&mut self, room_name: T, request_interval: u32) -> Result<RoomOverview>
+        where T: Into<Cow<'b, str>>
+    {
         let result: room_overview::Response = self.make_get_request("game/room-overview",
-                              Some(&[("room", room_name.to_string()), ("interval", request_interval.to_string())]))?;
+                              Some(&[("room", room_name.into().into_owned()),
+                                     ("interval", request_interval.to_string())]))?;
         Ok(result.into_info(request_interval)?)
+    }
+
+    /// Gets the terrain of a room, returning a 2d array of 50x50 points.
+    ///
+    /// Does not require authentication.
+    pub fn room_terrain<'b, T>(&mut self, room_name: T) -> Result<RoomTerrain>
+        where T: Into<Cow<'b, str>>
+    {
+        let result: room_terrain::Response = self.make_get_request("game/room-terrain",
+                              Some(&[("room", room_name.into().into_owned()), ("encoded", true.to_string())]))?;
+
+        Ok(result.into_info()?)
+    }
+
+    /// Gets the "status" of a room: if it is open, if it is in a novice area, if it exists.
+    pub fn room_status<'b, T>(&mut self, room_name: T) -> Result<RoomStatus>
+        where T: Into<Cow<'b, str>>
+    {
+        let result: room_status::Response = self.make_get_request("game/room-status",
+                              Some(&[("room", room_name.into().into_owned())]))?;
+
+        Ok(result.into_info()?)
     }
 }
 

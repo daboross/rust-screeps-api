@@ -5,10 +5,11 @@ authors = ["Dabo Ross <daboross@daboross.net>"]
 
 [dependencies]
 hyper = "0.10"
-serde_derive = "0.9"
 serde = "0.9"
+serde_derive = "0.9"
 serde_json = "0.9"
+time = "0.1"
 
 [dev-dependencies]
-hyper-rustls = "0.3"
 dotenv = "0.8"
+hyper-rustls = "0.3"
