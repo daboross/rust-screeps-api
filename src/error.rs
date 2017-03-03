@@ -93,12 +93,11 @@ impl From<io::Error> for Error {
 
 impl From<hyper::status::StatusCode> for Error {
     fn from(code: hyper::status::StatusCode) -> Error {
-        (if code == hyper::status::StatusCode::Unauthorized {
-                ErrorType::Unauthorized
-            } else {
-                ErrorType::StatusCode(code)
-            })
-            .into()
+        if code == hyper::status::StatusCode::Unauthorized {
+            ErrorType::Unauthorized.into()
+        } else {
+            ErrorType::StatusCode(code).into()
+        }
     }
 }
 
