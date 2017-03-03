@@ -44,3 +44,13 @@ fn test_room_terrain_invalid_room() {
         Ok(_) => panic!("Expected invalid room api error, found successful result."),
     };
 }
+
+#[test]
+fn test_recent_pvp() {
+    let client = create_secure_client();
+    let mut api = screeps_api::API::new(&client);
+
+    let pvp_results_a = api.recent_pvp(screeps_api::RecentPvpDetails::within(15)).unwrap();
+
+    let _ = api.recent_pvp(screeps_api::RecentPvpDetails::since(pvp_results_a.reported_up_to - 10)).unwrap();
+}

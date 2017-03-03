@@ -61,8 +61,9 @@ pub mod error;
 pub mod endpoints;
 mod data;
 
-use endpoints::{login, my_info, room_overview, room_terrain, room_status};
+use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp};
 pub use endpoints::login::Details as LoginDetails;
+pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use error::{Error, Result};
 use hyper::header::{Headers, ContentType};
 use std::borrow::Cow;
@@ -255,6 +256,17 @@ impl<'a> API<'a> {
     {
         self.make_get_request("game/room-status",
                               Some(&[("room", room_name.into().into_owned())]))
+    }
+
+    /// Experimental endpoint to get all rooms in which PvP has recently occurred, or where PvP has occurred since a
+    /// certain game tick.
+    pub fn recent_pvp(&mut self, details: RecentPvpDetails) -> Result<recent_pvp::RecentPvp> {
+        let args = match details {
+            recent_pvp::PvpArgs::WithinLast { ticks } => [("interval", ticks.to_string())],
+            recent_pvp::PvpArgs::Since { time } => [("start", time.to_string())],
+        };
+
+        self.make_get_request("experimental/pvp", Some(&args))
     }
 }
 
