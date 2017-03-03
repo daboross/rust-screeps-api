@@ -16,6 +16,7 @@
 //!     github: { id, username },
 //!     twitter: { username, followers_count }
 //! }
+
 use EndpointResult;
 use data::{self, Badge};
 use error::{ApiError, Result};

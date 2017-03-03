@@ -1,4 +1,5 @@
 //! Endpoint to log in to the API
+
 use EndpointResult;
 use data;
 use error::{Result, ApiError};

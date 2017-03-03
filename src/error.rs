@@ -48,9 +48,7 @@ pub struct Error {
 
 impl Error {
     /// Creates a new error from the given error and the given possible url.
-    pub fn with_url<T: Into<Error>>(err: T, url: Option<hyper::Url>) -> Error {
-        Error::with_json(err, url, None)
-    }
+    pub fn with_url<T: Into<Error>>(err: T, url: Option<hyper::Url>) -> Error { Error::with_json(err, url, None) }
     /// Creates a new error from the given error, the given possible url, and the given possible JSON data.
     pub fn with_json<T: Into<Error>>(err: T, url: Option<hyper::Url>, json: Option<serde_json::Value>) -> Error {
         let err = err.into();
