@@ -38,15 +38,16 @@
 //!     }
 //! }
 
-use data::Badge;
-use error::ApiError;
+use EndpointResult;
+use data::{self, Badge};
+use error::{ApiError, Result};
 use std::marker::PhantomData;
 
-/// Room overview result struct
+/// Room overview raw result.
 #[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
 pub struct Response {
-    pub ok: i32,
+    ok: i32,
     owner: Option<OwnerResponse>,
     stats: Option<RoomStatsResponse>,
     statsMax: Option<RoomTotalStatsResponse>,
@@ -100,12 +101,84 @@ struct RoomTotalStatsResponse {
     creepsLost1440: u32,
 }
 
+/// A single statistics point, representing a quantity for data over an interval of time.
+#[derive(Debug, Copy, Clone)]
+pub struct StatPoint {
+    /// The amount of whatever quantity this stat point is for
+    pub amount: u32,
+    /// The end time that this stat point is for.
+    pub end_time: u32,
+    /// Phantom data in order to allow adding any additional fields in the future.
+    #[doc(hidden)]
+    pub _phantom: PhantomData<()>,
+}
 
-impl Response {
-    pub fn into_info(self, data_interval: u32) -> Result<RoomOverview, ApiError> {
-        let Response { ok, owner, stats, statsMax: stats_max, .. } = self;
+impl From<StatPointResponse> for StatPoint {
+    fn from(stat: StatPointResponse) -> StatPoint {
+        StatPoint {
+            amount: stat.value,
+            end_time: stat.endTime,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+/// Total stats over a specific time period.
+#[derive(Debug, Copy, Clone)]
+pub struct TotalStats {
+    /// Time period. Currently either "8" for hour long stats, "180" for day long stats, or "1440" for week-long stats.
+    pub time_period: u32,
+    /// Energy harvested during this time period
+    pub energy_harvested: u32,
+    /// Energy spent on creeps during this time period
+    pub energy_spent_creeps: u32,
+    /// Energy spent on control during this time period
+    pub energy_spent_control: u32,
+    /// Energy spent on construction during this time period
+    pub energy_spent_construction: u32,
+    /// Creep parts produced during this time period
+    pub creep_parts_produced: u32,
+    /// Creep parts lots during this time period
+    creep_parts_lost: u32,
+    /// Phantom data in order to allow adding any additional fields in the future.
+    #[doc(hidden)]
+    pub _phantom: PhantomData<()>,
+}
+
+/// The result of a room_overview call.
+#[derive(Debug, Clone)]
+pub struct RoomOverview {
+    /// The username of the owner of the room.
+    pub owner: Option<String>,
+    /// The owner's badge
+    pub owner_badge: Option<Badge>,
+    /// Energy harvested during each interval of the requested time.
+    pub energy_harvested: Vec<StatPoint>,
+    /// Energy spent on creeps during each interval of the requested time.
+    pub energy_spent_creeps: Vec<StatPoint>,
+    /// Energy spent on control during each interval of the requested time.
+    pub energy_spent_control: Vec<StatPoint>,
+    /// Energy spent on construction during each interval of the requested time.
+    pub energy_spent_construction: Vec<StatPoint>,
+    /// Number of creep parts produced during each interval of the requested time.
+    pub creep_parts_produced: Vec<StatPoint>,
+    /// Number of creep parts lost during each interval of the requested time.
+    pub creep_parts_lost: Vec<StatPoint>,
+    /// A list of all total statistics provided (usually hour long, day long, and week long returned)
+    pub total_stats: Vec<TotalStats>,
+    /// Phantom data in order to allow adding any additional fields in the future.
+    #[doc(hidden)]
+    pub _phantom: PhantomData<()>,
+}
+
+impl EndpointResult for RoomOverview {
+    type RequestResult = Response;
+    type ErrorResult = data::ApiError;
+
+    fn from_raw(raw: Response) -> Result<RoomOverview> {
+        let Response { ok, owner, stats, statsMax: stats_max, .. } = raw;
         if ok != 1 {
-            return Err(ApiError::NotOk(ok));
+            return Err(ApiError::NotOk(ok).into());
         }
         let (username, badge) = match owner {
             Some(v) => (Some(v.username), Some(v.badge)),
@@ -113,17 +186,16 @@ impl Response {
         };
         let stats = match stats {
             Some(v) => v,
-            None => return Err(ApiError::MissingField("stats")),
+            None => return Err(ApiError::MissingField("stats").into()),
         };
         let stats_max = match stats_max {
             Some(v) => v,
-            None => return Err(ApiError::MissingField("statsMax")),
+            None => return Err(ApiError::MissingField("statsMax").into()),
         };
 
         Ok(RoomOverview {
             owner: username,
             owner_badge: badge,
-            data_interval: data_interval,
             energy_harvested: stats.energyHarvested.into_iter().map(Into::into).collect(),
             energy_spent_construction: stats.energyConstruction.into_iter().map(Into::into).collect(),
             energy_spent_creeps: stats.energyCreeps.into_iter().map(Into::into).collect(),
@@ -163,75 +235,4 @@ impl Response {
             _phantom: PhantomData,
         })
     }
-}
-
-/// The result of a room_overview call.
-#[derive(Debug, Clone)]
-pub struct RoomOverview {
-    /// The username of the owner of the room.
-    pub owner: Option<String>,
-    /// The owner's badge
-    pub owner_badge: Option<Badge>,
-    /// The interval between each data point
-    pub data_interval: u32,
-    /// Energy harvested during each interval
-    pub energy_harvested: Vec<StatPoint>,
-    /// Energy spent on creeps during each interval
-    pub energy_spent_creeps: Vec<StatPoint>,
-    /// Energy spent on control during each interval
-    pub energy_spent_control: Vec<StatPoint>,
-    /// Energy spent on construction during each interval
-    pub energy_spent_construction: Vec<StatPoint>,
-    /// Number of creep parts produced during each interval
-    pub creep_parts_produced: Vec<StatPoint>,
-    /// Number of creep parts lost during each interval
-    pub creep_parts_lost: Vec<StatPoint>,
-    /// A list of all total statistics provided (usually hour long, day long, and week long returned)
-    pub total_stats: Vec<TotalStats>,
-    /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct StatPoint {
-    /// The amount of whatever quantity this stat point is for
-    pub amount: u32,
-    /// The end time that this stat point is for.
-    pub end_time: u32,
-    /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
-}
-
-impl From<StatPointResponse> for StatPoint {
-    fn from(stat: StatPointResponse) -> StatPoint {
-        StatPoint {
-            amount: stat.value,
-            end_time: stat.endTime,
-            _phantom: PhantomData,
-        }
-    }
-}
-
-// Total stats over a specific time period.
-#[derive(Debug, Copy, Clone)]
-pub struct TotalStats {
-    /// Time period. Currently either "8" for hour long stats, "180" for day long stats, or "1440" for week-long stats.
-    pub time_period: u32,
-    /// Energy harvested during this time period
-    pub energy_harvested: u32,
-    /// Energy spent on creeps during this time period
-    pub energy_spent_creeps: u32,
-    /// Energy spent on control during this time period
-    pub energy_spent_control: u32,
-    /// Energy spent on construction during this time period
-    pub energy_spent_construction: u32,
-    /// Creep parts produced during this time period
-    pub creep_parts_produced: u32,
-    /// Creep parts lots during this time period
-    creep_parts_lost: u32,
-    /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
 }

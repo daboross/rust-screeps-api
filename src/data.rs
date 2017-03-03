@@ -1,5 +1,7 @@
 //! Various data structs that different calls might use in results.
 
+use error;
+
 /// Badge type!
 #[derive(Deserialize, Debug, Clone)]
 #[serde(untagged)]
@@ -34,6 +36,20 @@ pub struct Badge {
     pub flip: bool,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+pub struct ApiError {
+    pub error: String,
+}
+
+impl Into<error::Error> for ApiError {
+    fn into(self) -> error::Error {
+        if self.error == "invalid room" {
+            error::ApiError::InvalidRoom.into()
+        } else {
+            error::ApiError::GenericError(self.error).into()
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {

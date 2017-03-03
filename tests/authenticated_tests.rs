@@ -91,12 +91,3 @@ fn test_room_overview() {
         api.room_overview("W0N0", interval).unwrap();
     }
 }
-
-#[test]
-fn test_room_terrain() {
-    let client = create_secure_client();
-    let mut api = screeps_api::API::new(&client);
-
-    api.room_terrain("W0N0").unwrap();
-    api.room_terrain("W3N9").unwrap();
-}

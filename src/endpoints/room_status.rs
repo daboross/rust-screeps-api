@@ -2,14 +2,16 @@
 
 // TODO: testing "error" responses for all other queries!
 
-use error::ApiError;
+use EndpointResult;
+use data;
+use error::{Result, ApiError};
 use std::marker::PhantomData;
 use time;
 
-/// Room overview result struct
+/// Room overview raw result.
 #[derive(Deserialize, Debug)]
 pub struct Response {
-    pub ok: i32,
+    ok: i32,
     room: Option<InnerRoom>,
 }
 
@@ -34,7 +36,7 @@ enum StringNumberTimeSpec {
 }
 
 impl StringNumberTimeSpec {
-    fn to_timespec(&self) -> Result<time::Timespec, ApiError> {
+    fn to_timespec(&self) -> Result<time::Timespec> {
         let time = match *self {
             StringNumberTimeSpec::String(ref s) => {
                 match s.parse() {
@@ -43,7 +45,8 @@ impl StringNumberTimeSpec {
                         return Err(ApiError::MalformedResponse(format!("expected timestamp string to be a \
                                                                         valid integer, found {}: {:?}",
                                                                        s,
-                                                                       e)))
+                                                                       e))
+                            .into())
                     }
                 }
             }
@@ -53,61 +56,6 @@ impl StringNumberTimeSpec {
         Ok(time::Timespec::new(time, 0))
     }
 }
-
-impl Response {
-    pub fn into_info(self) -> Result<RoomStatus, ApiError> {
-        let Response { ok, room } = self;
-
-        if ok != 1 {
-            return Err(ApiError::NotOk(ok));
-        }
-
-        let InnerRoom { _id: room_name, status, novice, openTime: open_time } = match room {
-            Some(v) => v,
-            None => {
-                return Ok(RoomStatus {
-                    room_name: None,
-                    state: RoomState::Nonexistant,
-                    _phantom: PhantomData,
-                });
-            }
-        };
-
-        if status != "normal" {
-            return Err(ApiError::MalformedResponse(format!("expected room status to be \"normal\", \
-                                                            found \"{}\".",
-                                                           &status)));
-        }
-
-        // This turns Option<Result<A, B>> into Result<Option<A>, B>
-        let novice_time_spec = novice.map_or(Ok(None), |t| t.to_timespec().map(Some))?;
-        let open_time_spec = open_time.map_or(Ok(None), |t| t.to_timespec().map(Some))?;
-        let sys_time = time::get_time();
-
-        let state = match novice_time_spec {
-            Some(n) if n > sys_time => {
-                match open_time_spec {
-                    Some(o) if o > sys_time => {
-                        RoomState::SecondTierNovice {
-                            room_open_time: o,
-                            end_time: n,
-                        }
-                    }
-                    _ => RoomState::Novice { end_time: n },
-                }
-            }
-            Some(_) => RoomState::Open,
-            None => RoomState::Open,
-        };
-
-        Ok(RoomStatus {
-            room_name: Some(room_name),
-            state: state,
-            _phantom: PhantomData,
-        })
-    }
-}
-
 
 /// A room state, returned by room status.
 /// Note that the API itself will return timestamps for "novice end" and "open time" even when the room is no longer
@@ -148,15 +96,74 @@ pub struct RoomStatus {
     pub _phantom: PhantomData<()>,
 }
 
+impl EndpointResult for RoomStatus {
+    type RequestResult = Response;
+    type ErrorResult = data::ApiError;
+
+    fn from_raw(raw: Response) -> Result<RoomStatus> {
+        let Response { ok, room } = raw;
+
+        if ok != 1 {
+            return Err(ApiError::NotOk(ok).into());
+        }
+
+        let InnerRoom { _id: room_name, status, novice, openTime: open_time } = match room {
+            Some(v) => v,
+            None => {
+                return Ok(RoomStatus {
+                    room_name: None,
+                    state: RoomState::Nonexistant,
+                    _phantom: PhantomData,
+                });
+            }
+        };
+
+        if status != "normal" {
+            return Err(ApiError::MalformedResponse(format!("expected room status to be \"normal\", \
+                                                            found \"{}\".",
+                                                           &status))
+                .into());
+        }
+
+        // This turns Option<Result<A, B>> into Result<Option<A>, B>
+        let novice_time_spec = novice.map_or(Ok(None), |t| t.to_timespec().map(Some))?;
+        let open_time_spec = open_time.map_or(Ok(None), |t| t.to_timespec().map(Some))?;
+        let sys_time = time::get_time();
+
+        let state = match novice_time_spec {
+            Some(n) if n > sys_time => {
+                match open_time_spec {
+                    Some(o) if o > sys_time => {
+                        RoomState::SecondTierNovice {
+                            room_open_time: o,
+                            end_time: n,
+                        }
+                    }
+                    _ => RoomState::Novice { end_time: n },
+                }
+            }
+            Some(_) => RoomState::Open,
+            None => RoomState::Open,
+        };
+
+        Ok(RoomStatus {
+            room_name: Some(room_name),
+            state: state,
+            _phantom: PhantomData,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Response, RoomStatus};
+    use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
         let response: Response = serde_json::from_value(json).unwrap();
 
-        let _: RoomStatus = response.into_info().unwrap();
+        let _ = RoomStatus::from_raw(response).unwrap();
     }
 
     #[test]
@@ -194,7 +201,4 @@ mod tests {
             }
         }));
     }
-
-
-
 }

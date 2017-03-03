@@ -1,3 +1,7 @@
+//! Endpoint to log in to the API
+use EndpointResult;
+use data;
+use error::{Result, ApiError};
 use std::borrow::Cow;
 
 /// Login details
@@ -19,8 +23,32 @@ impl<'a> Details<'a> {
     }
 }
 
+/// Login raw result.
 #[derive(Deserialize, Debug)]
 pub struct Response {
-    pub ok: i32,
-    pub token: Option<String>,
+    ok: i32,
+    token: Option<String>,
+}
+
+/// The result of a call to log in.
+pub struct LoginResult {
+    /// The token which can be used to make future authenticated API calls.
+    pub token: String,
+}
+
+impl EndpointResult for LoginResult {
+    type RequestResult = Response;
+    type ErrorResult = data::ApiError;
+
+    fn from_raw(raw: Response) -> Result<LoginResult> {
+        let Response { ok, token } = raw;
+
+        if ok != 1 {
+            return Err(ApiError::NotOk(ok).into());
+        }
+        match token {
+            Some(token) => Ok(LoginResult { token: token }),
+            None => Err(ApiError::MissingField("token").into()),
+        }
+    }
 }

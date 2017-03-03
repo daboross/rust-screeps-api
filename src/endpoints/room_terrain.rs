@@ -2,13 +2,15 @@
 
 // TODO: testing "error" responses for all other queries!
 
-use error::ApiError;
+use EndpointResult;
+use data;
+use error::{Result, ApiError};
 use std::marker::PhantomData;
 
-/// Room overview result struct
+/// Room overview raw result.
 #[derive(Deserialize, Debug)]
 pub struct Response {
-    pub ok: i32,
+    ok: i32,
     terrain: Option<Vec<InnerResponse>>,
 }
 
@@ -22,61 +24,6 @@ struct InnerResponse {
     /// encoded data
     terrain: String,
 }
-
-impl Response {
-    pub fn into_info(self) -> Result<RoomTerrain, ApiError> {
-        let Response { ok, terrain: terrain_array } = self;
-
-        if ok != 1 {
-            return Err(ApiError::NotOk(ok));
-        }
-
-        let terrain_data = match terrain_array {
-            Some(v) => {
-                match v.into_iter().next() {
-                    Some(v) => v,
-                    None => return Err(ApiError::MissingField("terrain.0")),
-                }
-            }
-            None => return Err(ApiError::MissingField("terrain")),
-        };
-
-        let terrain_bytes = terrain_data.terrain.into_bytes();
-
-        if terrain_bytes.len() != 2500 {
-            return Err(ApiError::MalformedResponse(format!("expected response.terrain[0].\
-                terrain to be a 2500 byte string, found a {} byte string.",
-                                                           terrain_bytes.len())));
-        }
-
-        let mut terrain = [[TerrainType::Plains; 50]; 50];
-
-        for (y, chunk) in terrain_bytes.chunks(50).enumerate() {
-            for (x, byte) in chunk.iter().enumerate() {
-                terrain[y][x] = match *byte {
-                    b'0' => TerrainType::Plains,
-                    b'1' => TerrainType::Wall,
-                    b'2' => TerrainType::Swamp,
-                    b'3' => TerrainType::SwampyWall,
-                    other => {
-                        return Err(ApiError::MalformedResponse(format!("expected terrain data to contain \
-                                only characters 0,1,2,3, found byte {} at x,y {},{}.",
-                                                                       other,
-                                                                       x,
-                                                                       y)))
-                    }
-                }
-            }
-        }
-
-        Ok(RoomTerrain {
-            room_name: terrain_data.room,
-            terrain: terrain,
-            _phantom: PhantomData,
-        })
-    }
-}
-
 /// Type of terrain
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum TerrainType {
@@ -101,15 +48,75 @@ pub struct RoomTerrain {
     pub _phantom: PhantomData<()>,
 }
 
+impl EndpointResult for RoomTerrain {
+    type RequestResult = Response;
+    type ErrorResult = data::ApiError;
+
+    fn from_raw(raw: Response) -> Result<RoomTerrain> {
+        let Response { ok, terrain: terrain_array } = raw;
+
+        if ok != 1 {
+            return Err(ApiError::NotOk(ok).into());
+        }
+
+        let terrain_data = match terrain_array {
+            Some(v) => {
+                match v.into_iter().next() {
+                    Some(v) => v,
+                    None => return Err(ApiError::MissingField("terrain.0").into()),
+                }
+            }
+            None => return Err(ApiError::MissingField("terrain").into()),
+        };
+
+        let terrain_bytes = terrain_data.terrain.into_bytes();
+
+        if terrain_bytes.len() != 2500 {
+            return Err(ApiError::MalformedResponse(format!("expected response.terrain[0].\
+                terrain to be a 2500 byte string, found a {} byte string.",
+                                                           terrain_bytes.len()))
+                .into());
+        }
+
+        let mut terrain = [[TerrainType::Plains; 50]; 50];
+
+        for (y, chunk) in terrain_bytes.chunks(50).enumerate() {
+            for (x, byte) in chunk.iter().enumerate() {
+                terrain[y][x] = match *byte {
+                    b'0' => TerrainType::Plains,
+                    b'1' => TerrainType::Wall,
+                    b'2' => TerrainType::Swamp,
+                    b'3' => TerrainType::SwampyWall,
+                    other => {
+                        return Err(ApiError::MalformedResponse(format!("expected terrain data to contain \
+                                only characters 0,1,2,3, found byte {} at x,y {},{}.",
+                                                                       other,
+                                                                       x,
+                                                                       y))
+                            .into())
+                    }
+                }
+            }
+        }
+
+        Ok(RoomTerrain {
+            room_name: terrain_data.room,
+            terrain: terrain,
+            _phantom: PhantomData,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Response, RoomTerrain};
+    use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
         let response: Response = serde_json::from_value(json).unwrap();
 
-        let _: RoomTerrain = response.into_info().unwrap();
+        let _ = RoomTerrain::from_raw(response).unwrap();
     }
 
     #[test]

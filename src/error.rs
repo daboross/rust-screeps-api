@@ -1,3 +1,4 @@
+//! Error types for screeps-api.
 extern crate hyper;
 extern crate serde_json;
 
@@ -38,18 +39,25 @@ pub struct Error {
     pub err: ErrorType,
     /// The whole URL which was being accessed when this error occurred (not included for URL parsing errors).
     pub url: Option<hyper::Url>,
+    /// The json data from the request which resulted in this error (not included for URL or JSON parsing errors).
+    pub json: Option<serde_json::Value>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[doc(hidden)]
     pub _phantom: marker::PhantomData<()>,
 }
 
 impl Error {
-    /// Creates a new error from the given possible error type, and the given url.
-    pub fn new<T: Into<Error>>(err: T, url: Option<hyper::Url>) -> Error {
+    /// Creates a new error from the given error and the given possible url.
+    pub fn with_url<T: Into<Error>>(err: T, url: Option<hyper::Url>) -> Error {
+        Error::with_json(err, url, None)
+    }
+    /// Creates a new error from the given error, the given possible url, and the given possible JSON data.
+    pub fn with_json<T: Into<Error>>(err: T, url: Option<hyper::Url>, json: Option<serde_json::Value>) -> Error {
         let err = err.into();
         Error {
             err: err.err,
             url: url.or(err.url),
+            json: json.or(err.json),
             _phantom: marker::PhantomData,
         }
     }
@@ -63,91 +71,65 @@ impl From<ErrorType> for Error {
         Error {
             err: err,
             url: None,
+            json: None,
             _phantom: marker::PhantomData,
         }
     }
 }
 
 impl From<serde_json::error::Error> for Error {
-    fn from(err: serde_json::error::Error) -> Error {
-        Error {
-            err: ErrorType::SerdeJson(err),
-            url: None,
-            _phantom: marker::PhantomData,
-        }
-    }
+    fn from(err: serde_json::error::Error) -> Error { ErrorType::SerdeJson(err).into() }
 }
 
 impl From<hyper::error::Error> for Error {
-    fn from(err: hyper::error::Error) -> Error {
-        Error {
-            err: ErrorType::Hyper(err),
-            url: None,
-            _phantom: marker::PhantomData,
-        }
-    }
+    fn from(err: hyper::error::Error) -> Error { ErrorType::Hyper(err).into() }
 }
 
 impl From<hyper::error::ParseError> for Error {
-    fn from(err: hyper::error::ParseError) -> Error {
-        Error {
-            err: ErrorType::Hyper(hyper::Error::Uri(err)),
-            url: None,
-            _phantom: marker::PhantomData,
-        }
-    }
+    fn from(err: hyper::error::ParseError) -> Error { ErrorType::Hyper(hyper::Error::Uri(err)).into() }
 }
 
 impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error {
-            err: ErrorType::Io(err),
-            url: None,
-            _phantom: marker::PhantomData,
-        }
-    }
+    fn from(err: io::Error) -> Error { ErrorType::Io(err).into() }
 }
 
 impl From<hyper::status::StatusCode> for Error {
     fn from(code: hyper::status::StatusCode) -> Error {
-        Error {
-            err: {
-                if code == hyper::status::StatusCode::Unauthorized {
-                    ErrorType::Unauthorized
-                } else {
-                    ErrorType::StatusCode(code)
-                }
-            },
-            url: None,
-            _phantom: marker::PhantomData,
-        }
+        (if code == hyper::status::StatusCode::Unauthorized {
+                ErrorType::Unauthorized
+            } else {
+                ErrorType::StatusCode(code)
+            })
+            .into()
     }
 }
 
 impl From<ApiError> for Error {
-    fn from(err: ApiError) -> Error {
-        Error {
-            err: ErrorType::Api(err),
-            url: None,
-            _phantom: marker::PhantomData,
-        }
-    }
+    fn from(err: ApiError) -> Error { ErrorType::Api(err).into() }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.err {
-            SerdeJson(ref err) => fmt::Display::fmt(err, f),
-            Hyper(ref err) => fmt::Display::fmt(err, f),
-            Io(ref err) => fmt::Display::fmt(err, f),
-            StatusCode(ref status) => fmt::Display::fmt(status, f),
-            Api(ref err) => fmt::Display::fmt(err, f),
+            SerdeJson(ref err) => fmt::Display::fmt(err, f)?,
+            Hyper(ref err) => fmt::Display::fmt(err, f)?,
+            Io(ref err) => fmt::Display::fmt(err, f)?,
+            StatusCode(ref status) => fmt::Display::fmt(status, f)?,
+            Api(ref err) => fmt::Display::fmt(err, f)?,
             Unauthorized => {
                 write!(f,
-                       "access not authorized: token expired, username/password incorrect or no login provided")
+                       "access not authorized: token expired, username/password
+                       incorrect or no login provided")?;
             }
             ErrorType::__Nonexhaustive => unreachable!(),
         }
+        if let Some(ref url) = self.url {
+            write!(f, " | at url '{}'", url)?;
+        }
+        if let Some(ref json) = self.json {
+            write!(f, " | return json: '{}'", json)?;
+        }
+        Ok(())
     }
 }
 
@@ -197,9 +179,13 @@ impl StdError for Error {
 pub enum ApiError {
     /// The server responded with an "ok" code which was not `1`.
     NotOk(i32),
+    /// A known response to a query about an invalid room.
+    InvalidRoom,
+    /// An error found from the API. Data is the raw error string reported by the server.
+    GenericError(String),
     /// The server response was missing a top-level JSON field that was expected.
     MissingField(&'static str),
-    /// A malformed response in inner data
+    /// A malformed response, including a formatted String description of the error.
     MalformedResponse(String),
     /// A marker variant that tells the compiler that users of this enum cannot match it exhaustively.
     #[doc(hidden)]
@@ -209,9 +195,11 @@ pub enum ApiError {
 impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ApiError::NotOk(code) => write!(f, "non-ok result from api call: {}", code),
-            ApiError::MissingField(field) => write!(f, "missing field from api call: {}", field),
-            ApiError::MalformedResponse(ref desc) => write!(f, "malformed field from api call: {}", desc),
+            ApiError::NotOk(code) => write!(f, "non-ok result from api result: {}", code),
+            ApiError::MissingField(field) => write!(f, "missing field from api result: {}", field),
+            ApiError::MalformedResponse(ref desc) => write!(f, "malformed field from api result: {}", desc),
+            ApiError::InvalidRoom => write!(f, "malformed api call: invalid room name"),
+            ApiError::GenericError(ref err) => write!(f, "api call resulted in error: {}", err),
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }
@@ -221,8 +209,10 @@ impl StdError for ApiError {
     fn description(&self) -> &str {
         match *self {
             ApiError::NotOk(_) => "non-ok result from api call",
-            ApiError::MissingField(_) => "missing field from api call",
-            ApiError::MalformedResponse(_) => "malformed field from api call",
+            ApiError::MissingField(_) => "missing field in api result",
+            ApiError::MalformedResponse(_) => "malformed field in api result",
+            ApiError::GenericError(_) => "api call resulted in error",
+            ApiError::InvalidRoom => "malformed api call: invalid room",
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }

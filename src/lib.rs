@@ -56,20 +56,23 @@ extern crate serde;
 extern crate serde_json;
 extern crate time;
 
-mod error;
-mod endpoints;
+pub mod error;
+pub mod endpoints;
 mod data;
 
 use endpoints::{login, my_info, room_overview, room_terrain, room_status};
 pub use endpoints::login::Details as LoginDetails;
-pub use endpoints::my_info::MyInfo;
-pub use endpoints::room_overview::RoomOverview;
-pub use endpoints::room_status::{RoomStatus, RoomState};
-pub use endpoints::room_terrain::{RoomTerrain, TerrainType};
 pub use error::{Error, Result};
-use error::ApiError;
 use hyper::header::{Headers, ContentType};
 use std::borrow::Cow;
+
+/// A trait for each endpoint
+trait EndpointResult: Sized {
+    type RequestResult: serde::Deserialize;
+    type ErrorResult: serde::Deserialize + Into<Error>;
+
+    fn from_raw(data: Self::RequestResult) -> Result<Self>;
+}
 
 /// API Object, stores the current API token and allows access to making requests.
 #[derive(Debug)]
@@ -82,7 +85,7 @@ pub struct API<'a> {
 }
 
 impl<'a> API<'a> {
-    /// Creates a new API instance for the official server with the `https://screeps.com/api/ base url.
+    /// Creates a new API instance for the official server with the `https://screeps.com/api/` base url.
     ///
     /// The returned stance can be used to make anonymous calls, or `API.login` can be used to allow for
     /// authenticated API calls.
@@ -107,10 +110,10 @@ impl<'a> API<'a> {
     }
 
     /// Makes a POST request to the given endpoint URL, with the given data encoded as JSON in the body of the request.
-    fn make_post_request<T: serde::Serialize, R: serde::Deserialize>(&mut self,
-                                                                     endpoint: &str,
-                                                                     request_text: T)
-                                                                     -> Result<R> {
+    fn make_post_request<T: serde::Serialize, R: EndpointResult>(&mut self,
+                                                                 endpoint: &str,
+                                                                 request_text: T)
+                                                                 -> Result<R> {
         let body = serde_json::to_string(&request_text)?;
 
         let mut headers = Headers::new();
@@ -127,7 +130,7 @@ impl<'a> API<'a> {
             .send()?;
 
         if !response.status.is_success() {
-            return Err(Error::new(response.status, Some(response.url.clone())));
+            return Err(Error::with_url(response.status, Some(response.url.clone())));
         }
 
         if let Some(token_vec) = response.headers.get_raw("X-Token") {
@@ -136,19 +139,31 @@ impl<'a> API<'a> {
             }
         }
 
-        let result: R = match serde_json::from_reader(&mut response) {
+        let json: serde_json::Value = match serde_json::from_reader(&mut response) {
             Ok(v) => v,
-            Err(e) => return Err(Error::new(e, Some(response.url.clone()))),
+            Err(e) => return Err(Error::with_url(e, Some(response.url.clone()))),
         };
 
-        Ok(result)
+        use serde::Deserialize;
+
+        let result = match R::RequestResult::deserialize(&json) {
+            Ok(v) => v,
+            Err(e) => {
+                match R::ErrorResult::deserialize(&json) {
+                    Ok(v) => return Err(Error::with_json(v, Some(response.url.clone()), Some(json))),
+                    // Favor the primary parsing error if one occurs parsing the error type as well.
+                    Err(_) => return Err(Error::with_json(e, Some(response.url.clone()), Some(json))),
+                }
+            }
+        };
+
+        R::from_raw(result)
     }
 
     /// Makes a new GET request to the given endpoint URL, with given the query parameters added to the end.
-    fn make_get_request<R: serde::Deserialize>(&mut self,
-                                               endpoint: &str,
-                                               query_pairs: Option<&[(&str, String)]>)
-                                               -> Result<R> {
+    fn make_get_request<R>(&mut self, endpoint: &str, query_pairs: Option<&[(&str, String)]>) -> Result<R>
+        where R: EndpointResult
+    {
         let mut headers = Headers::new();
         headers.set(ContentType::json());
         if let Some(ref token) = self.token {
@@ -168,7 +183,7 @@ impl<'a> API<'a> {
             .send()?;
 
         if !response.status.is_success() {
-            return Err(Error::new(response.status, Some(response.url.clone())));
+            return Err(Error::with_url(response.status, Some(response.url.clone())));
         }
 
         if let Some(token_vec) = response.headers.get_raw("X-Token") {
@@ -177,35 +192,37 @@ impl<'a> API<'a> {
             }
         }
 
-        let result: R = match serde_json::from_reader(&mut response) {
+        let json: serde_json::Value = match serde_json::from_reader(&mut response) {
             Ok(v) => v,
-            Err(e) => return Err(Error::new(e, Some(response.url.clone()))),
+            Err(e) => return Err(Error::with_url(e, Some(response.url.clone()))),
         };
 
-        Ok(result)
+        use serde::Deserialize;
+
+        let result = match R::RequestResult::deserialize(&json) {
+            Ok(v) => v,
+            Err(e) => {
+                match R::ErrorResult::deserialize(&json) {
+                    Ok(v) => return Err(Error::with_json(v, Some(response.url.clone()), Some(json))),
+                    // Favor the primary parsing error if one occurs parsing the error type as well.
+                    Err(_) => return Err(Error::with_json(e, Some(response.url.clone()), Some(json))),
+                }
+            }
+        };
+
+        R::from_raw(result)
     }
 
     /// Logs in using a given username and password, and stores the resulting token inside this structure.
     pub fn login(&mut self, login_details: &LoginDetails) -> Result<()> {
-        let result: login::Response = self.make_post_request("auth/signin", login_details)?;
+        let result: login::LoginResult = self.make_post_request("auth/signin", login_details)?;
 
-        if result.ok != 1 {
-            return Err(ApiError::NotOk(result.ok).into());
-        }
-
-        if let Some(token) = result.token {
-            self.token = Some(token.into());
-            Ok(())
-        } else {
-            Err(ApiError::MissingField("token").into())
-        }
+        self.token = Some(result.token.into_bytes());
+        Ok(())
     }
 
     /// Gets user information on the user currently logged in, including username and user id.
-    pub fn my_info(&mut self) -> Result<MyInfo> {
-        let result: my_info::Response = self.make_get_request("auth/me", None)?;
-        Ok(result.into_info()?)
-    }
+    pub fn my_info(&mut self) -> Result<my_info::MyInfo> { self.make_get_request("auth/me", None) }
 
     /// Gets the overview of a room, returning totals for usually 3 intervals, 8, 180 and 1440, representing
     /// data for the past hour, data for the past 24 hours, and data for the past week respectively.
@@ -213,42 +230,36 @@ impl<'a> API<'a> {
     /// All Allowed request_intervals are not known, but at least `8`, `180` and `1440` are allowed. The returned data,
     /// at the time of writing, includes 8 data points of each type, representing equal portions of the time period
     /// requested (hour for `8`, day for `180`, week for `1440`).
-    pub fn room_overview<'b, T>(&mut self, room_name: T, request_interval: u32) -> Result<RoomOverview>
+    pub fn room_overview<'b, T>(&mut self, room_name: T, request_interval: u32) -> Result<room_overview::RoomOverview>
         where T: Into<Cow<'b, str>>
     {
-        let result: room_overview::Response = self.make_get_request("game/room-overview",
+        self.make_get_request("game/room-overview",
                               Some(&[("room", room_name.into().into_owned()),
-                                     ("interval", request_interval.to_string())]))?;
-        Ok(result.into_info(request_interval)?)
+                                     ("interval", request_interval.to_string())]))
     }
 
     /// Gets the terrain of a room, returning a 2d array of 50x50 points.
     ///
     /// Does not require authentication.
-    pub fn room_terrain<'b, T>(&mut self, room_name: T) -> Result<RoomTerrain>
+    pub fn room_terrain<'b, T>(&mut self, room_name: T) -> Result<room_terrain::RoomTerrain>
         where T: Into<Cow<'b, str>>
     {
-        let result: room_terrain::Response = self.make_get_request("game/room-terrain",
-                              Some(&[("room", room_name.into().into_owned()), ("encoded", true.to_string())]))?;
-
-        Ok(result.into_info()?)
+        self.make_get_request("game/room-terrain",
+                              Some(&[("room", room_name.into().into_owned()), ("encoded", true.to_string())]))
     }
 
     /// Gets the "status" of a room: if it is open, if it is in a novice area, if it exists.
-    pub fn room_status<'b, T>(&mut self, room_name: T) -> Result<RoomStatus>
+    pub fn room_status<'b, T>(&mut self, room_name: T) -> Result<room_status::RoomStatus>
         where T: Into<Cow<'b, str>>
     {
-        let result: room_status::Response = self.make_get_request("game/room-status",
-                              Some(&[("room", room_name.into().into_owned())]))?;
-
-        Ok(result.into_info()?)
+        self.make_get_request("game/room-status",
+                              Some(&[("room", room_name.into().into_owned())]))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use {API, LoginDetails};
-    use error::{Error, ErrorType};
+    use API;
     extern crate hyper;
     extern crate hyper_rustls;
     use hyper::client::Client;
@@ -258,17 +269,5 @@ mod tests {
     fn anonymous_creation() {
         let client = Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()));
         let _unused = API::new(&client);
-    }
-
-    #[test]
-    fn login_creation_auth_failure() {
-        let client = Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()));
-        let login = LoginDetails::new("username", "password");
-        let mut api = API::new(&client);
-
-        match api.login(&login) {
-            Err(Error { err: ErrorType::Unauthorized, .. }) => (),
-            other => panic!("Expected unauthorized error, found {:?}", other),
-        }
     }
 }
