@@ -53,7 +53,8 @@ impl Into<error::Error> for ApiError {
 
 #[cfg(test)]
 mod tests {
-    use super::Badge;
+    use super::{Badge, ApiError};
+    use error;
     use serde_json;
 
     #[test]
@@ -108,5 +109,28 @@ mod tests {
             "flip": false,
         }))
             .unwrap();
+    }
+
+    #[test]
+    fn parse_standard_server_error() {
+        let _: ApiError = serde_json::from_value(json!({
+            "error": "any error string",
+        }))
+            .unwrap();
+    }
+
+    #[test]
+    fn parse_invalid_room_error() {
+        let result: ApiError = serde_json::from_value(json!({
+            "error": "invalid room",
+        }))
+            .unwrap();
+
+        let error: error::Error = result.into();
+
+        match error.err {
+            error::ErrorType::Api(error::ApiError::InvalidRoom) => (),
+            _ => panic!("expected invalid room error, found {}", error),
+        }
     }
 }

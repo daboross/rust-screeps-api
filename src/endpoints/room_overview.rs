@@ -236,3 +236,310 @@ impl EndpointResult for RoomOverview {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Response, RoomOverview};
+    use EndpointResult;
+    use serde_json;
+
+    fn test_parse(json: serde_json::Value) {
+        let response: Response = serde_json::from_value(json).unwrap();
+
+        let _ = RoomOverview::from_raw(response).unwrap();
+    }
+
+    #[test]
+    fn test_e15_n52_sample() {
+        test_parse(json! ({
+            "ok": 1,
+            "owner": {
+                "badge": {
+                    "color1": "#260d0d",
+                    "color2": "#6b2e41",
+                    "color3": "#ffe56d",
+                    "flip": false,
+                    "param": -100,
+                    "type": 21
+                },
+                "username": "daboross"
+            },
+            "stats": {
+                "creepsLost": [
+                    {
+                        "endTime": 3101205,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101206,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101207,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101208,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101209,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101210,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101211,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101212,
+                        "value": 0
+                    }
+                ],
+                "creepsProduced": [
+                    {
+                        "endTime": 3101205,
+                        "value": 117
+                    },
+                    {
+                        "endTime": 3101206,
+                        "value": 8
+                    },
+                    {
+                        "endTime": 3101207,
+                        "value": 8
+                    },
+                    {
+                        "endTime": 3101208,
+                        "value": 83
+                    },
+                    {
+                        "endTime": 3101209,
+                        "value": 86
+                    },
+                    {
+                        "endTime": 3101210,
+                        "value": 128
+                    },
+                    {
+                        "endTime": 3101211,
+                        "value": 47
+                    },
+                    {
+                        "endTime": 3101212,
+                        "value": 26
+                    }
+                ],
+                "energyConstruction": [
+                    {
+                        "endTime": 3101205,
+                        "value": 91
+                    },
+                    {
+                        "endTime": 3101206,
+                        "value": 146
+                    },
+                    {
+                        "endTime": 3101207,
+                        "value": 89
+                    },
+                    {
+                        "endTime": 3101208,
+                        "value": 129
+                    },
+                    {
+                        "endTime": 3101209,
+                        "value": 120
+                    },
+                    {
+                        "endTime": 3101210,
+                        "value": 122
+                    },
+                    {
+                        "endTime": 3101211,
+                        "value": 107
+                    },
+                    {
+                        "endTime": 3101212,
+                        "value": 87
+                    }
+                ],
+                "energyControl": [
+                    {
+                        "endTime": 3101205,
+                        "value": 428
+                    },
+                    {
+                        "endTime": 3101206,
+                        "value": 825
+                    },
+                    {
+                        "endTime": 3101207,
+                        "value": 1740
+                    },
+                    {
+                        "endTime": 3101208,
+                        "value": 1755
+                    },
+                    {
+                        "endTime": 3101209,
+                        "value": 1830
+                    },
+                    {
+                        "endTime": 3101210,
+                        "value": 1875
+                    },
+                    {
+                        "endTime": 3101211,
+                        "value": 1920
+                    },
+                    {
+                        "endTime": 3101212,
+                        "value": 1425
+                    }
+                ],
+                "energyCreeps": [
+                    {
+                        "endTime": 3101205,
+                        "value": 6950
+                    },
+                    {
+                        "endTime": 3101206,
+                        "value": 650
+                    },
+                    {
+                        "endTime": 3101207,
+                        "value": 650
+                    },
+                    {
+                        "endTime": 3101208,
+                        "value": 4310
+                    },
+                    {
+                        "endTime": 3101209,
+                        "value": 4400
+                    },
+                    {
+                        "endTime": 3101210,
+                        "value": 9400
+                    },
+                    {
+                        "endTime": 3101211,
+                        "value": 5500
+                    },
+                    {
+                        "endTime": 3101212,
+                        "value": 1300
+                    }
+                ],
+                "energyHarvested": [
+                    {
+                        "endTime": 3101205,
+                        "value": 2400
+                    },
+                    {
+                        "endTime": 3101206,
+                        "value": 2500
+                    },
+                    {
+                        "endTime": 3101207,
+                        "value": 2320
+                    },
+                    {
+                        "endTime": 3101208,
+                        "value": 2340
+                    },
+                    {
+                        "endTime": 3101209,
+                        "value": 2440
+                    },
+                    {
+                        "endTime": 3101210,
+                        "value": 2500
+                    },
+                    {
+                        "endTime": 3101211,
+                        "value": 2560
+                    },
+                    {
+                        "endTime": 3101212,
+                        "value": 1900
+                    }
+                ],
+                "powerProcessed": [
+                    {
+                        "endTime": 3101205,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101206,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101207,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101208,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101209,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101210,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101211,
+                        "value": 0
+                    },
+                    {
+                        "endTime": 3101212,
+                        "value": 0
+                    }
+                ]
+            },
+            "statsMax": {
+                "creepsLost1440": 8923,
+                "creepsLost180": 1632,
+                "creepsLost8": 226,
+                "creepsProduced1440": 21797,
+                "creepsProduced180": 2783,
+                "creepsProduced8": 212,
+                "energy1440": 12240476,
+                "energy180": 1365753,
+                "energy8": 94311,
+                "energyConstruction1440": 12240476,
+                "energyConstruction180": 1365753,
+                "energyConstruction8": 94311,
+                "energyControl1440": 12240476,
+                "energyControl180": 1365753,
+                "energyControl8": 94311,
+                "energyCreeps1440": 12240476,
+                "energyCreeps180": 1365753,
+                "energyCreeps8": 94311,
+                "energyHarvested1440": 12240476,
+                "energyHarvested180": 1365753,
+                "energyHarvested8": 94311,
+                "power1440": 21422,
+                "power180": 2708,
+                "power8": 132,
+                "powerProcessed1440": 21422,
+                "powerProcessed180": 2708,
+                "powerProcessed8": 132
+            },
+            "totals": {
+                "creepsProduced": 503,
+                "energyConstruction": 891,
+                "energyControl": 11798,
+                "energyCreeps": 33160,
+                "energyHarvested": 18960
+            }
+        }));
+    }
+}

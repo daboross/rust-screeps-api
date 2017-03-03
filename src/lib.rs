@@ -48,6 +48,7 @@
 //! When making multiple concurrent calls to the API, please make a new API instance for each thread, and provide each
 //! with the login details via `login()` separately to obtain multiple tokens.
 #![deny(missing_docs)]
+#![recursion_limit="512"]
 #[macro_use]
 extern crate serde_derive;
 extern crate hyper;

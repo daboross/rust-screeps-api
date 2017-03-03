@@ -108,3 +108,57 @@ impl EndpointResult for MyInfo {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Response, MyInfo};
+    use EndpointResult;
+    use serde_json;
+
+    fn test_parse(json: serde_json::Value) {
+        let response: Response = serde_json::from_value(json).unwrap();
+
+        let _ = MyInfo::from_raw(response).unwrap();
+    }
+
+    #[test]
+    fn test_daboross_result() {
+        test_parse(json! ({
+            "_id": "57874d42d0ae911e3bd15bbc",
+            "badge": {
+                "color1": "#260d0d",
+                "color2": "#6b2e41",
+                "color3": "#ffe56d",
+                "flip": false,
+                "param": -100,
+                "type": 21
+            },
+            "cpu": 170,
+            "credits": 0,
+            "email": "daboross@daboross.net",
+            "gcl": 571069296,
+            "github": {
+                "id": "1152146",
+                "username": "daboross"
+            },
+            "lastRespawnDate": 1475270405700i64,
+            "money": 3957697.9500000584f64,
+            "notifyPrefs": {
+                "errorsInterval": 0
+            },
+            "ok": 1,
+            "password": true,
+            "promoPeriodUntil": 1471635211172i64,
+            "steam": {
+                "displayName": "daboross",
+                "id": "76561198033802814",
+                "ownership": [
+                    464350
+                ]
+            },
+            "subscription": true,
+            "subscriptionTokens": 0,
+            "username": "daboross"
+        }));
+    }
+}

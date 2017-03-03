@@ -173,7 +173,7 @@ mod tests {
             "room": {
                 "_id": "W6S83",
                 "status": "normal",
-                "novice": 1488394267175i64,
+                "novice": 1488394267175i64
             }
         }));
     }

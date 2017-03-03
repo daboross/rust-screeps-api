@@ -53,3 +53,24 @@ impl EndpointResult for LoginResult {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{Response, LoginResult};
+    use EndpointResult;
+    use serde_json;
+
+    fn test_parse(json: serde_json::Value) {
+        let response: Response = serde_json::from_value(json).unwrap();
+
+        let _ = LoginResult::from_raw(response).unwrap();
+    }
+
+    #[test]
+    fn test_login_success() {
+        test_parse(json! ({
+            "ok": 1,
+            "token": "c07924d3f556a355eba7cd59f4c21f670fda76c2",
+        }));
+    }
+}
