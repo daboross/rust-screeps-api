@@ -61,7 +61,7 @@ pub mod error;
 pub mod endpoints;
 mod data;
 
-use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp};
+use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp, leaderboard_season_list};
 pub use endpoints::login::Details as LoginDetails;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use error::{Error, Result};
@@ -267,6 +267,17 @@ impl<'a> API<'a> {
         };
 
         self.make_get_request("experimental/pvp", Some(&args))
+    }
+
+    /// Gets a list of all past leaderboard seasons, with end dates, display names, and season ids for each season.
+    ///
+    /// Seasons are a way of having limited time periods (usually one month) in which all rankings are reset at the
+    /// beginning of, and points earned during the time period contribute to a player's rank in that season.
+    ///
+    /// This method does not return any actual data, but rather just a list of valid past season, any of the ids of
+    /// which can then be used to retrieve more information.
+    pub fn leaderboard_season_list(&mut self) -> Result<Vec<leaderboard_season_list::LeaderboardSeason>> {
+        self.make_get_request("leaderboard/seasons", None)
     }
 }
 

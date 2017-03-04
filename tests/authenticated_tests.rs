@@ -91,3 +91,14 @@ fn test_room_overview() {
         api.room_overview("W0N0", interval).unwrap();
     }
 }
+
+#[test]
+fn test_leaderboard_seasons() {
+    if opt_env("NO_AUTH_TESTS") {
+        return;
+    }
+    let client = create_secure_client();
+    let mut api = logged_in(&client);
+
+    api.leaderboard_season_list().unwrap();
+}
