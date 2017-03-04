@@ -1,21 +1,4 @@
 //! User information retrieval
-//! endpoint: auth/me
-//! Data: {
-//!     ok,
-//!     _id,
-//!     email,
-//!     username,
-//!     cpu,
-//!     badge: { type, color1, color2, color3, param, flip },
-//!     password,
-//!     notifyPrefs: { sendOnline, errorsInterval, disabledOnMessages, disabled, interval },
-//!     gcl,
-//!     credits,
-//!     lastChargeTime,
-//!     lastTweetTime,
-//!     github: { id, username },
-//!     twitter: { username, followers_count }
-//! }
 
 use EndpointResult;
 use data::{self, Badge};

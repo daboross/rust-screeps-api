@@ -1,7 +1,5 @@
 //! Room terrain retrieval. This assumes getting terrain with encoded=true in the request.
 
-// TODO: testing "error" responses for all other queries!
-
 use EndpointResult;
 use data;
 use error::{Result, ApiError};

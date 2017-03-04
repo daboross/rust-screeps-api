@@ -1,42 +1,4 @@
 //! Room overview retrieval
-//! {
-//!     ok,
-//!     owner: {
-//!         username,
-//!         badge: { type, color1, color2, color3, param, flip }
-//!     },
-//!     stats: {
-//!         energyHarvested: [ { value, endTime } ],
-//!         energyConstruction: [ { value, endTime } ],
-//!         energyCreeps: [ { value, endTime } ],
-//!         energyControl: [ { value, endTime } ],
-//!         creepsProduced: [ { value, endTime } ],
-//!         creepsLost: [ { value, endTime } ]
-//!     },
-//!     statsMax: {
-//!         energy1440,
-//!         energyCreeps1440,
-//!         energy8,
-//!         energyControl8,
-//!         creepsLost180,
-//!         energyHarvested8,
-//!         energy180,
-//!         energyConstruction180,
-//!         creepsProduced8,
-//!         energyControl1440,
-//!         energyCreeps8,
-//!         energyHarvested1440,
-//!         creepsLost1440,
-//!         energyConstruction1440,
-//!         energyHarvested180,
-//!         creepsProduced180,
-//!         creepsProduced1440,
-//!         energyCreeps180,
-//!         energyControl180,
-//!         energyConstruction8,
-//!         creepsLost8
-//!     }
-//! }
 
 use EndpointResult;
 use data::{self, Badge};
