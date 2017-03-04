@@ -6,6 +6,7 @@ use error::{Result, ApiError};
 use std::marker::PhantomData;
 
 /// Call parameters for requesting recent pvp
+#[derive(Debug, Copy, Clone)]
 pub enum PvpArgs {
     /// Retrieves rooms where pvp has occurred recently, with a given number of game ticks.
     WithinLast {
@@ -43,6 +44,7 @@ struct InnerRoom {
 
 
 /// Result storing recent pvp matches.
+#[derive(Debug, Clone)]
 pub struct RecentPvp {
     /// A list of room names in which pvp has recently occurred, and the time at which pvp last occurred.
     pub rooms: Vec<(String, i64)>,
