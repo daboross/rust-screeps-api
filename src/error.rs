@@ -163,9 +163,8 @@ impl StdError for Error {
             SerdeJson(ref err) => Some(err),
             Hyper(ref err) => Some(err),
             Io(ref err) => Some(err),
-            StatusCode(_) => None,
             Api(ref err) => Some(err),
-            Unauthorized => None,
+            StatusCode(_) | Unauthorized => None,
             __Nonexhaustive => unreachable!(),
         }
     }

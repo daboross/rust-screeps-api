@@ -91,7 +91,7 @@ impl<'a> API<'a> {
     ///
     /// The returned stance can be used to make anonymous calls, or `API.login` can be used to allow for
     /// authenticated API calls.
-    pub fn new<'b>(client: &'b hyper::Client) -> API<'b> {
+    pub fn new(client: &hyper::Client) -> API {
         API {
             url: hyper::Url::parse("https://screeps.com/api/").expect("expected pre-set url to parse, parsing failed"),
             client: client,
@@ -103,7 +103,7 @@ impl<'a> API<'a> {
     ///
     /// The returned instance can be used to make anonymous calls, or `API.login` can be used to allow for
     /// authenticated API calls.
-    pub fn with_url<'b, T: hyper::client::IntoUrl>(client: &'b hyper::Client, url: T) -> Result<API<'b>> {
+    pub fn with_url<T: hyper::client::IntoUrl>(client: &hyper::Client, url: T) -> Result<API> {
         Ok(API {
             url: url.into_url()?,
             client: client,

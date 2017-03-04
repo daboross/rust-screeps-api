@@ -107,7 +107,7 @@ pub struct TotalStats {
     pub _phantom: PhantomData<()>,
 }
 
-/// The result of a room_overview call.
+/// Various statistics about a single room, returned as a result from `room_overview` calls.
 #[derive(Debug, Clone)]
 pub struct RoomOverview {
     /// The username of the owner of the room.

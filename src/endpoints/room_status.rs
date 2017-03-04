@@ -140,8 +140,7 @@ impl EndpointResult for RoomStatus {
                     _ => RoomState::Novice { end_time: n },
                 }
             }
-            Some(_) => RoomState::Open,
-            None => RoomState::Open,
+            Some(_) | None => RoomState::Open,
         };
 
         Ok(RoomStatus {

@@ -10,7 +10,7 @@ fn env(var: &str) -> String {
     dotenv::dotenv().ok();
     match ::std::env::var(var) {
         Ok(value) => value,
-        Err(_) => panic!("must have `{}` defined", var),
+        Err(e) => panic!("must have `{}` defined (err: {:?})", var, e),
     }
 }
 
@@ -19,11 +19,8 @@ fn opt_env(var: &str) -> bool {
     match ::std::env::var(var) {
         Ok(value) => {
             match value.chars().next() {
-                Some('t') => true,
-                Some('T') => true,
-                Some('1') => true,
-                Some(_) => false,
-                None => false,
+                Some('t') | Some('T') | Some('1') => true,
+                Some(_) | None => false,
             }
         }
         Err(_) => false,
@@ -34,7 +31,7 @@ fn create_secure_client() -> hyper::Client {
     Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()))
 }
 
-fn logged_in<'a>(client: &'a hyper::Client) -> screeps_api::API<'a> {
+fn logged_in(client: &hyper::Client) -> screeps_api::API {
     let username = env("SCREEPS_API_USERNAME");
     let password = env("SCREEPS_API_PASSWORD");
     let mut api = screeps_api::API::new(client);
