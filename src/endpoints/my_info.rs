@@ -94,18 +94,18 @@ impl EndpointResult for MyInfo {
 
 #[cfg(test)]
 mod tests {
-    use super::{Response, MyInfo};
+    use super::MyInfo;
     use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
-        let response: Response = serde_json::from_value(json).unwrap();
+        let response = serde_json::from_value(json).unwrap();
 
         let _ = MyInfo::from_raw(response).unwrap();
     }
 
     #[test]
-    fn test_daboross_result() {
+    fn parse_sample_info() {
         test_parse(json! ({
             "_id": "57874d42d0ae911e3bd15bbc",
             "badge": {

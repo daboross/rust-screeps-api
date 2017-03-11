@@ -58,7 +58,7 @@ mod tests {
     use serde_json;
 
     #[test]
-    fn parse_badge_simple_colors_simple_pattern() {
+    fn parse_sample_parse_badge_simple_colors_simple_pattern() {
         let _: Badge = serde_json::from_value(json!({
             "type": 19,
             "color1": 37,
@@ -71,7 +71,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_badge_hex_colors_simple_pattern() {
+    fn parse_sample_badge_hex_colors_simple_pattern() {
         let _: Badge = serde_json::from_value(json!({
             "type": 21,
             "color1": "#260d0d",
@@ -84,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_badge_custom_dissi() {
+    fn parse_sample_badge_custom_dissi() {
         let _: Badge = serde_json::from_value(json!({
             "type": {
                 "path1": "M0,50c0,27.3,21.8,49.5,48.9,50v-9.6c-2.5-0.8-5.5-4.6-7.8-10.2c-0.9-2.3-1.7-4.7-2.4-7.4   \
@@ -112,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_standard_server_error() {
+    fn parse_sample_standard_server_error() {
         let _: ApiError = serde_json::from_value(json!({
             "error": "any error string",
         }))
@@ -120,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn parse_invalid_room_error() {
+    fn parse_sample_invalid_room_error() {
         let result: ApiError = serde_json::from_value(json!({
             "error": "invalid room",
         }))

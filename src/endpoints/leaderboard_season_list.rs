@@ -63,18 +63,18 @@ impl EndpointResult for Vec<LeaderboardSeason> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Response, LeaderboardSeason};
+    use super::LeaderboardSeason;
     use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
-        let response: Response = serde_json::from_value(json).unwrap();
+        let response = serde_json::from_value(json).unwrap();
 
         let _ = Vec::<LeaderboardSeason>::from_raw(response).unwrap();
     }
 
     #[test]
-    fn test_snippet_leaderboard_season_list() {
+    fn parse_sample_leaderboard_season_list() {
         // This is not an actual call, but rather just a truncated call containing the top 5 results.
         test_parse(json! ({
             "ok": 1,

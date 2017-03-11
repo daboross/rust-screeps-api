@@ -6,7 +6,7 @@ use error::{Result, ApiError};
 use std::borrow::Cow;
 
 /// Login details
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 pub struct Details<'a> {
     /// The email or username to log in with (either works)
     pub email: Cow<'a, str>,
@@ -32,6 +32,7 @@ pub struct Response {
 }
 
 /// The result of a call to log in.
+#[derive(Debug, Clone)]
 pub struct LoginResult {
     /// The token which can be used to make future authenticated API calls.
     pub token: String,
@@ -56,18 +57,18 @@ impl EndpointResult for LoginResult {
 
 #[cfg(test)]
 mod tests {
-    use super::{Response, LoginResult};
+    use super::LoginResult;
     use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
-        let response: Response = serde_json::from_value(json).unwrap();
+        let response = serde_json::from_value(json).unwrap();
 
         let _ = LoginResult::from_raw(response).unwrap();
     }
 
     #[test]
-    fn test_login_success() {
+    fn parse_sample_login_success() {
         test_parse(json! ({
             "ok": 1,
             "token": "c07924d3f556a355eba7cd59f4c21f670fda76c2",

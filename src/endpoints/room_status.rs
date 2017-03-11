@@ -153,18 +153,18 @@ impl EndpointResult for RoomStatus {
 
 #[cfg(test)]
 mod tests {
-    use super::{Response, RoomStatus};
+    use super::RoomStatus;
     use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
-        let response: Response = serde_json::from_value(json).unwrap();
+        let response = serde_json::from_value(json).unwrap();
 
         let _ = RoomStatus::from_raw(response).unwrap();
     }
 
     #[test]
-    fn test_room_with_novice() {
+    fn parse_sample_novice_room() {
         test_parse(json! ({
             "ok": 1,
             "room": {
@@ -176,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn test_highway_room() {
+    fn parse_sample_highway_room() {
         test_parse(json! ({
             "ok": 1,
             "room": {
@@ -187,7 +187,7 @@ mod tests {
     }
 
     #[test]
-    fn test_center_novice_room() {
+    fn parse_sample_center_novice_room() {
         test_parse(json! ({
             "ok": 1,
             "room": {

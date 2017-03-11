@@ -201,18 +201,18 @@ impl EndpointResult for RoomOverview {
 
 #[cfg(test)]
 mod tests {
-    use super::{Response, RoomOverview};
+    use super::RoomOverview;
     use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
-        let response: Response = serde_json::from_value(json).unwrap();
+        let response = serde_json::from_value(json).unwrap();
 
         let _ = RoomOverview::from_raw(response).unwrap();
     }
 
     #[test]
-    fn test_e15_n52_sample() {
+    fn parse_sample_overview_e15n52() {
         test_parse(json! ({
             "ok": 1,
             "owner": {

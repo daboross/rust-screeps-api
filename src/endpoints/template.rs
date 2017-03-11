@@ -13,6 +13,7 @@ pub struct Response {
 }
 
 /// Call info
+#[derive(Debug, Clone)]
 pub struct CallInfo {
     /// Phantom data in order to allow adding any additional fields in the future.
     #[doc(hidden)]
@@ -36,18 +37,18 @@ impl EndpointResult for CallInfo {
 
 #[cfg(test)]
 mod tests {
-    use super::{Response, CallInfo};
+    use super::CallInfo;
     use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
-        let response: Response = serde_json::from_value(json).unwrap();
+        let response = serde_json::from_value(json).unwrap();
 
         let _ = CallInfo::from_raw(response).unwrap();
     }
 
     #[test]
-    fn test_sample() {
+    fn parse_sample() {
         test_parse(json! ({
             "ok": 1,
         }));

@@ -76,18 +76,18 @@ impl EndpointResult for RecentPvp {
 
 #[cfg(test)]
 mod tests {
-    use super::{Response, RecentPvp};
+    use super::RecentPvp;
     use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
-        let response: Response = serde_json::from_value(json).unwrap();
+        let response = serde_json::from_value(json).unwrap();
 
         let _ = RecentPvp::from_raw(response).unwrap();
     }
 
     #[test]
-    fn test_sample() {
+    fn parse_sample_pvp() {
         test_parse(json! ({
             "ok": 1,
             "rooms": [

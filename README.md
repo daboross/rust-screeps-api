@@ -13,6 +13,12 @@ and [serde_json](https://github.com/serde-rs/json) to create queries and parse r
 While the API endpoints are not officially recognized, they are not obfuscated and can be used freely on both the official server and on private servers.
 Documentation for all known endpoints can be found at https://github.com/screepers/python-screeps/blob/master/docs/Endpoints.md.
 
-Documentation for this crate can be found at https://dabo.guru/rust/screeps-api/screeps_api/.
+Documentation for this crate can be found at https://dabo.guru/rust/screeps-api/screeps_api/
 
-To run tests, please create a `.env` file containing either both `SCREEPS_API_USERNAME` and `SCREEPS_API_PASSWORD`, or `NO_AUTH_TESTS=1`. These may also be provided as environmental variables.
+Environmental variables used when testing:
+- SCREEPS_API_USERNAME: the username to log in with for doing authenticated tests
+- SCREEPS_API_PASSWORD: the password to login with for doing authenticated tests
+
+To control testing, use:
+- `cargo test parse`: only test sample result parsing, no HTTP calls
+- `cargo test -- --skip auth`: only test parsing and unauthenticated calls, nothing requiring login in.

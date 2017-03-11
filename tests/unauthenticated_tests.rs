@@ -12,15 +12,15 @@ fn create_secure_client() -> hyper::Client {
 }
 
 #[test]
-fn login_creation_auth_failure() {
+fn test_login_failure() {
     let client = create_secure_client();
     let login = screeps_api::LoginDetails::new("username", "password");
     let mut api = screeps_api::API::new(&client);
 
     match api.login(&login) {
         Err(Error { err: ErrorType::Unauthorized, .. }) => (),
-        Err(other) => panic!("Expected unauthorized error, found other error {}", other),
-        Ok(()) => panic!("Expected unauthorized error, found success"),
+        Err(other) => panic!("expected unauthorized error, found other error {}", other),
+        Ok(()) => panic!("expected unauthorized error, found success"),
     }
 }
 
@@ -40,8 +40,8 @@ fn test_room_terrain_invalid_room() {
 
     match api.room_terrain("asdffdsa") {
         Err(Error { err: ErrorType::Api(ApiError::InvalidRoom), .. }) => (),
-        Err(other) => panic!("Expected invalid room api error, found {}", other),
-        Ok(_) => panic!("Expected invalid room api error, found successful result."),
+        Err(other) => panic!("expected invalid room api error, found {}", other),
+        Ok(_) => panic!("expected invalid room api error, found successful result."),
     };
 }
 

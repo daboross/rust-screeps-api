@@ -14,19 +14,6 @@ fn env(var: &str) -> String {
     }
 }
 
-fn opt_env(var: &str) -> bool {
-    dotenv::dotenv().ok();
-    match ::std::env::var(var) {
-        Ok(value) => {
-            match value.chars().next() {
-                Some('t') | Some('T') | Some('1') => true,
-                Some(_) | None => false,
-            }
-        }
-        Err(_) => false,
-    }
-}
-
 fn create_secure_client() -> hyper::Client {
     Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()))
 }
@@ -37,17 +24,15 @@ fn logged_in(client: &hyper::Client) -> screeps_api::API {
     let mut api = screeps_api::API::new(client);
 
     if let Err(err) = api.login(&screeps_api::LoginDetails::new(username, password)) {
-        panic!("Error logging in: {:?}", err);
+        panic!("Error logging in: {:?}\nTo disable login tests, use `cargo test -- --skip auth`",
+               err);
     }
 
     api
 }
 
 #[test]
-fn test_my_info() {
-    if opt_env("NO_AUTH_TESTS") {
-        return;
-    }
+fn test_auth_my_info() {
     let client = create_secure_client();
     let mut api = logged_in(&client);
 
@@ -55,10 +40,7 @@ fn test_my_info() {
 }
 
 #[test]
-fn test_token_reretrieval() {
-    if opt_env("NO_AUTH_TESTS") {
-        return;
-    }
+fn test_auth_token_reretrieval() {
     let client = create_secure_client();
     let mut api = logged_in(&client);
 
@@ -70,10 +52,7 @@ fn test_token_reretrieval() {
 }
 
 #[test]
-fn test_room_overview() {
-    if opt_env("NO_AUTH_TESTS") {
-        return;
-    }
+fn test_auth_room_overview() {
     let client = create_secure_client();
     let mut api = logged_in(&client);
 
@@ -90,10 +69,7 @@ fn test_room_overview() {
 }
 
 #[test]
-fn test_leaderboard_seasons() {
-    if opt_env("NO_AUTH_TESTS") {
-        return;
-    }
+fn test_auth_leaderboard_seasons() {
     let client = create_secure_client();
     let mut api = logged_in(&client);
 

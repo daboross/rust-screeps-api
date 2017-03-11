@@ -107,18 +107,18 @@ impl EndpointResult for RoomTerrain {
 
 #[cfg(test)]
 mod tests {
-    use super::{Response, RoomTerrain};
+    use super::RoomTerrain;
     use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
-        let response: Response = serde_json::from_value(json).unwrap();
+        let response = serde_json::from_value(json).unwrap();
 
         let _ = RoomTerrain::from_raw(response).unwrap();
     }
 
     #[test]
-    fn test_a_room() {
+    fn parse_sample_terrain() {
         test_parse(json! ({
             "ok": 1,
             "terrain": [
