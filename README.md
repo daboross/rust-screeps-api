@@ -10,7 +10,7 @@ server, https://screeps.com, as well connecting to the instances [open sourced s
 rust-screeps-api provides a rust wrapper for the unofficial Screeps API, making requests using [hyper](https://github.com/hyperium/hyper)
 and [serde_json](https://github.com/serde-rs/json) to create queries and parse responses.
 
-While the API endpoints are not officially recognized, they are not obfuscated and can be used freely on both the official server and on private servers. 
+While the API endpoints are not officially recognized, they are not obfuscated and can be used freely on both the official server and on private servers.
 Documentation for all known endpoints can be found at https://github.com/screepers/python-screeps/blob/master/docs/Endpoints.md.
 
 Documentation for this crate can be found at https://dabo.guru/rust/screeps-api/screeps_api/.

@@ -1,7 +1,20 @@
 [package]
 name = "screeps-api"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Dabo Ross <daboross@daboross.net>"]
+description = "Fully typed and tested wrapper over the Screeps Game's HTTP API"
+
+documentation = "http://dabo.guru/rust/screeps-api/"
+repository = "https://github.com/daboross/rust-screeps-api"
+
+readme = "README.md"
+
+keywords = ["screeps"]
+categories = ["api-bindings"]
+license = "MIT"
+
+[badges]
+travis-ci = { repository = "daboross/rust-screeps-api" }
 
 [dependencies]
 hyper = "0.10"
