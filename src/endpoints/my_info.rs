@@ -3,7 +3,6 @@
 use EndpointResult;
 use data::{self, Badge};
 use error::{ApiError, Result};
-use serde_json;
 use std::marker::PhantomData;
 
 /// User info raw result.
@@ -11,18 +10,19 @@ use std::marker::PhantomData;
 #[allow(non_snake_case)]
 pub struct Response {
     ok: i32,
-    _id: Option<String>,
-    username: Option<String>,
-    password: Option<bool>,
-    cpu: Option<i32>,
-    gcl: Option<i32>,
-    credits: Option<f64>,
-    lastChargeTime: Option<String>,
-    lastTweetTime: Option<String>,
-    badge: Option<Badge>,
-    github: Option<serde_json::Value>,
-    twitter: Option<serde_json::Value>,
-    notifyPrefs: Option<serde_json::Value>,
+    _id: String,
+    username: String,
+    password: bool,
+    cpu: i32,
+    gcl: u64,
+    credits: f64,
+    // These can be added if needed
+    // lastChargeTime: Option<String>,
+    // lastTweetTime: Option<String>,
+    // github: Option<serde_json::Value>,
+    // twitter: Option<serde_json::Value>,
+    // notifyPrefs: Option<serde_json::Value>,
+    badge: Badge,
 }
 
 /// Result of a call to get the information for the logged in user.
@@ -36,8 +36,8 @@ pub struct MyInfo {
     pub has_password: bool,
     /// This user's current CPU allowance.
     pub cpu: i32,
-    /// This user's current GCL.
-    pub gcl: i32,
+    /// This user's current total count of GCL points (perform calculation to find actual gcl level).
+    pub gcl_points: u64,
     /// This user's current credit balance.
     pub credits: f64,
     /// Phantom data in order to allow adding any additional fields in the future.
@@ -50,42 +50,17 @@ impl EndpointResult for MyInfo {
     type ErrorResult = data::ApiError;
 
     fn from_raw(raw: Response) -> Result<MyInfo> {
-        let Response { ok, _id, username, password, cpu, gcl, credits, .. } = raw;
+        let Response { ok, _id: user_id, username, password, cpu, gcl, credits, .. } = raw;
 
         if ok != 1 {
             return Err(ApiError::NotOk(ok).into());
         }
-        let user_id = match _id {
-            Some(v) => v,
-            None => return Err(ApiError::MissingField("_id").into()),
-        };
-        let username = match username {
-            Some(v) => v,
-            None => return Err(ApiError::MissingField("username").into()),
-        };
-        let password = match password {
-            Some(v) => v,
-            None => return Err(ApiError::MissingField("password").into()),
-        };
-        let cpu = match cpu {
-            Some(v) => v,
-            None => return Err(ApiError::MissingField("cpu").into()),
-        };
-        let gcl = match gcl {
-            Some(v) => v,
-            None => return Err(ApiError::MissingField("gcl").into()),
-        };
-        let credits = match credits {
-            Some(v) => v,
-            None => return Err(ApiError::MissingField("cerdits").into()),
-        };
-
         Ok(MyInfo {
             user_id: user_id,
             username: username,
             has_password: password,
             cpu: cpu,
-            gcl: gcl,
+            gcl_points: gcl,
             credits: credits,
             _phantom: PhantomData,
         })

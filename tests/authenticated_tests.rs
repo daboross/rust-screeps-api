@@ -106,12 +106,10 @@ fn test_auth_retrieve_single_rank() {
 
 #[test]
 fn test_auth_retrieve_all_ranks() {
-
     let client = create_secure_client();
     let mut api = logged_in(&client);
 
     let result = api.find_leaderboard_ranks(screeps_api::LeaderboardType::GlobalControl, "daboross")
         .unwrap();
     assert!(result.len() > 0);
-
 }

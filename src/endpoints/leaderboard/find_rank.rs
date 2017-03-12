@@ -12,7 +12,7 @@ pub struct SingleResponse {
     // id: String,
     ok: i32,
     rank: u32,
-    score: i64,
+    score: u64,
     season: String,
     user: String,
 }
@@ -29,7 +29,7 @@ struct InnerAllSeasonsResponse {
     // Again, no idea what this is for, so I'm not including it in the documented response.
     // _id: String,
     rank: u32,
-    score: i64,
+    score: u64,
     season: String,
     user: String,
 }
@@ -46,12 +46,11 @@ pub struct FoundUserRank {
     /// The top user's rank is 0, so add one to this digit if displaying to a user.
     pub rank: u32,
     /// The user's raw score for this season for the requested leaderboard type.
-    pub raw_score: i64,
+    pub raw_score: u64,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[doc(hidden)]
     pub _phantom: PhantomData<()>,
 }
-
 
 // This is the result when specifying one season.
 impl EndpointResult for FoundUserRank {
