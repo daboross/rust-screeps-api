@@ -47,6 +47,8 @@ impl Into<error::Error> for ApiError {
             error::ApiError::InvalidRoom.into()
         } else if self.error == "result not found" {
             error::ApiError::ResultNotFound.into()
+        } else if self.error == "invalid params" {
+            error::ApiError::InvalidParameters.into()
         } else if self.error == "user not found" {
             error::ApiError::UserNotFound.into()
         } else {
