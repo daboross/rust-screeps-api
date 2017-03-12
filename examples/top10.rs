@@ -11,7 +11,7 @@ use hyper::net::HttpsConnector;
 use screeps_api::LeaderboardType::*;
 use screeps_api::endpoints::leaderboard::page::LeaderboardPage;
 
-/// Set up dotenv and retrieve a specific variable, panicking with a useful message if it does not exist.
+/// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
 fn env(var: &str) -> String {
     dotenv::dotenv().ok();
     match ::std::env::var(var) {
@@ -25,19 +25,18 @@ fn print_ranks(result: &LeaderboardPage) {
     for ranked_user in &result.ranks {
         match result.user_details.get(&ranked_user.user_id) {
             Some(details) => {
-                println!("\t[{:01}] {} (GCL {})",
+                println!("\t[{}] {} (GCL {})",
                          ranked_user.rank,
                          details.username,
                          details.gcl_points);
             }
             None => {
-                println!("\t[{:01}] {}", ranked_user.rank, ranked_user.user_id);
+                println!("\t[{}] {}", ranked_user.rank, ranked_user.user_id);
             }
         }
     }
 }
 
-/// Main method
 fn main() {
     let hyper = Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()));
     let mut client = screeps_api::API::new(&hyper);

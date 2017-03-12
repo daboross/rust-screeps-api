@@ -9,7 +9,7 @@ extern crate dotenv;
 use hyper::client::Client;
 use hyper::net::HttpsConnector;
 
-/// Set up dotenv and retrieve a specific variable, panicking with a useful message if it does not exist.
+/// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
 fn env(var: &str) -> String {
     dotenv::dotenv().ok();
     match ::std::env::var(var) {
@@ -18,7 +18,6 @@ fn env(var: &str) -> String {
     }
 }
 
-/// Main method
 fn main() {
     let hyper = Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()));
     let mut client = screeps_api::API::new(&hyper);
