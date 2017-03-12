@@ -7,6 +7,7 @@ use hyper::client::Client;
 use hyper::net::HttpsConnector;
 use screeps_api::error::{Error, ErrorType, ApiError};
 
+/// Set up dotenv and retrieve a specific variable, panicking with a useful message if it does not exist.
 fn env(var: &str) -> String {
     dotenv::dotenv().ok();
     match ::std::env::var(var) {
