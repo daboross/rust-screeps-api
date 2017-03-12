@@ -1,4 +1,5 @@
 //! Interpreting generic template calls.
+
 use EndpointResult;
 use data;
 use error::{Result, ApiError};

@@ -1,4 +1,5 @@
 //! Interpreting login responses.
+
 use EndpointResult;
 use data;
 use error::{Result, ApiError};

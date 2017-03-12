@@ -1,4 +1,5 @@
 //! Interpreting room status results.
+
 use EndpointResult;
 use data;
 use error::{Result, ApiError};

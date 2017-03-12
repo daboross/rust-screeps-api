@@ -1,4 +1,5 @@
 //! Interpreting the result of finding the rank of a specific user.
+
 use EndpointResult;
 use data;
 use error::{Result, ApiError};

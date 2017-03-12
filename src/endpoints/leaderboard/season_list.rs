@@ -1,4 +1,5 @@
 //! Interpreting leaderboard season list results.
+
 use EndpointResult;
 use data;
 use error::{Result, ApiError};

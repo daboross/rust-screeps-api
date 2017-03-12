@@ -1,4 +1,5 @@
 //! Interpreting room overview results.
+
 use EndpointResult;
 use data::{self, Badge};
 use error::{ApiError, Result};

@@ -1,4 +1,5 @@
 //! Interpreting rooms in which PvP recently occurred. This is an "experimental" endpoint.
+
 use EndpointResult;
 use data;
 use error::{Result, ApiError};

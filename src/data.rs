@@ -1,4 +1,5 @@
 //! Data structures that appear in multiple API endpoint results.
+
 use error;
 
 /// Badge type - what shape a badge should be.
@@ -15,7 +16,7 @@ pub enum BadgeType {
         /// The first SVG path string.
         path1: String,
         /// The second SVG path string.
-        path2: String
+        path2: String,
     },
 }
 

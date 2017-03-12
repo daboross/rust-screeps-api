@@ -1,4 +1,5 @@
 //! Interpreting user leaderboard page results.
+
 use super::find_rank;
 use EndpointResult;
 use data;
