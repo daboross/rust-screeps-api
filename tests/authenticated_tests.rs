@@ -5,6 +5,7 @@ extern crate dotenv;
 
 use hyper::client::Client;
 use hyper::net::HttpsConnector;
+use screeps_api::error::{Error, ErrorType, ApiError};
 
 fn env(var: &str) -> String {
     dotenv::dotenv().ok();
@@ -74,4 +75,43 @@ fn test_auth_leaderboard_seasons() {
     let mut api = logged_in(&client);
 
     api.leaderboard_season_list().unwrap();
+}
+
+#[test]
+fn test_auth_retrieve_single_rank() {
+    let client = create_secure_client();
+    let mut api = logged_in(&client);
+
+    api.find_season_leaderboard_rank(screeps_api::LeaderboardType::GlobalControl,
+                                      "daboross",
+                                      "2017-02")
+        .unwrap();
+
+    match api.find_season_leaderboard_rank(screeps_api::LeaderboardType::GlobalControl,
+                                           "username_should_not_exist_ever_let's_just_make_it_long",
+                                           "2017-02") {
+        Err(Error { err: ErrorType::Api(ApiError::UserNotFound), .. }) => (),
+        Err(other) => panic!("expected UserNotFound error, found other error {}", other),
+        Ok(other) => panic!("expected UserNotFound error, found success: {:?}", other),
+    }
+    // "daboross" did not process any power during the 2017-02 season of the official server.
+    match api.find_season_leaderboard_rank(screeps_api::LeaderboardType::PowerProcessed,
+                                           "daboross",
+                                           "2017-02") {
+        Err(Error { err: ErrorType::Api(ApiError::ResultNotFound), .. }) => (),
+        Err(other) => panic!("expected ResultNotFound error, found other error {}", other),
+        Ok(other) => panic!("expected ResultNotFound error, found success: {:?}", other),
+    }
+}
+
+#[test]
+fn test_auth_retrieve_all_ranks() {
+
+    let client = create_secure_client();
+    let mut api = logged_in(&client);
+
+    let result = api.find_leaderboard_ranks(screeps_api::LeaderboardType::GlobalControl, "daboross")
+        .unwrap();
+    assert!(result.len() > 0);
+
 }

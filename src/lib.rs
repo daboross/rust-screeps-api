@@ -61,7 +61,8 @@ pub mod error;
 pub mod endpoints;
 mod data;
 
-use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp, leaderboard_season_list};
+use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp, leaderboard};
+pub use endpoints::leaderboard::constants::LeaderboardType;
 pub use endpoints::login::Details as LoginDetails;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use error::{Error, Result};
@@ -276,8 +277,47 @@ impl<'a> API<'a> {
     ///
     /// This method does not return any actual data, but rather just a list of valid past season, any of the ids of
     /// which can then be used to retrieve more information.
-    pub fn leaderboard_season_list(&mut self) -> Result<Vec<leaderboard_season_list::LeaderboardSeason>> {
+    pub fn leaderboard_season_list(&mut self) -> Result<Vec<leaderboard::season_list::LeaderboardSeason>> {
         self.make_get_request("leaderboard/seasons", None)
+    }
+
+    /// Finds the rank of a user in a specific season for a specific leaderboard type.
+    ///
+    /// Will return `ApiError::UserNotFound` when the username does not exist, and `ApiError::ResultNotFound`
+    /// when the user exists but does not have a rank for the given season. The user will not have a rank when either
+    /// the account did not exist when the season ended, or the user either processed no power or upgraded no
+    /// controllers, during the specific leaderboard season.
+    ///
+    /// This is technically the same API endpoint as find_leaderboard_rank, but the result format differs when
+    /// requesting a specific season from when requesting all season ranks.
+    pub fn find_season_leaderboard_rank<'b, T, T2>(&mut self,
+                                                   leaderboard_type: LeaderboardType,
+                                                   username: T,
+                                                   season: T2)
+                                                   -> Result<leaderboard::find_rank::FoundUserRank>
+        where T: Into<Cow<'b, str>>,
+              T2: Into<Cow<'b, str>>
+    {
+        self.make_get_request("leaderboard/find",
+                              Some(&[("mode", leaderboard_type.api_representation().to_string()),
+                                     ("season", season.into().into_owned()),
+                                     ("username", username.into().into_owned())]))
+    }
+
+    /// Finds the rank of a user for all seasons for a specific leaderboard type.
+    ///
+    /// This will return `ApiError::UserNotFound` if a username does not exist, and may also return an empty `Vec` as
+    /// the result if the user does not have any ranks in the given leaderboard type (they have never contributed any
+    /// global control points, or processed power, depending on the type).
+    pub fn find_leaderboard_ranks<'b, T>(&mut self,
+                                         leaderboard_type: LeaderboardType,
+                                         username: T)
+                                         -> Result<Vec<leaderboard::find_rank::FoundUserRank>>
+        where T: Into<Cow<'b, str>>
+    {
+        self.make_get_request("leaderboard/find",
+                              Some(&[("mode", leaderboard_type.api_representation().to_string()),
+                                     ("username", username.into().into_owned())]))
     }
 }
 

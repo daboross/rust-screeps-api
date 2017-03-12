@@ -45,6 +45,10 @@ impl Into<error::Error> for ApiError {
     fn into(self) -> error::Error {
         if self.error == "invalid room" {
             error::ApiError::InvalidRoom.into()
+        } else if self.error == "result not found" {
+            error::ApiError::ResultNotFound.into()
+        } else if self.error == "user not found" {
+            error::ApiError::UserNotFound.into()
         } else {
             error::ApiError::GenericError(self.error).into()
         }
