@@ -1,24 +1,42 @@
-//! Various data structs that different calls might use in results.
-
+//! Data structures that appear in multiple API endpoint results.
 use error;
 
-/// Badge type!
+/// Badge type - what shape a badge should be.
 #[derive(Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum BadgeType {
+    /// Specific built-in badge pattern. Each number from 1 to 24 inclusive represents two SVG paths built in to the
+    /// Screeps client.
+    ///
+    /// These paths can be scraped from the client, but are not included here for licensing reasons.
     Fixed(i32),
-    Dynamic { path1: String, path2: String },
+    /// Dynamic badge pattern defined by two SVG paths.
+    Dynamic {
+        /// The first SVG path string.
+        path1: String,
+        /// The second SVG path string.
+        path2: String
+    },
 }
 
-/// Badge color!
+/// Badge color - what color a specific part of a badge should be.
 #[derive(Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum BadgeColor {
+    /// Specific built-in badge color. Each number from 0 to 79 inclusive represents a specific color.
+    ///
+    /// How these colors are generated can be figured out from the client, but this logic is not included here for
+    /// licensing reasons.
     Set(i32),
+    /// Hex badge color.
     Hex(String),
 }
 
-/// badge: { type, color1, color2, color3, param, flip }
+/// Description of a user badge, contains information on how that badge should be drawn/colored.
+///
+/// Badges can be rendered as SVG by first filling the entire image with `color1`, filling the first path (defined by
+/// badge type) with `color2`, filling the second path with `color3`, and then cutting off corners to make the badge
+/// a round circle.
 #[derive(Deserialize, Debug, Clone)]
 pub struct Badge {
     /// Badge type, used for different badge formats
@@ -36,8 +54,10 @@ pub struct Badge {
     pub flip: bool,
 }
 
+/// JSON API error result from the server.
 #[derive(Deserialize, Debug, Clone)]
 pub struct ApiError {
+    /// The error string.
     pub error: String,
 }
 

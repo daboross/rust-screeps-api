@@ -1,5 +1,4 @@
-//! Find the rank of a users on the leaderboard.
-
+//! Interpreting the result of finding the rank of a specific user.
 use EndpointResult;
 use data;
 use error::{Result, ApiError};
@@ -7,6 +6,7 @@ use std::marker::PhantomData;
 
 /// Raw result for when the API endpoint is called with a specific season id.
 #[derive(Deserialize, Debug)]
+#[doc(hidden)]
 pub struct SingleResponse {
     // I have no idea what this is for, so not including in the documented and expected response.
     // id: String,
@@ -19,6 +19,7 @@ pub struct SingleResponse {
 
 /// Raw result for when the API endpoint is called without a specific season id.
 #[derive(Deserialize, Debug)]
+#[doc(hidden)]
 pub struct AllSeasonRanksResponse {
     ok: i32,
     list: Vec<InnerAllSeasonsResponse>,

@@ -1,5 +1,4 @@
-//! User information retrieval
-
+//! Interpreting user self information.
 use EndpointResult;
 use data::{self, Badge};
 use error::{ApiError, Result};
@@ -8,6 +7,7 @@ use std::marker::PhantomData;
 /// User info raw result.
 #[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
+#[doc(hidden)]
 pub struct Response {
     ok: i32,
     _id: String,

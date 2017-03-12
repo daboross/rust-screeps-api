@@ -1,52 +1,63 @@
 //! Rust wrapper for the Screeps public API.
 //!
-//! This project aims to allow any rust project to freely call the https://screeps.com API, or any private Screeps
-//! server API, and receive typed results that can be easily and safely used within rust.
+//! Allows rust programs to retrieve game information from https://screeps.com and any private Screeps server.
 //!
 //! # Usage
 //!
-//! The `API` struct is the main client api provided by rust-screeps-api. To use it, first create an instance with
-//! `API::new(client)` or `API::with_url(client, url)` to connect to a private server.
+//! To start, create a hyper client and an `API` instance. `API` keeps track of the base API url and the current
+//! authentication token.
+//!
+//! `screeps-api` requires a separate hyper client in order to let you choose your own SSL crate. `rustls` is
+//! pure rust, but `openssl` is much more vetted.
 //!
 //! ```
-//! # extern crate hyper;
-//! extern crate screeps_api;
-//! # fn main() {
-//! # let hyper_client = hyper::Client::new();
-//!
-//! let api = screeps_api::API::new(&hyper_client);
-//!
-//! let mut api = screeps_api::API::with_url(&hyper_client, "https://screeps.com/").expect("expected valid URL");
-//! # }
-//! ```
-//!
-//! As you can tell, you'll need to pre-create a hyper client in order to use rust-screeps-api. While it strictly could
-//! create a client itself, this way you can provide any backend connection implementation you want, as well as use
-//! any of the available https implementations.
-//!
-//! Here's an example using hyper and hyper-rustls to create a client. hyper-rustls provides a pure-rust https backend,
-//! but it, as of yet, is not as well vetted as other projects, such as hyper-openssl.
-//!
-//! ```
-//! extern crate screeps_api;
 //! extern crate hyper;
+//! extern crate screeps_api;
 //! extern crate hyper_rustls;
 //!
 //! use hyper::net::HttpsConnector;
 //!
 //! # fn main() {
-//! let client = hyper::Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()));
+//! let client = hyper::Client::with_connector(
+//!         HttpsConnector::new(hyper_rustls::TlsClient::new()));
 //!
 //! let mut api = screeps_api::API::new(&client);
 //! # }
 //! ```
 //!
-//! One last thing to note: The screeps API runs on a rotating authentication  token, so the token stored within the
-//! API instance is only valid for one call. For this reason, all API requests require mutable access and store the
-//! token resulting from the call internally.
+//! This API object can then be used to make any number of API calls. Each will return a `Result` with a typed response
+//! or an error. All calls require mutable access (more info below).
 //!
-//! When making multiple concurrent calls to the API, please make a new API instance for each thread, and provide each
-//! with the login details via `login()` separately to obtain multiple tokens.
+//! ```no_run
+//! # extern crate hyper;
+//! # extern crate screeps_api;
+//! # extern crate hyper_rustls;
+//! #
+//! # use hyper::net::HttpsConnector;
+//! #
+//! # fn main() {
+//! #   let client = hyper::Client::with_connector(
+//! #           HttpsConnector::new(hyper_rustls::TlsClient::new()));
+//!
+//! let mut api = screeps_api::API::new(&client);
+//!
+//! api.login("username", "password").unwrap();
+//!
+//! let my_info = api.my_info().unwrap();
+//!
+//! println!("Logged in with user ID {}!", my_info.user_id);
+//!
+//! # }
+//! ```
+//!
+//! # Multiple clients
+//!
+//! Unlike hyper, screeps-api clients can not be used in multiple thread simultaneously. The reason for this is Screep's
+//! authentication model, a rotating token. Each auth token can only be used for one call, and that call will return
+//! the auth new token.
+//!
+//! For this reason, all API calls made require mutable access to the `API` structure, and if you want to call the API
+//! in multiple thread simultaneously, you need to create and log in to multiple `API` structures.
 #![deny(missing_docs)]
 #![recursion_limit="512"]
 #[macro_use]
@@ -59,11 +70,10 @@ extern crate time;
 
 pub mod error;
 pub mod endpoints;
-mod data;
+pub mod data;
 
 use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp, leaderboard};
-pub use endpoints::leaderboard::constants::LeaderboardType;
-pub use endpoints::login::Details as LoginDetails;
+pub use endpoints::leaderboard::LeaderboardType;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use error::{Error, Result};
 use hyper::header::{Headers, ContentType};
@@ -217,8 +227,12 @@ impl<'a> API<'a> {
     }
 
     /// Logs in using a given username and password, and stores the resulting token inside this structure.
-    pub fn login(&mut self, login_details: &LoginDetails) -> Result<()> {
-        let result: login::LoginResult = self.make_post_request("auth/signin", login_details)?;
+    pub fn login<'b, T, T2>(&mut self, username: T, password: T2) -> Result<()>
+        where T: Into<Cow<'b, str>>,
+              T2: Into<Cow<'b, str>>
+    {
+        let result: login::LoginResult =
+            self.make_post_request("auth/signin", login::Details::new(username, password))?;
 
         self.token = Some(result.token.into_bytes());
         Ok(())
@@ -340,20 +354,5 @@ impl<'a> API<'a> {
                                      ("season", season.into().into_owned()),
                                      ("limit", limit.to_string()),
                                      ("offset", offset.to_string())]))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use API;
-    extern crate hyper;
-    extern crate hyper_rustls;
-    use hyper::client::Client;
-    use hyper::net::HttpsConnector;
-
-    #[test]
-    fn anonymous_creation() {
-        let client = Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()));
-        let _unused = API::new(&client);
     }
 }

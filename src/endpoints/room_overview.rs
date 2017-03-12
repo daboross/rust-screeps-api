@@ -1,5 +1,4 @@
-//! Room overview retrieval
-
+//! Interpreting room overview results.
 use EndpointResult;
 use data::{self, Badge};
 use error::{ApiError, Result};
@@ -8,6 +7,7 @@ use std::marker::PhantomData;
 /// Room overview raw result.
 #[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
+#[doc(hidden)]
 pub struct Response {
     ok: i32,
     owner: Option<OwnerResponse>,

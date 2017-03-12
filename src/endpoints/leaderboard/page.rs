@@ -1,5 +1,4 @@
-//! Gets a page of the ranked leaderboard list for a given season
-
+//! Interpreting user leaderboard page results.
 use super::find_rank;
 use EndpointResult;
 use data;
@@ -10,6 +9,7 @@ use std::marker::PhantomData;
 /// Raw list results.
 #[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
+#[doc(hidden)]
 pub struct Response {
     ok: i32,
     count: u64,

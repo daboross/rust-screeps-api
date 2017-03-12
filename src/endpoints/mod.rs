@@ -1,4 +1,4 @@
-//! Endpoint modules for the screeps API.
+//! Parsing code for each individual API endpoint.
 //!
 //! Each sub-module contains code for interpreting the result of calling a specific API endpoint.
 pub mod login;

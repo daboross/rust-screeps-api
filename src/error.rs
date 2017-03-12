@@ -1,4 +1,4 @@
-//! Error types for screeps-api.
+//! Error types for the screeps api.
 extern crate hyper;
 extern crate serde_json;
 

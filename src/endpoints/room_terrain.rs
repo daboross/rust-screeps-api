@@ -1,4 +1,4 @@
-//! Room terrain retrieval. This assumes getting terrain with encoded=true in the request.
+//! Interpreting room terrain results.
 
 use EndpointResult;
 use data;
@@ -7,6 +7,7 @@ use std::marker::PhantomData;
 
 /// Room overview raw result.
 #[derive(Deserialize, Debug)]
+#[doc(hidden)]
 pub struct Response {
     ok: i32,
     terrain: Option<Vec<InnerResponse>>,
@@ -22,6 +23,7 @@ struct InnerResponse {
     /// encoded data
     terrain: String,
 }
+
 /// Type of terrain
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum TerrainType {
@@ -35,12 +37,14 @@ pub enum TerrainType {
     SwampyWall,
 }
 
-/// Struct describing the terrain of a room
+/// Structure describing the terrain of a room
 pub struct RoomTerrain {
     /// The name of the room
     pub room_name: String,
     /// A 50x50 grid of terrain squares, use terrain[y_pos][x_pos] to get individual terrain.
-    pub terrain: [[TerrainType; 50]; 50],
+    ///
+    /// When coming from an API result, this is guaranteed to contain 50 `Vec`s, each containing 50 `TerrainType`s.
+    pub terrain: Vec<Vec<TerrainType>>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[doc(hidden)]
     pub _phantom: PhantomData<()>,
@@ -76,30 +80,30 @@ impl EndpointResult for RoomTerrain {
                 .into());
         }
 
-        let mut terrain = [[TerrainType::Plains; 50]; 50];
-
-        for (y, chunk) in terrain_bytes.chunks(50).enumerate() {
-            for (x, byte) in chunk.iter().enumerate() {
-                terrain[y][x] = match *byte {
-                    b'0' => TerrainType::Plains,
-                    b'1' => TerrainType::Wall,
-                    b'2' => TerrainType::Swamp,
-                    b'3' => TerrainType::SwampyWall,
-                    other => {
-                        return Err(ApiError::MalformedResponse(format!("expected terrain data to contain \
-                                only characters 0,1,2,3, found byte {} at x,y {},{}.",
-                                                                       other,
-                                                                       x,
-                                                                       y))
-                            .into())
-                    }
-                }
-            }
-        }
-
         Ok(RoomTerrain {
             room_name: terrain_data.room,
-            terrain: terrain,
+            terrain: terrain_bytes.chunks(50)
+                .enumerate()
+                .map(|(y, chunk)| {
+                    chunk.iter()
+                        .enumerate()
+                        .map(|(x, byte)| match *byte {
+                            b'0' => Ok(TerrainType::Plains),
+                            b'1' => Ok(TerrainType::Wall),
+                            b'2' => Ok(TerrainType::Swamp),
+                            b'3' => Ok(TerrainType::SwampyWall),
+                            other => {
+                                return Err(ApiError::MalformedResponse(format!("expected terrain data to contain \
+                                                    only characters 0,1,2,3, found byte {} at x,y {},{}.",
+                                                                               other,
+                                                                               x,
+                                                                               y))
+                                    .into());
+                            }
+                        })
+                        .collect::<Result<Vec<TerrainType>>>()
+                })
+                .collect::<Result<Vec<Vec<TerrainType>>>>()?,
             _phantom: PhantomData,
         })
     }

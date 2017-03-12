@@ -1,5 +1,4 @@
-//! Call.
-
+//! Interpreting generic template calls.
 use EndpointResult;
 use data;
 use error::{Result, ApiError};
@@ -8,6 +7,7 @@ use std::marker::PhantomData;
 /// Call raw result.
 #[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
+#[doc(hidden)]
 pub struct Response {
     ok: i32,
 }

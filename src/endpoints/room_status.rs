@@ -1,5 +1,4 @@
-//! Room terrain retrieval. This assumes getting terrain with encoded=true in the request.
-
+//! Interpreting room status results.
 use EndpointResult;
 use data;
 use error::{Result, ApiError};
@@ -8,6 +7,7 @@ use time;
 
 /// Room overview raw result.
 #[derive(Deserialize, Debug)]
+#[doc(hidden)]
 pub struct Response {
     ok: i32,
     room: Option<InnerRoom>,

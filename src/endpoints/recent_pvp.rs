@@ -1,5 +1,4 @@
-//! Retrieval of rooms in which PvP recently occurred. This is an "experimental" endpoint.
-
+//! Interpreting rooms in which PvP recently occurred. This is an "experimental" endpoint.
 use EndpointResult;
 use data;
 use error::{Result, ApiError};
@@ -29,6 +28,7 @@ impl PvpArgs {
 
 /// Recent PvP raw result.
 #[derive(Deserialize, Debug)]
+#[doc(hidden)]
 pub struct Response {
     ok: i32,
     rooms: Vec<InnerRoom>,

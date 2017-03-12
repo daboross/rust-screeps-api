@@ -1,5 +1,4 @@
-//! Endpoint to log in to the API
-
+//! Interpreting login responses.
 use EndpointResult;
 use data;
 use error::{Result, ApiError};
@@ -26,6 +25,7 @@ impl<'a> Details<'a> {
 
 /// Login raw result.
 #[derive(Deserialize, Debug)]
+#[doc(hidden)]
 pub struct Response {
     ok: i32,
     token: Option<String>,

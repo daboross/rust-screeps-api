@@ -25,7 +25,7 @@ fn logged_in(client: &hyper::Client) -> screeps_api::API {
     let password = env("SCREEPS_API_PASSWORD");
     let mut api = screeps_api::API::new(client);
 
-    if let Err(err) = api.login(&screeps_api::LoginDetails::new(username, password)) {
+    if let Err(err) = api.login(username, password) {
         panic!("Error logging in: {:?}\nTo disable login tests, use `cargo test -- --skip auth`",
                err);
     }
@@ -146,8 +146,14 @@ fn test_auth_leaderboard_limit_parameter_error() {
                                21,
                                0) {
         Err(Error { err: ErrorType::Api(ApiError::InvalidParameters), .. }) => (),
-        Err(other) => panic!("expected InvalidParameters error, found other error {}", other),
-        Ok(other) => panic!("expected InvalidParameters error, found success: {:?}", other),
+        Err(other) => {
+            panic!("expected InvalidParameters error, found other error {}",
+                   other)
+        }
+        Ok(other) => {
+            panic!("expected InvalidParameters error, found success: {:?}",
+                   other)
+        }
     }
 
 }

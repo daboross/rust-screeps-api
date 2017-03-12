@@ -22,7 +22,7 @@ fn main() {
     let hyper = Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()));
     let mut client = screeps_api::API::new(&hyper);
 
-    client.login(&screeps_api::LoginDetails::new(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD"))).unwrap();
+    client.login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD")).unwrap();
 
     let my_info = client.my_info().unwrap();
 

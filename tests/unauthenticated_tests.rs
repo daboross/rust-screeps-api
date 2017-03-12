@@ -14,10 +14,9 @@ fn create_secure_client() -> hyper::Client {
 #[test]
 fn test_login_failure() {
     let client = create_secure_client();
-    let login = screeps_api::LoginDetails::new("username", "password");
     let mut api = screeps_api::API::new(&client);
 
-    match api.login(&login) {
+    match api.login("username", "password") {
         Err(Error { err: ErrorType::Unauthorized, .. }) => (),
         Err(other) => panic!("expected unauthorized error, found other error {}", other),
         Ok(()) => panic!("expected unauthorized error, found success"),
