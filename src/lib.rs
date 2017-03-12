@@ -319,6 +319,28 @@ impl<'a> API<'a> {
                               Some(&[("mode", leaderboard_type.api_representation().to_string()),
                                      ("username", username.into().into_owned())]))
     }
+
+    /// Gets a page of the leaderboard for a given season.
+    ///
+    /// Limit dictates how many users will be returned, maximum is 20. Higher than that will cause an InvalidParameters
+    /// error message.
+    ///
+    /// Offset doesn't have to be a multiple of limit, but it's most likely most useful that it is. Offset 0 will get
+    /// you the start/top of the ranked list.
+    pub fn leaderboard_page<'b, T>(&mut self,
+                                   leaderboard_type: LeaderboardType,
+                                   season: T,
+                                   limit: u32,
+                                   offset: u32)
+                                   -> Result<leaderboard::page::LeaderboardPage>
+        where T: Into<Cow<'b, str>>
+    {
+        self.make_get_request("leaderboard/list",
+                              Some(&[("mode", leaderboard_type.api_representation().to_string()),
+                                     ("season", season.into().into_owned()),
+                                     ("limit", limit.to_string()),
+                                     ("offset", offset.to_string())]))
+    }
 }
 
 #[cfg(test)]

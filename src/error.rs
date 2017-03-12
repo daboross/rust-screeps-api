@@ -181,6 +181,8 @@ pub enum ApiError {
     ResultNotFound,
     /// The user whose data was being requested was not found.
     UserNotFound,
+    /// The API returned that invalid parameters were passed.
+    InvalidParameters,
     /// An error found from the API. Data is the raw error string reported by the server.
     GenericError(String),
     /// The server response was missing a top-level JSON field that was expected.
@@ -199,9 +201,10 @@ impl fmt::Display for ApiError {
             ApiError::MissingField(field) => write!(f, "missing field from api result: {}", field),
             ApiError::MalformedResponse(ref desc) => write!(f, "malformed field from api result: {}", desc),
             ApiError::GenericError(ref err) => write!(f, "api call resulted in error: {}", err),
-            ApiError::InvalidRoom | ApiError::ResultNotFound | ApiError::UserNotFound => {
-                write!(f, "{}", self.description())
-            }
+            ApiError::InvalidRoom |
+            ApiError::ResultNotFound |
+            ApiError::UserNotFound |
+            ApiError::InvalidParameters => write!(f, "{}", self.description()),
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }
@@ -217,6 +220,7 @@ impl StdError for ApiError {
             ApiError::InvalidRoom => "malformed api call: invalid room",
             ApiError::ResultNotFound => "specific data requested was not found",
             ApiError::UserNotFound => "the user requested was not found",
+            ApiError::InvalidParameters => "one or more parameters to the function were invalid",
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }

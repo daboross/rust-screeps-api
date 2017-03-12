@@ -2,3 +2,4 @@
 pub mod find_rank;
 pub mod season_list;
 pub mod constants;
+pub mod page;

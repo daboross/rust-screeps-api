@@ -113,3 +113,40 @@ fn test_auth_retrieve_all_ranks() {
         .unwrap();
     assert!(result.len() > 0);
 }
+
+#[test]
+fn test_auth_retrieve_leaderboard() {
+    let client = create_secure_client();
+    let mut api = logged_in(&client);
+
+    let result = api.leaderboard_page(screeps_api::LeaderboardType::GlobalControl,
+                          "2017-02",
+                          10,
+                          0)
+        .unwrap();
+
+    for ranked_user in result.ranks {
+        if !result.user_details.contains_key(&ranked_user.user_id) {
+            panic!("expected user_details to contain ranked_user user_id, but found {:?} did not contain {:?}",
+                   result.user_details,
+                   ranked_user.user_id);
+        }
+    }
+}
+
+/// This is to ensure that the documentation stays up to date if this ever changes.
+#[test]
+fn test_auth_leaderboard_limit_parameter_error() {
+    let client = create_secure_client();
+    let mut api = logged_in(&client);
+
+    match api.leaderboard_page(screeps_api::LeaderboardType::GlobalControl,
+                               "2017-02",
+                               21,
+                               0) {
+        Err(Error { err: ErrorType::Api(ApiError::InvalidParameters), .. }) => (),
+        Err(other) => panic!("expected InvalidParameters error, found other error {}", other),
+        Ok(other) => panic!("expected InvalidParameters error, found success: {:?}", other),
+    }
+
+}
