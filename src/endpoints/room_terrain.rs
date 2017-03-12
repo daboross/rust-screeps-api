@@ -41,9 +41,10 @@ pub enum TerrainType {
 pub struct RoomTerrain {
     /// The name of the room
     pub room_name: String,
-    /// A 50x50 grid of terrain squares, use terrain[y_pos][x_pos] to get individual terrain.
+    /// A 50x50 grid of terrain squares.
     ///
-    /// When coming from an API result, this is guaranteed to contain 50 `Vec`s, each containing 50 `TerrainType`s.
+    /// When coming from an API result, this is guaranteed to contain 50 `Vec`s, each containing 50 `TerrainType`s. You
+    /// can use terrain[y_pos][x_pos] to get individual terrain.
     pub terrain: Vec<Vec<TerrainType>>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[doc(hidden)]

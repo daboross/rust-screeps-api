@@ -57,6 +57,7 @@ impl StringNumberTimeSpec {
 }
 
 /// A room state, returned by room status.
+///
 /// Note that the API itself will return timestamps for "novice end" and "open time" even when the room is no longer
 /// novice, so the current system's knowledge of utc time is used to determine whether a room is novice or not.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

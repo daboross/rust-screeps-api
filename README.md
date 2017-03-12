@@ -1,13 +1,14 @@
 rust-screeps-api
 ================
-[![Build Status](https://travis-ci.org/daboross/rust-screeps-api.svg?branch=master)][1]
+[![Build Status][travis-image]][travis-builds]
 
-A Rust library for using the [Screeps][2] HTTP API.
+A Rust library for using the [Screeps] HTTP API.
 
 Screeps is a true programming MMO where users uploading JavaScript code to power their online empires.
-`rust-screeps-api` can connect to the [official server][2], and any [private server][3] instances run by users.
+`rust-screeps-api` can connect to the [official server][screeps], and any [private server][screeps-os] instances run by
+users.
 
-Rust uses [hyper][4] to run http requests, and [serde][5] to parse json results.
+Rust uses [hyper] to run http requests, and [serde] to parse json results.
 
 ## Usage
 
@@ -60,8 +61,9 @@ Use:
 - `cargo test parse` to only perform parsing unit tests. This can be performed offline.
 - `cargo test -- --skip auth` to test both parsing and all unauthenticated calls to the official server.
 
-[1]: https://travis-ci.org/daboross/rust-screeps-api
-[2]: https://screeps.com
-[3]: https://github.com/screeps/screeps/
-[4]: https://github.com/hyperium/hyper/
-[5]: https://github.com/serde-rs/json/
+[travis-image]: https://travis-ci.org/daboross/rust-screeps-api.svg?branch=master
+[travis-builds]: https://travis-ci.org/daboross/rust-screeps-api
+[screeps]: https://screeps.com
+[screeps-os]: https://github.com/screeps/screeps/
+[hyper]: https://github.com/hyperium/hyper/
+[serde]: https://github.com/serde-rs/json/
