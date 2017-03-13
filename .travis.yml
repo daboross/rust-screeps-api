@@ -17,3 +17,6 @@ script:
   else
     cargo test
   fi
+matrix:
+  allow_failures:
+  - rust: nightly
