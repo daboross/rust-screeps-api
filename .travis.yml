@@ -8,15 +8,14 @@ cache: cargo
 before_script:
 - export PATH="$PATH:$HOME/.cargo/bin"
 - which rustfmt || cargo install rustfmt --vers 0.7.1
-script:
-- cargo fmt -- --write-mode=diff
-- |
-  if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-    echo "WARNING: Tests requiring authentication disabled";
-    cargo test -- --skip auth
-  else
-    cargo test
+- if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then
+    echo "WARNING: Tests requiring authentication disabled."
+    TEST_ARGS=("--skip" "auth")
   fi
+script:
+- cargo build --verbose
+- cargo fmt --verbose -- --write-mode=diff
+- cargo test --verbose -- "${TEST_ARGS[@]}"
 matrix:
   allow_failures:
   - rust: nightly
