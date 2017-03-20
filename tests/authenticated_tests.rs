@@ -20,7 +20,9 @@ fn create_secure_client() -> hyper::Client {
     Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()))
 }
 
-fn logged_in(client: &hyper::Client) -> screeps_api::API {
+fn logged_in() -> screeps_api::API<hyper::Client> {
+    let client = create_secure_client();
+
     let username = env("SCREEPS_API_USERNAME");
     let password = env("SCREEPS_API_PASSWORD");
     let mut api = screeps_api::API::new(client);
@@ -35,16 +37,14 @@ fn logged_in(client: &hyper::Client) -> screeps_api::API {
 
 #[test]
 fn test_auth_my_info() {
-    let client = create_secure_client();
-    let mut api = logged_in(&client);
+    let mut api = logged_in();
 
     let _ = api.my_info().unwrap();
 }
 
 #[test]
 fn test_auth_token_reretrieval() {
-    let client = create_secure_client();
-    let mut api = logged_in(&client);
+    let mut api = logged_in();
 
     let _ = api.my_info().unwrap();
 
@@ -55,8 +55,7 @@ fn test_auth_token_reretrieval() {
 
 #[test]
 fn test_auth_room_overview() {
-    let client = create_secure_client();
-    let mut api = logged_in(&client);
+    let mut api = logged_in();
 
     for &interval in &[8u32, 180u32, 1440u32] {
         // At the time of writing, a room owned by a user who does not have a custom badge.
@@ -72,16 +71,14 @@ fn test_auth_room_overview() {
 
 #[test]
 fn test_auth_leaderboard_seasons() {
-    let client = create_secure_client();
-    let mut api = logged_in(&client);
+    let mut api = logged_in();
 
     api.leaderboard_season_list().unwrap();
 }
 
 #[test]
 fn test_auth_retrieve_single_rank() {
-    let client = create_secure_client();
-    let mut api = logged_in(&client);
+    let mut api = logged_in();
 
     api.find_season_leaderboard_rank(screeps_api::LeaderboardType::GlobalControl,
                                       "daboross",
@@ -107,8 +104,7 @@ fn test_auth_retrieve_single_rank() {
 
 #[test]
 fn test_auth_retrieve_all_ranks() {
-    let client = create_secure_client();
-    let mut api = logged_in(&client);
+    let mut api = logged_in();
 
     let result = api.find_leaderboard_ranks(screeps_api::LeaderboardType::GlobalControl, "daboross")
         .unwrap();
@@ -117,8 +113,7 @@ fn test_auth_retrieve_all_ranks() {
 
 #[test]
 fn test_auth_retrieve_leaderboard() {
-    let client = create_secure_client();
-    let mut api = logged_in(&client);
+    let mut api = logged_in();
 
     let result = api.leaderboard_page(screeps_api::LeaderboardType::GlobalControl,
                           "2017-02",
@@ -138,8 +133,7 @@ fn test_auth_retrieve_leaderboard() {
 /// This is to ensure that the documentation stays up to date if this ever changes.
 #[test]
 fn test_auth_leaderboard_limit_parameter_error() {
-    let client = create_secure_client();
-    let mut api = logged_in(&client);
+    let mut api = logged_in();
 
     match api.leaderboard_page(screeps_api::LeaderboardType::GlobalControl,
                                "2017-02",

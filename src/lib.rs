@@ -87,25 +87,48 @@ trait EndpointResult: Sized {
     fn from_raw(data: Self::RequestResult) -> Result<Self>;
 }
 
+/// A generic trait over hyper's Client which allows for references, owned clients, and Arc<hyper::Client>
+/// to be used.
+pub trait HyperClient {
+    /// Get a reference to this client.
+    fn client(&self) -> &hyper::Client;
+}
+
+impl HyperClient for hyper::Client {
+    fn client(&self) -> &hyper::Client { self }
+}
+
+impl<'a> HyperClient for &'a hyper::Client {
+    fn client(&self) -> &hyper::Client { self }
+}
+
+impl HyperClient for ::std::sync::Arc<hyper::Client> {
+    fn client(&self) -> &hyper::Client { &self }
+}
+
 /// API Object, stores the current API token and allows access to making requests.
 #[derive(Debug)]
-pub struct API<'a> {
+pub struct API<T>
+    where T: HyperClient
+{
     /// The base URL for this API instance.
     pub url: hyper::Url,
     /// The current authentication token, in binary UTF8.
     pub token: Option<Vec<u8>>,
-    client: &'a hyper::Client,
+    client: T,
 }
 
-impl<'a> API<'a> {
+impl<T> API<T>
+    where T: HyperClient
+{
     /// Creates a new API instance for the official server with the `https://screeps.com/api/` base url.
     ///
     /// The returned stance can be used to make anonymous calls, or `API.login` can be used to allow for
     /// authenticated API calls.
-    pub fn new(client: &hyper::Client) -> API {
+    pub fn new(client: T) -> Self {
         API {
             url: hyper::Url::parse("https://screeps.com/api/").expect("expected pre-set url to parse, parsing failed"),
-            client: client,
+            client: client.into(),
             token: None,
         }
     }
@@ -114,7 +137,7 @@ impl<'a> API<'a> {
     ///
     /// The returned instance can be used to make anonymous calls, or `API.login` can be used to allow for
     /// authenticated API calls.
-    pub fn with_url<T: hyper::client::IntoUrl>(client: &hyper::Client, url: T) -> Result<API> {
+    pub fn with_url<U: hyper::client::IntoUrl>(client: T, url: U) -> Result<Self> {
         Ok(API {
             url: url.into_url()?,
             client: client,
@@ -123,9 +146,9 @@ impl<'a> API<'a> {
     }
 
     /// Makes a POST request to the given endpoint URL, with the given data encoded as JSON in the body of the request.
-    fn make_post_request<T: serde::Serialize, R: EndpointResult>(&mut self,
+    fn make_post_request<U: serde::Serialize, R: EndpointResult>(&mut self,
                                                                  endpoint: &str,
-                                                                 request_text: T)
+                                                                 request_text: U)
                                                                  -> Result<R> {
         let body = serde_json::to_string(&request_text)?;
 
@@ -137,6 +160,7 @@ impl<'a> API<'a> {
         }
 
         let mut response = self.client
+            .client()
             .post(self.url.join(endpoint)?)
             .body(&body)
             .headers(headers)
@@ -191,6 +215,7 @@ impl<'a> API<'a> {
         }
 
         let mut response = self.client
+            .client()
             .get(url)
             .headers(headers)
             .send()?;
@@ -227,9 +252,9 @@ impl<'a> API<'a> {
     }
 
     /// Logs in using a given username and password, and stores the resulting token inside this structure.
-    pub fn login<'b, T, T2>(&mut self, username: T, password: T2) -> Result<()>
-        where T: Into<Cow<'b, str>>,
-              T2: Into<Cow<'b, str>>
+    pub fn login<'b, U, V>(&mut self, username: U, password: V) -> Result<()>
+        where U: Into<Cow<'b, str>>,
+              V: Into<Cow<'b, str>>
     {
         let result: login::LoginResult =
             self.make_post_request("auth/signin", login::Details::new(username, password))?;
@@ -247,8 +272,8 @@ impl<'a> API<'a> {
     /// All Allowed request_intervals are not known, but at least `8`, `180` and `1440` are allowed. The returned data,
     /// at the time of writing, includes 8 data points of each type, representing equal portions of the time period
     /// requested (hour for `8`, day for `180`, week for `1440`).
-    pub fn room_overview<'b, T>(&mut self, room_name: T, request_interval: u32) -> Result<room_overview::RoomOverview>
-        where T: Into<Cow<'b, str>>
+    pub fn room_overview<'b, U>(&mut self, room_name: U, request_interval: u32) -> Result<room_overview::RoomOverview>
+        where U: Into<Cow<'b, str>>
     {
         self.make_get_request("game/room-overview",
                               Some(&[("room", room_name.into().into_owned()),
@@ -258,16 +283,16 @@ impl<'a> API<'a> {
     /// Gets the terrain of a room, returning a 2d array of 50x50 points.
     ///
     /// Does not require authentication.
-    pub fn room_terrain<'b, T>(&mut self, room_name: T) -> Result<room_terrain::RoomTerrain>
-        where T: Into<Cow<'b, str>>
+    pub fn room_terrain<'b, U>(&mut self, room_name: U) -> Result<room_terrain::RoomTerrain>
+        where U: Into<Cow<'b, str>>
     {
         self.make_get_request("game/room-terrain",
                               Some(&[("room", room_name.into().into_owned()), ("encoded", true.to_string())]))
     }
 
     /// Gets the "status" of a room: if it is open, if it is in a novice area, if it exists.
-    pub fn room_status<'b, T>(&mut self, room_name: T) -> Result<room_status::RoomStatus>
-        where T: Into<Cow<'b, str>>
+    pub fn room_status<'b, U>(&mut self, room_name: U) -> Result<room_status::RoomStatus>
+        where U: Into<Cow<'b, str>>
     {
         self.make_get_request("game/room-status",
                               Some(&[("room", room_name.into().into_owned())]))
@@ -304,13 +329,13 @@ impl<'a> API<'a> {
     ///
     /// This is technically the same API endpoint as find_leaderboard_rank, but the result format differs when
     /// requesting a specific season from when requesting all season ranks.
-    pub fn find_season_leaderboard_rank<'b, T, T2>(&mut self,
-                                                   leaderboard_type: LeaderboardType,
-                                                   username: T,
-                                                   season: T2)
-                                                   -> Result<leaderboard::find_rank::FoundUserRank>
-        where T: Into<Cow<'b, str>>,
-              T2: Into<Cow<'b, str>>
+    pub fn find_season_leaderboard_rank<'b, U, V>(&mut self,
+                                                  leaderboard_type: LeaderboardType,
+                                                  username: U,
+                                                  season: V)
+                                                  -> Result<leaderboard::find_rank::FoundUserRank>
+        where U: Into<Cow<'b, str>>,
+              V: Into<Cow<'b, str>>
     {
         self.make_get_request("leaderboard/find",
                               Some(&[("mode", leaderboard_type.api_representation().to_string()),
@@ -323,11 +348,11 @@ impl<'a> API<'a> {
     /// This will return `ApiError::UserNotFound` if a username does not exist, and may also return an empty `Vec` as
     /// the result if the user does not have any ranks in the given leaderboard type (they have never contributed any
     /// global control points, or processed power, depending on the type).
-    pub fn find_leaderboard_ranks<'b, T>(&mut self,
+    pub fn find_leaderboard_ranks<'b, U>(&mut self,
                                          leaderboard_type: LeaderboardType,
-                                         username: T)
+                                         username: U)
                                          -> Result<Vec<leaderboard::find_rank::FoundUserRank>>
-        where T: Into<Cow<'b, str>>
+        where U: Into<Cow<'b, str>>
     {
         self.make_get_request("leaderboard/find",
                               Some(&[("mode", leaderboard_type.api_representation().to_string()),
@@ -341,13 +366,13 @@ impl<'a> API<'a> {
     ///
     /// Offset doesn't have to be a multiple of limit, but it's most likely most useful that it is. Offset 0 will get
     /// you the start/top of the ranked list.
-    pub fn leaderboard_page<'b, T>(&mut self,
+    pub fn leaderboard_page<'b, U>(&mut self,
                                    leaderboard_type: LeaderboardType,
-                                   season: T,
+                                   season: U,
                                    limit: u32,
                                    offset: u32)
                                    -> Result<leaderboard::page::LeaderboardPage>
-        where T: Into<Cow<'b, str>>
+        where U: Into<Cow<'b, str>>
     {
         self.make_get_request("leaderboard/list",
                               Some(&[("mode", leaderboard_type.api_representation().to_string()),
