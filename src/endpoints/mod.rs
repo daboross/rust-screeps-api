@@ -12,3 +12,9 @@ pub mod leaderboard;
 // don't compile this endpoint template file with regular output, but still compile w/ tests to test for correctness.
 #[cfg(test)]
 pub mod template;
+
+pub use my_info::MyInfo;
+pub use recent_pvp::RecentPvp;
+pub use room_overview::RoomOverview;
+pub use room_status::RoomStatus;
+pub use room_terrain::RoomTerrain;

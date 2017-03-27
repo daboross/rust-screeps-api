@@ -72,10 +72,12 @@ pub mod error;
 pub mod endpoints;
 pub mod data;
 
+pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain};
 use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp, leaderboard};
 pub use endpoints::leaderboard::LeaderboardType;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use error::{Error, Result};
+
 use hyper::header::{Headers, ContentType};
 use std::borrow::Cow;
 
