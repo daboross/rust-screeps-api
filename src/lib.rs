@@ -383,3 +383,43 @@ impl<T> API<T>
                                      ("offset", offset.to_string())]))
     }
 }
+
+
+/// Calculates GCL, given GCL points.
+#[inline]
+pub fn gcl_calc(gcl_points: u64) -> u64 {
+    const GCL_INV_MULTIPLY: f64 = 1.0 / 1_000_000f64;
+    const GCL_INV_POW: f64 = 1.0 / 2.4f64;
+
+    ((gcl_points as f64) * GCL_INV_MULTIPLY)
+        .powf(GCL_INV_POW)
+        .floor() as u64 + 1
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::gcl_calc;
+
+    #[test]
+    fn parse_gcl_1() {
+        assert_eq!(gcl_calc(0), 1);
+        assert_eq!(gcl_calc(900_000), 1);
+    }
+
+    #[test]
+    fn parse_gcl_2() {
+        assert_eq!(gcl_calc(1_000_000), 2);
+        assert_eq!(gcl_calc(5_278_000), 2);
+    }
+
+    #[test]
+    fn parse_gcl_3() {
+        assert_eq!(gcl_calc(5_278_032), 3);
+    }
+
+    #[test]
+    fn parse_gcl_late_15() {
+        assert_eq!(gcl_calc(657_254_041), 15);
+    }
+}
