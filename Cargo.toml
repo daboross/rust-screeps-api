@@ -25,5 +25,5 @@ serde-tuple-vec-map = "0.1"
 time = "0.1"
 
 [dev-dependencies]
-dotenv = "0.9"
+dotenv = "0.10"
 hyper-rustls = "0.3"
