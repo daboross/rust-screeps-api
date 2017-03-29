@@ -1,7 +1,7 @@
 //! Interpreting room status results.
 
 use EndpointResult;
-use data;
+use data::{self, RoomState};
 use error::{Result, ApiError};
 use std::marker::PhantomData;
 use time;
@@ -22,65 +22,9 @@ struct InnerRoom {
     /// The "status" string, usually "normal"? Unknown what else it could be.
     status: String,
     /// The end time for the novice area this room is or was last in.
-    novice: Option<StringNumberTimeSpec>,
+    novice: Option<data::StringNumberTimeSpec>,
     /// The time this room will open or did open into the novice area as a second tier novice room.
-    openTime: Option<StringNumberTimeSpec>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(untagged)]
-enum StringNumberTimeSpec {
-    String(String),
-    Number(i64),
-}
-
-impl StringNumberTimeSpec {
-    fn to_timespec(&self) -> Result<time::Timespec> {
-        let time = match *self {
-            StringNumberTimeSpec::String(ref s) => {
-                match s.parse() {
-                    Ok(v) => v,
-                    Err(e) => {
-                        return Err(ApiError::MalformedResponse(format!("expected timestamp string to be a \
-                                                                        valid integer, found {}: {:?}",
-                                                                       s,
-                                                                       e))
-                            .into())
-                    }
-                }
-            }
-            StringNumberTimeSpec::Number(v) => v,
-        };
-
-        Ok(time::Timespec::new(time, 0))
-    }
-}
-
-/// A room state, returned by room status.
-///
-/// Note that the API itself will return timestamps for "novice end" and "open time" even when the room is no longer
-/// novice, so the current system's knowledge of utc time is used to determine whether a room is novice or not.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum RoomState {
-    /// Room name does not exist.
-    Nonexistant,
-    /// Room exists and terrain has been generated, but room is completely closed.
-    Closed,
-    /// Room exists, is open, and is not part of a novice area.
-    Open,
-    /// Room is part of a novice area.
-    Novice {
-        /// The time when the novice area will expire.
-        end_time: time::Timespec,
-    },
-    /// Room is part of a "second tier" novice area, which is closed, but when opened will be part of a novice area
-    /// which already has other open rooms.
-    SecondTierNovice {
-        /// The time this room will open and join the surrounding novice area rooms.
-        room_open_time: time::Timespec,
-        /// The time the novice area this room is a part of will expire.
-        end_time: time::Timespec,
-    },
+    openTime: Option<data::StringNumberTimeSpec>,
 }
 
 /// Struct describing the status of a room
@@ -112,7 +56,7 @@ impl EndpointResult for RoomStatus {
             None => {
                 return Ok(RoomStatus {
                     room_name: None,
-                    state: RoomState::Nonexistant,
+                    state: RoomState::non_existant(),
                     _phantom: PhantomData,
                 });
             }
@@ -125,25 +69,7 @@ impl EndpointResult for RoomStatus {
                 .into());
         }
 
-        // This turns Option<Result<A, B>> into Result<Option<A>, B>
-        let novice_time_spec = novice.map_or(Ok(None), |t| t.to_timespec().map(Some))?;
-        let open_time_spec = open_time.map_or(Ok(None), |t| t.to_timespec().map(Some))?;
-        let sys_time = time::get_time();
-
-        let state = match novice_time_spec {
-            Some(n) if n > sys_time => {
-                match open_time_spec {
-                    Some(o) if o > sys_time => {
-                        RoomState::SecondTierNovice {
-                            room_open_time: o,
-                            end_time: n,
-                        }
-                    }
-                    _ => RoomState::Novice { end_time: n },
-                }
-            }
-            Some(_) | None => RoomState::Open,
-        };
+        let state = RoomState::from_data(time::get_time(), novice, open_time)?;
 
         Ok(RoomStatus {
             room_name: Some(room_name),
