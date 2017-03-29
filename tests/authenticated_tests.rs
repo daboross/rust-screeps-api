@@ -43,6 +43,15 @@ fn test_auth_my_info() {
 }
 
 #[test]
+fn test_auth_map_stats() {
+    let mut api = logged_in();
+
+    let result = api.map_stats(&["E15N52", "E19S79", "E14S78", "E19S81", "W6S67", "InvalidRoomName"]).unwrap();
+
+    assert_eq!(result.rooms.len(), 5);
+}
+
+#[test]
 fn test_auth_token_reretrieval() {
     let mut api = logged_in();
 

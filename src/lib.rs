@@ -60,10 +60,11 @@
 //! in multiple thread simultaneously, you need to create and log in to multiple `API` structures.
 #![deny(missing_docs)]
 #![recursion_limit="512"]
+extern crate hyper;
 #[macro_use]
 extern crate serde_derive;
-extern crate hyper;
 extern crate serde;
+extern crate tuple_vec_map;
 #[cfg_attr(test, macro_use)]
 extern crate serde_json;
 extern crate time;
@@ -72,14 +73,17 @@ pub mod error;
 pub mod endpoints;
 pub mod data;
 
-pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain};
-use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp, leaderboard};
+pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats};
 pub use endpoints::leaderboard::LeaderboardType;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use error::{Error, Result};
 
-use hyper::header::{Headers, ContentType};
 use std::borrow::Cow;
+use std::convert::AsRef;
+
+use hyper::header::{Headers, ContentType};
+
+use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp, leaderboard, map_stats};
 
 /// A trait for each endpoint
 trait EndpointResult: Sized {
@@ -148,10 +152,10 @@ impl<T> API<T>
     }
 
     /// Makes a POST request to the given endpoint URL, with the given data encoded as JSON in the body of the request.
-    fn make_post_request<U: serde::Serialize, R: EndpointResult>(&mut self,
-                                                                 endpoint: &str,
-                                                                 request_text: U)
-                                                                 -> Result<R> {
+    fn make_post_request<U, R>(&mut self, endpoint: &str, request_text: U) -> Result<R>
+        where U: serde::Serialize,
+              R: EndpointResult
+    {
         let body = serde_json::to_string(&request_text)?;
 
         let mut headers = Headers::new();
@@ -267,6 +271,17 @@ impl<T> API<T>
 
     /// Gets user information on the user currently logged in, including username and user id.
     pub fn my_info(&mut self) -> Result<my_info::MyInfo> { self.make_get_request("auth/me", None) }
+
+    /// Get information on a number of rooms.
+    pub fn map_stats<'a, U, V>(&mut self, rooms: &'a V) -> Result<map_stats::MapStats>
+        where U: AsRef<str>,
+              &'a V: IntoIterator<Item = U>
+    {
+        // TODO: interpret for different stats.
+        let args = map_stats::MapStatsArgs::new(rooms, map_stats::StatName::RoomOwner);
+
+        self.make_post_request("game/map-stats", args)
+    }
 
     /// Gets the overview of a room, returning totals for usually 3 intervals, 8, 180 and 1440, representing
     /// data for the past hour, data for the past 24 hours, and data for the past week respectively.

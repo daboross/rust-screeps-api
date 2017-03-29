@@ -38,7 +38,7 @@ pub enum BadgeColor {
 #[derive(Deserialize, Debug, Clone)]
 pub struct Badge {
     /// Badge type, used for different badge formats
-    #[serde(rename="type")]
+    #[serde(rename = "type")]
     pub badge_type: BadgeType,
     /// First color, use depends on badge type.
     pub color1: BadgeColor,

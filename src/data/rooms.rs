@@ -108,9 +108,83 @@ impl RoomState {
     pub fn closed() -> Self { RoomState::Closed }
 }
 
+/// Raw sign data from the server.
+#[derive(Deserialize, Debug)]
+#[allow(non_snake_case)]
+pub struct RoomSignData {
+    time: u64,
+    datetime: StringNumberTimeSpec,
+    user: String,
+    text: String,
+}
+
+/// Raw "hard sign" data from the server.
+#[derive(Deserialize, Debug)]
+#[allow(non_snake_case)]
+pub struct HardSignData {
+    time: u64,
+    datetime: StringNumberTimeSpec,
+    endDatetime: StringNumberTimeSpec,
+    text: String,
+}
+
+/// Represents a room sign.
+#[derive(Debug, Clone)]
+pub struct RoomSign {
+    /// The game time when the sign was set.
+    pub game_time_set: u64,
+    /// The real date/time when the sign was set.
+    pub time_set: time::Timespec,
+    /// The user ID of the user who set the sign.
+    pub user_id: String,
+    /// The text of the sign.
+    pub text: String,
+}
+
+impl RoomSignData {
+    /// Transform the raw result with the possibility of failing due to invalid data.
+    pub fn into_sign(self) -> Result<RoomSign, error::ApiError> {
+        let RoomSignData { time, datetime, user, text } = self;
+        let sign = RoomSign {
+            game_time_set: time,
+            time_set: datetime.to_timespec()?,
+            user_id: user,
+            text: text,
+        };
+        Ok(sign)
+    }
+}
+
+/// Represents a "hard sign" on a room, where the server has overwritten any player-placed signs for a specific period.
+#[derive(Debug, Clone)]
+pub struct HardSign {
+    /// The game time when the hard sign override was added.
+    pub game_time_set: u64,
+    /// The real date when the hard sign override was added.
+    pub start: time::Timespec,
+    /// The real date when the hard sign override ends.
+    pub end: time::Timespec,
+    /// The hard sign text.
+    pub text: String,
+}
+
+impl HardSignData {
+    /// Transform the raw result with the possibility of failing due to invalid data.
+    pub fn into_sign(self) -> Result<HardSign, error::ApiError> {
+        let HardSignData { time, datetime, endDatetime: end_datetime, text } = self;
+        let sign = HardSign {
+            game_time_set: time,
+            start: datetime.to_timespec()?,
+            end: end_datetime.to_timespec()?,
+            text: text,
+        };
+        Ok(sign)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{StringNumberTimeSpec, RoomState};
+    use super::{StringNumberTimeSpec, RoomState, RoomSignData, HardSignData};
     use serde_json;
     use time;
 
@@ -136,6 +210,7 @@ mod tests {
         let state = RoomState::from_data(time::Timespec::new(1, 0), None, None).unwrap();
         assert_eq!(state, RoomState::Open);
     }
+
     #[test]
     fn parse_room_state_open_previously_novice() {
         // Current time is 4, room opened at 2, novice area ended at 3.
@@ -181,5 +256,32 @@ mod tests {
                        room_open_time: time::Timespec::new(15, 0),
                        end_time: time::Timespec::new(20, 0),
                    });
+    }
+
+    #[test]
+    fn parse_room_sign() {
+        let data: RoomSignData = serde_json::from_value(json!({
+            "time": 16656131,
+            "text": "I have plans for this block",
+            "datetime": 1484071532985i64,
+            "user": "57c7df771d90a0c561977377"
+        }))
+            .unwrap();
+
+        let _ = data.into_sign().unwrap();
+    }
+
+    #[test]
+    fn parse_hard_sign() {
+        let data: HardSignData = serde_json::from_value(json!({
+            "time": 18297994,
+            "datetime": 1490632558393i64,
+            "text": "A new Novice Area is being planned somewhere in this sector. \
+                     Please make sure all important rooms are reserved.",
+            "endDatetime": 1490978122587i64
+        }))
+            .unwrap();
+
+        let _ = data.into_sign().unwrap();
     }
 }
