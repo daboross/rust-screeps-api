@@ -48,7 +48,9 @@ pub struct Error {
 
 impl Error {
     /// Creates a new error from the given error and the given possible url.
-    pub fn with_url<T: Into<Error>>(err: T, url: Option<hyper::Url>) -> Error { Error::with_json(err, url, None) }
+    pub fn with_url<T: Into<Error>>(err: T, url: Option<hyper::Url>) -> Error {
+        Error::with_json(err, url, None)
+    }
     /// Creates a new error from the given error, the given possible url, and the given possible JSON data.
     pub fn with_json<T: Into<Error>>(err: T, url: Option<hyper::Url>, json: Option<serde_json::Value>) -> Error {
         let err = err.into();
@@ -76,19 +78,27 @@ impl From<ErrorType> for Error {
 }
 
 impl From<serde_json::error::Error> for Error {
-    fn from(err: serde_json::error::Error) -> Error { ErrorType::SerdeJson(err).into() }
+    fn from(err: serde_json::error::Error) -> Error {
+        ErrorType::SerdeJson(err).into()
+    }
 }
 
 impl From<hyper::error::Error> for Error {
-    fn from(err: hyper::error::Error) -> Error { ErrorType::Hyper(err).into() }
+    fn from(err: hyper::error::Error) -> Error {
+        ErrorType::Hyper(err).into()
+    }
 }
 
 impl From<hyper::error::ParseError> for Error {
-    fn from(err: hyper::error::ParseError) -> Error { ErrorType::Hyper(hyper::Error::Uri(err)).into() }
+    fn from(err: hyper::error::ParseError) -> Error {
+        ErrorType::Hyper(hyper::Error::Uri(err)).into()
+    }
 }
 
 impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error { ErrorType::Io(err).into() }
+    fn from(err: io::Error) -> Error {
+        ErrorType::Io(err).into()
+    }
 }
 
 impl From<hyper::status::StatusCode> for Error {
@@ -102,7 +112,9 @@ impl From<hyper::status::StatusCode> for Error {
 }
 
 impl From<ApiError> for Error {
-    fn from(err: ApiError) -> Error { ErrorType::Api(err).into() }
+    fn from(err: ApiError) -> Error {
+        ErrorType::Api(err).into()
+    }
 }
 
 impl fmt::Display for Error {
@@ -225,5 +237,7 @@ impl StdError for ApiError {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> { None }
+    fn cause(&self) -> Option<&StdError> {
+        None
+    }
 }

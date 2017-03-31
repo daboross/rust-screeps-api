@@ -101,15 +101,21 @@ pub trait HyperClient {
 }
 
 impl HyperClient for hyper::Client {
-    fn client(&self) -> &hyper::Client { self }
+    fn client(&self) -> &hyper::Client {
+        self
+    }
 }
 
 impl<'a> HyperClient for &'a hyper::Client {
-    fn client(&self) -> &hyper::Client { self }
+    fn client(&self) -> &hyper::Client {
+        self
+    }
 }
 
 impl HyperClient for ::std::sync::Arc<hyper::Client> {
-    fn client(&self) -> &hyper::Client { &self }
+    fn client(&self) -> &hyper::Client {
+        &self
+    }
 }
 
 /// API Object, stores the current API token and allows access to making requests.
@@ -270,7 +276,9 @@ impl<T> API<T>
     }
 
     /// Gets user information on the user currently logged in, including username and user id.
-    pub fn my_info(&mut self) -> Result<my_info::MyInfo> { self.make_get_request("auth/me", None) }
+    pub fn my_info(&mut self) -> Result<my_info::MyInfo> {
+        self.make_get_request("auth/me", None)
+    }
 
     /// Get information on a number of rooms.
     pub fn map_stats<'a, U, V>(&mut self, rooms: &'a V) -> Result<map_stats::MapStats>

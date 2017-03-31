@@ -100,12 +100,16 @@ impl RoomState {
     }
 
     /// Creates a non-existant room state.
-    pub fn non_existant() -> Self { RoomState::Nonexistant }
+    pub fn non_existant() -> Self {
+        RoomState::Nonexistant
+    }
 
     /// Creates a "closed" room state.
     ///
     /// TODO: find what the server actually responds with for these rooms so we can find how to interpret them.
-    pub fn closed() -> Self { RoomState::Closed }
+    pub fn closed() -> Self {
+        RoomState::Closed
+    }
 }
 
 /// Raw sign data from the server.

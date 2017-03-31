@@ -22,9 +22,13 @@ pub enum PvpArgs {
 
 impl PvpArgs {
     /// Creates a new PvP call parameter to request any PvP occurring since the given game tick.
-    pub fn since(tick: i64) -> PvpArgs { PvpArgs::Since { time: tick } }
+    pub fn since(tick: i64) -> PvpArgs {
+        PvpArgs::Since { time: tick }
+    }
     /// Creates a new PvP call parameter to request any PvP occurring within the last x ticks.
-    pub fn within(ticks: i64) -> PvpArgs { PvpArgs::WithinLast { ticks: ticks } }
+    pub fn within(ticks: i64) -> PvpArgs {
+        PvpArgs::WithinLast { ticks: ticks }
+    }
 }
 
 /// Recent PvP raw result.
