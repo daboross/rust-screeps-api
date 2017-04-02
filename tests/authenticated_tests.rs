@@ -63,6 +63,25 @@ fn test_auth_token_reretrieval() {
 }
 
 #[test]
+fn test_shared_token_storage() {
+    let shared = std::rc::Rc::new(std::cell::RefCell::new(None));
+    let shared_client = std::rc::Rc::new(create_secure_client());
+
+    let username = env("SCREEPS_API_USERNAME");
+    let password = env("SCREEPS_API_PASSWORD");
+
+    screeps_api::API::with_token(shared_client.clone(), shared.clone()).login(username, password).unwrap();
+
+    screeps_api::API::with_token(shared_client.clone(), shared.clone()).my_info().unwrap();
+
+    screeps_api::API::with_token(shared_client.clone(), shared.clone()).my_info().unwrap();
+
+    screeps_api::API::with_token(shared_client.clone(), shared.clone()).my_info().unwrap();
+
+    screeps_api::API::with_token(shared_client.clone(), shared.clone()).my_info().unwrap();
+}
+
+#[test]
 fn test_auth_room_overview() {
     let mut api = logged_in();
 
