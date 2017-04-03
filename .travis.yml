@@ -5,6 +5,9 @@ rust:
 - beta
 - nightly
 cache: cargo
+env:
+- COMPILE_ARGS=()
+- COMPILE_ARGS=("--no-default-features")
 before_script:
 - export PATH="$PATH:$HOME/.cargo/bin"
 - which rustfmt || cargo install rustfmt --vers 0.7.1
@@ -14,9 +17,9 @@ before_script:
         TEST_ARGS=("--skip" "auth")
     fi
 script:
-- cargo build --verbose
+- cargo build --verbose "${COMPILE_ARGS[@]}"
 - cargo fmt --verbose -- --write-mode=diff
-- cargo test --verbose -- "${TEST_ARGS[@]}"
+- cargo test --verbose "${COMPILE_ARGS[@]}" -- "${TEST_ARGS[@]}"
 matrix:
     allow_failures:
     - rust: nightly

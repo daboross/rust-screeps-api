@@ -63,6 +63,8 @@
 #[macro_use]
 extern crate log;
 extern crate hyper;
+#[cfg(websockets)]
+extern crate ws;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
@@ -74,11 +76,15 @@ extern crate time;
 pub mod error;
 pub mod endpoints;
 pub mod data;
+#[cfg(websockets)]
+pub mod sockets;
 
 pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats};
 pub use endpoints::leaderboard::LeaderboardType;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use error::{Error, Result};
+#[cfg(websockets)]
+pub use sockets::SocketApi;
 
 use std::borrow::Cow;
 use std::convert::AsRef;

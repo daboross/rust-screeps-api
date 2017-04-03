@@ -25,6 +25,11 @@ serde_derive = "0.9"
 serde_json = "0.9"
 serde-tuple-vec-map = "0.1"
 time = "0.1"
+ws = {version = "0.7", features = ["ssl"], optional = true}
+
+[features]
+websockets = ["ws"]
+default = ["websockets"]
 
 [dev-dependencies]
 dotenv = "0.10"
