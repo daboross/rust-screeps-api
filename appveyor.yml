@@ -4,7 +4,7 @@
 # Note: we're explicitly only supporting MSVC and not MinGW here due to ring's support for MSCV.
 environment:
     global:
-        OPENSSL_STATIC=true
+        OPENSSL_STATIC: true
     matrix:
     # Stable
     - TARGET: i686-pc-windows-msvc
