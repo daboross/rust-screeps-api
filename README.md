@@ -9,7 +9,7 @@ Screeps is a true programming MMO where users uploading JavaScript code to power
 `rust-screeps-api` can connect to the [official server][screeps], and any [private server][screeps-os] instances run by
 users.
 
-Rust uses [hyper] to run http requests, and [serde] to parse json results.
+`rust-screeps-api` uses [hyper] to run http requests and [serde] to parse json results.
 
 ## Usage
 
