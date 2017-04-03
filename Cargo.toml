@@ -14,7 +14,8 @@ categories = ["api-bindings"]
 license = "MIT"
 
 [badges]
-travis-ci = { repository = "daboross/rust-screeps-api" }
+travis-ci = { repository = "daboross/rust-screeps-api", branch = "master" }
+appveyor = { service = "github", repository = "daboross/rust-screeps-api", branch = "master" }
 
 [dependencies]
 log = "0.3"

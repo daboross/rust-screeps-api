@@ -1,6 +1,7 @@
 rust-screeps-api
 ================
-[![Build Status][travis-image]][travis-builds]
+[![Linux Build Status][travis-image]][travis-builds]
+[![Windows Build Status][appveyor-image]][appveyor-builds]
 
 A Rust library for using the [Screeps] HTTP API.
 
@@ -63,6 +64,8 @@ Use:
 
 [travis-image]: https://travis-ci.org/daboross/rust-screeps-api.svg?branch=master
 [travis-builds]: https://travis-ci.org/daboross/rust-screeps-api
+[appveyor-image]: https://ci.appveyor.com/api/projects/status/github/daboross/rust-screeps-api?branch=adding-appveyor&svg=true
+[appveyor-builds]: https://ci.appveyor.com/project/daboross/rust-screeps-api
 [screeps]: https://screeps.com
 [screeps-os]: https://github.com/screeps/screeps/
 [hyper]: https://github.com/hyperium/hyper/

@@ -1,0 +1,49 @@
+# Based on the "trust" template v0.1.1
+# https://github.com/japaric/trust/tree/v0.1.1
+
+# Note: we're explicitly only supporting MSVC and not MinGW here due to ring's support for MSCV.
+environment:
+    matrix:
+    # Stable
+    - TARGET: i686-pc-windows-msvc
+      RUST_VERSION: stable
+    - TARGET: x86_64-pc-windows-msvc
+      RUST_VERSION: stable
+    # Beta
+    - TARGET: i686-pc-windows-msvc
+      RUST_VERSION: beta
+    - TARGET: x86_64-pc-windows-msvc
+      RUST_VERSION: beta
+    # Nightly
+    - TARGET: i686-pc-windows-msvc
+      RUST_VERSION: nightly
+    - TARGET: x86_64-pc-windows-msvc
+      RUST_VERSION: nightly
+
+install:
+- ps: >-
+    If ($Env:TARGET -eq 'x86_64-pc-windows-gnu') {
+        $Env:PATH += ';C:\msys64\mingw64\bin'
+    } ElseIf ($Env:TARGET -eq 'i686-pc-windows-gnu') {
+        $Env:PATH += ';C:\msys64\mingw32\bin'
+    }
+- curl -sSf -o rustup-init.exe https://win.rustup.rs/
+- rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
+- set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+- rustc -Vv
+- cargo -V
+
+test_script:
+- cargo build --verbose --target %TARGET%
+# TODO: this doesn't test authenticated access, only parsing and non-auth calls.
+# We're probably OK not testing logging in on windows since it is tested on linux,
+# and we do test at least making HTTPS calls to the server with this, but it might
+# still be nice for completeness.
+- cargo test --verbose --target %TARGET% -- --skip auth
+
+cache:
+- C:\Users\appveyor\.cargo\registry
+- target
+
+# Disable the appveyor build step so we can just build the rust project instead.
+build: off
