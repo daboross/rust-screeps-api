@@ -5,6 +5,7 @@
 environment:
     global:
         OPENSSL_STATIC: true
+        SSL_CERT_FILE: "C:\\Users\\appveyor\\cacert.pem"
     matrix:
     # Stable
     - TARGET: i686-pc-windows-msvc
@@ -35,6 +36,7 @@ install:
     } ElseIf ($Env:TARGET -eq 'i686-pc-windows-gnu') {
         $Env:PATH += ';C:\msys64\mingw32\bin'
     }
+- curl --remote-name --time-cond %SSL_CERT_FILE% -o %SSL_CERT_FILE% https://curl.haxx.se/ca/cacert.pem
 - curl -sSf -o rustup-init.exe https://win.rustup.rs/
 - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
 - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
@@ -52,6 +54,7 @@ test_script:
 cache:
 - C:\Users\appveyor\.cargo\registry
 - target
+- C:\Users\appveyor\cacert.pem
 
 # Disable the appveyor build step so we can just build the rust project instead.
 build: off
