@@ -34,3 +34,4 @@ default = ["websockets"]
 [dev-dependencies]
 dotenv = "0.10"
 hyper-rustls = "0.3"
+hyper-openssl = "0.2"

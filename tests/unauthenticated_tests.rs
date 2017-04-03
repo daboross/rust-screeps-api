@@ -1,6 +1,7 @@
 extern crate screeps_api;
 extern crate hyper;
 extern crate hyper_rustls;
+extern crate hyper_openssl;
 extern crate dotenv;
 
 use hyper::client::Client;
@@ -30,6 +31,16 @@ fn test_room_terrain() {
 
     api.room_terrain("W0N0").unwrap();
     api.room_terrain("W3N9").unwrap();
+}
+
+#[test]
+fn test_openssl_room_terrain_connection() {
+    let client = Client::with_connector(HttpsConnector::new(hyper_openssl::OpensslClient::new().unwrap()));
+
+    let mut api = screeps_api::API::new(&client);
+
+    api.room_terrain("W20N21").unwrap();
+    api.room_terrain("E34S34").unwrap();
 }
 
 #[test]
