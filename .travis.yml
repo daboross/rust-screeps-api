@@ -1,25 +1,30 @@
 language: rust
 sudo: false
-rust:
-- stable
-- beta
-- nightly
 cache: cargo
-env:
-- COMPILE_ARGS=()
-- COMPILE_ARGS=("--no-default-features")
+matrix:
+    allow_failures:
+    - rust: nightly
+    include:
+    - rust: stable
+      TEST_ARGS=("parse")
+    - rust: beta
+      TEST_ARGS=()
+    - rust: beta
+      TEST_ARGS=("parse")
+      COMPILE_ARGS=("--no-default-features")
+    - rust: nightly
+      TEST_ARGS=("parse")
 before_script:
 - export PATH="$PATH:$HOME/.cargo/bin"
 - which rustfmt || cargo install rustfmt --vers 0.7.1
 - |
     if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then
         echo "WARNING: Tests requiring authentication disabled."
-        TEST_ARGS=("--skip" "auth")
+        if [ "$TEST_ARGS" != "parse" ]; then
+            TEST_ARGS=("--", "--skip" "auth")
+        fi
     fi
 script:
 - cargo build --verbose "${COMPILE_ARGS[@]}"
 - cargo fmt --verbose -- --write-mode=diff
-- cargo test --verbose "${COMPILE_ARGS[@]}" -- "${TEST_ARGS[@]}"
-matrix:
-    allow_failures:
-    - rust: nightly
+- cargo test --verbose "${COMPILE_ARGS[@]}" "${TEST_ARGS[@]}"
