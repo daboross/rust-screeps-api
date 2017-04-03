@@ -55,15 +55,15 @@ fn test_auth_map_stats() {
 fn test_auth_token_reretrieval() {
     let mut api = logged_in();
 
-    let _ = api.my_info().unwrap();
+    api.my_info().unwrap();
 
-    let _ = api.my_info().unwrap();
+    api.my_info().unwrap();
 
-    let _ = api.my_info().unwrap();
+    api.my_info().unwrap();
 }
 
 #[test]
-fn test_shared_token_storage() {
+fn test_auth_shared_token_storage() {
     let shared = std::rc::Rc::new(std::cell::RefCell::new(None));
     let shared_client = std::rc::Rc::new(create_secure_client());
 
