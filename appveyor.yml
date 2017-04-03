@@ -5,7 +5,7 @@
 environment:
     global:
         OPENSSL_STATIC: true
-        SSL_CERT_FILE: "C:\\Users\\appveyor\\cacert.pem"
+        SSL_CERT_DL: "C:\\Users\\appveyor\\cacert.pem"
     matrix:
     # Stable
     - TARGET: i686-pc-windows-msvc
@@ -30,18 +30,13 @@ environment:
       OPENSSL_DIR: C:\OpenSSL-Win64
 
 install:
-- ps: >-
-    If ($Env:TARGET -eq 'x86_64-pc-windows-gnu') {
-        $Env:PATH += ';C:\msys64\mingw64\bin'
-    } ElseIf ($Env:TARGET -eq 'i686-pc-windows-gnu') {
-        $Env:PATH += ';C:\msys64\mingw32\bin'
-    }
-- curl --remote-name --time-cond %SSL_CERT_FILE% -o %SSL_CERT_FILE% https://curl.haxx.se/ca/cacert.pem
+- curl --remote-name --time-cond %SSL_CERT_DL% -o %SSL_CERT_DL% https://curl.haxx.se/ca/cacert.pem
 - curl -sSf -o rustup-init.exe https://win.rustup.rs/
 - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
 - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
 - rustc -Vv
 - cargo -V
+- set SSL_CERT_FILE=%SSL_CERT_DL%
 
 test_script:
 - cargo build --verbose --target %TARGET%
