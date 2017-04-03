@@ -48,7 +48,7 @@ test_script:
 
 cache:
 - C:\Users\appveyor\.cargo\registry
-- target
+- target -> C:\Users\appveyor\cacert.pem
 - C:\Users\appveyor\cacert.pem
 
 # Disable the appveyor build step so we can just build the rust project instead.
