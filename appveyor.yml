@@ -39,6 +39,7 @@ install:
 - set SSL_CERT_FILE=%SSL_CERT_DL%
 
 test_script:
+- set SSL_CERT_FILE=%SSL_CERT_DL%
 - cargo build --verbose --target %TARGET%
 # TODO: this doesn't test authenticated access, only parsing and non-auth calls.
 # We're probably OK not testing logging in on windows since it is tested on linux,
@@ -48,8 +49,8 @@ test_script:
 
 cache:
 - C:\Users\appveyor\.cargo\registry
-- target -> C:\Users\appveyor\cacert.pem
 - C:\Users\appveyor\cacert.pem
+- target -> C:\Users\appveyor\cacert.pem
 
 # Disable the appveyor build step so we can just build the rust project instead.
 build: off
