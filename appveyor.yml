@@ -3,22 +3,30 @@
 
 # Note: we're explicitly only supporting MSVC and not MinGW here due to ring's support for MSCV.
 environment:
+    global:
+        OPENSSL_STATIC=true
     matrix:
     # Stable
     - TARGET: i686-pc-windows-msvc
       RUST_VERSION: stable
+      OPENSSL_DIR: C:\OpenSSL-Win32
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: stable
+      OPENSSL_DIR: C:\OpenSSL-Win64
     # Beta
     - TARGET: i686-pc-windows-msvc
       RUST_VERSION: beta
+      OPENSSL_DIR: C:\OpenSSL-Win32
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: beta
+      OPENSSL_DIR: C:\OpenSSL-Win64
     # Nightly
     - TARGET: i686-pc-windows-msvc
       RUST_VERSION: nightly
+      OPENSSL_DIR: C:\OpenSSL-Win32
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: nightly
+      OPENSSL_DIR: C:\OpenSSL-Win64
 
 install:
 - ps: >-
