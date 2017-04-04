@@ -31,12 +31,12 @@ environment:
 
 install:
 - curl --remote-name --time-cond %SSL_CERT_DL% -o %SSL_CERT_DL% https://curl.haxx.se/ca/cacert.pem
+- set SSL_CERT_FILE=%SSL_CERT_DL%
 - curl -sSf -o rustup-init.exe https://win.rustup.rs/
 - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
 - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
 - rustc -Vv
 - cargo -V
-- set SSL_CERT_FILE=%SSL_CERT_DL%
 
 test_script:
 - set SSL_CERT_FILE=%SSL_CERT_DL%
