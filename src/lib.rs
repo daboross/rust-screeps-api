@@ -105,6 +105,10 @@ trait EndpointResult: Sized {
     fn from_raw(data: Self::RequestResult) -> Result<Self>;
 }
 
+/// An API token that allows for one-time authentication. Each use of an API token with the screeps API
+/// will cause the API to return a new token which should be stored in its place.
+pub type Token = Vec<u8>;
+
 /// A generic trait over hyper's Client which allows for references, owned clients, and Arc<hyper::Client>
 /// to be used.
 pub trait HyperClient {
@@ -115,10 +119,10 @@ pub trait HyperClient {
 /// A generic trait over some storage for auth tokens, possibly for use with sharing tokens between clients.
 pub trait TokenStorage {
     /// Takes a token from the token storage, if there are any tokens.
-    fn take_token(&mut self) -> Option<Vec<u8>>;
+    fn take_token(&mut self) -> Option<Token>;
 
     /// Gives a new token back to the token storage.
-    fn return_token(&mut self, Vec<u8>);
+    fn return_token(&mut self, Token);
 }
 
 impl HyperClient for hyper::Client {
@@ -145,49 +149,59 @@ impl HyperClient for Rc<hyper::Client> {
     }
 }
 
-impl TokenStorage for Option<Vec<u8>> {
-    fn take_token(&mut self) -> Option<Vec<u8>> {
+impl TokenStorage for Option<Token> {
+    fn take_token(&mut self) -> Option<Token> {
         self.take()
     }
 
-    fn return_token(&mut self, token: Vec<u8>) {
+    fn return_token(&mut self, token: Token) {
         *self = Some(token);
     }
 }
 
-impl TokenStorage for VecDeque<Vec<u8>> {
-    fn take_token(&mut self) -> Option<Vec<u8>> {
+impl TokenStorage for VecDeque<Token> {
+    fn take_token(&mut self) -> Option<Token> {
         self.pop_front()
     }
 
-    fn return_token(&mut self, token: Vec<u8>) {
+    fn return_token(&mut self, token: Token) {
         self.push_back(token)
     }
 }
 
 impl<T: TokenStorage> TokenStorage for Arc<Mutex<T>> {
-    fn take_token(&mut self) -> Option<Vec<u8>> {
+    fn take_token(&mut self) -> Option<Token> {
         self.lock().unwrap().take_token()
     }
 
-    fn return_token(&mut self, token: Vec<u8>) {
+    fn return_token(&mut self, token: Token) {
         self.lock().unwrap().return_token(token)
     }
 }
 
 impl<T: TokenStorage> TokenStorage for Rc<RefCell<T>> {
-    fn take_token(&mut self) -> Option<Vec<u8>> {
+    fn take_token(&mut self) -> Option<Token> {
         self.borrow_mut().take_token()
     }
 
-    fn return_token(&mut self, token: Vec<u8>) {
+    fn return_token(&mut self, token: Token) {
         self.borrow_mut().return_token(token)
+    }
+}
+
+impl<'a, T: TokenStorage> TokenStorage for &'a mut T {
+    fn take_token(&mut self) -> Option<Token> {
+        (**self).take_token()
+    }
+
+    fn return_token(&mut self, token: Token) {
+        (**self).return_token(token)
     }
 }
 
 /// API Object, stores the current API token and allows access to making requests.
 #[derive(Debug)]
-pub struct API<C: HyperClient = hyper::Client, T: TokenStorage = Option<Vec<u8>>> {
+pub struct API<C: HyperClient = hyper::Client, T: TokenStorage = Option<Token>> {
     /// The base URL for this API instance.
     pub url: hyper::Url,
     /// The current authentication token, in binary UTF8.
@@ -199,7 +213,7 @@ fn default_url() -> hyper::Url {
     hyper::Url::parse("https://screeps.com/api/").expect("expected pre-set url to parse, parsing failed")
 }
 
-impl<C: HyperClient> API<C, Option<Vec<u8>>> {
+impl<C: HyperClient> API<C, Option<Token>> {
     /// Creates a new API instance for the official server with the `https://screeps.com/api/` base url.
     ///
     /// The returned instance can be used to make anonymous calls, or `API.login` can be used to allow for
