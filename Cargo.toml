@@ -26,9 +26,10 @@ serde_json = "0.9"
 serde-tuple-vec-map = "0.1"
 time = "0.1"
 ws = {version = "0.7", features = ["ssl"], optional = true}
+fnv = {version = "1.0", optional = true}
 
 [features]
-websockets = ["ws"]
+websockets = ["ws", "fnv"]
 default = ["websockets"]
 
 [dev-dependencies]
