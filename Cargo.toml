@@ -36,3 +36,10 @@ default = ["websockets"]
 dotenv = "0.10"
 hyper-rustls = "0.3"
 hyper-openssl = "0.2"
+fern = "0.3"
+clap = "2.22"
+
+[[example]]
+name = "ws-debug"
+path = "examples/ws_debug.rs"
+required-features = ["ws"]
