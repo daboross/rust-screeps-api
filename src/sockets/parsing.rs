@@ -7,7 +7,7 @@ use super::error::ParseError;
 use Token;
 
 /// Result of parsing a message
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ParsedResult {
     /// "Open"?
     Open,
@@ -94,7 +94,7 @@ impl ParsedResult {
 
 
 /// A parsed message.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ParsedMessage {
     /// Authentication failed.
     AuthFailed,
@@ -102,6 +102,21 @@ pub enum ParsedMessage {
     AuthOk {
         /// The new token to store.
         new_token: Token,
+    },
+    /// On initial connection, the server reports its own time.
+    ServerTime {
+        /// The server time.
+        time: u64,
+    },
+    /// On initial connection, the server reports a protocol version.
+    ServerProtocol {
+        /// The protocol version.
+        protocol: u32,
+    },
+    /// On initial connection, the server reports a "package" number.
+    ServerPackage {
+        /// The package version? I'm not sure.
+        package: u32,
     },
     /// An update on one of the channels.
     ChannelUpdate {
@@ -116,6 +131,9 @@ pub enum ParsedMessage {
 
 
 const AUTH_PREFIX: &'static str = "auth ";
+const TIME_PREFIX: &'static str = "time ";
+const PROTOCOL_PREFIX: &'static str = "protocol ";
+const PACKAGE_PREFIX: &'static str = "package ";
 const AUTH_OK: &'static str = "ok ";
 const AUTH_FAILED: &'static str = "failed";
 
@@ -134,7 +152,7 @@ impl ParsedMessage {
 
                 return Ok({
                     if rest.starts_with(AUTH_OK) {
-                        ParsedMessage::AuthOk { new_token: rest[AUTH_OK.len()..].as_bytes().to_owned() }
+                        ParsedMessage::AuthOk { new_token: rest[AUTH_OK.len()..].to_owned() }
                     } else if rest == AUTH_FAILED {
                         ParsedMessage::AuthFailed
                     } else {
@@ -143,6 +161,36 @@ impl ParsedMessage {
                         ParsedMessage::AuthFailed
                     }
                 });
+            } else if full_message.starts_with(TIME_PREFIX) {
+                let rest = &full_message[TIME_PREFIX.len()..];
+
+                match rest.parse::<u64>() {
+                    Ok(v) => return Ok(ParsedMessage::ServerTime { time: v }),
+                    Err(_) => {
+                        warn!("expected \"time <integer>\", found \"{}\". Ignoring inconsistent message!",
+                              rest);
+                    }
+                }
+            } else if full_message.starts_with(PROTOCOL_PREFIX) {
+                let rest = &full_message[PROTOCOL_PREFIX.len()..];
+
+                match rest.parse::<u32>() {
+                    Ok(v) => return Ok(ParsedMessage::ServerProtocol { protocol: v }),
+                    Err(_) => {
+                        warn!("expected \"protocol <integer>\", found \"{}\". Ignoring inconsistent message!",
+                              rest);
+                    }
+                }
+            } else if full_message.starts_with(PACKAGE_PREFIX) {
+                let rest = &full_message[PACKAGE_PREFIX.len()..];
+
+                match rest.parse::<u32>() {
+                    Ok(v) => return Ok(ParsedMessage::ServerPackage { package: v }),
+                    Err(_) => {
+                        warn!("expected \"package <integer>\", found \"{}\". Ignoring inconsistent message!",
+                              rest);
+                    }
+                }
             }
 
             if let Ok((channel, message)) = serde_json::from_str(full_message) {

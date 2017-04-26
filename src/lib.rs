@@ -63,10 +63,6 @@
 #[macro_use]
 extern crate log;
 extern crate hyper;
-#[cfg(feature = "websockets")]
-extern crate ws;
-#[cfg(feature = "websockets")]
-extern crate fnv;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
@@ -109,7 +105,7 @@ trait EndpointResult: Sized {
 
 /// An API token that allows for one-time authentication. Each use of an API token with the screeps API
 /// will cause the API to return a new token which should be stored in its place.
-pub type Token = Vec<u8>;
+pub type Token = String;
 
 /// A generic trait over hyper's Client which allows for references, owned clients, and Arc<hyper::Client>
 /// to be used.
@@ -301,7 +297,7 @@ impl<C: HyperClient, T: TokenStorage> API<C, T> {
     {
         let result: login::LoginResult = self.post("auth/signin", login::Details::new(username, password)).send()?;
 
-        self.token.return_token(result.token.into_bytes());
+        self.token.return_token(result.token);
         Ok(())
     }
 
@@ -481,8 +477,8 @@ impl<'a, C: HyperClient, T: TokenStorage, S: serde::Serialize> PartialRequest<'a
 
         let temp_token = match (auth_required, client.token.take_token()) {
             (_, Some(token)) => {
-                headers.set_raw("X-Token", vec![token.clone()]);
-                headers.set_raw("X-Username", vec![token.clone()]);
+                headers.set_raw("X-Token", vec![token.clone().into_bytes()]);
+                headers.set_raw("X-Username", vec![token.clone().into_bytes()]);
                 Some(token)
             }
             (true, None) => {
@@ -530,12 +526,28 @@ impl<'a, C: HyperClient, T: TokenStorage, S: serde::Serialize> PartialRequest<'a
             return Err(Error::with_url(response.status, Some(response.url.clone())));
         }
 
-        if let Some(token_vec) = response.headers.get_raw("X-Token") {
-            if let Some(token_bytes) = token_vec.first() {
-                client.token.return_token(Vec::from(&**token_bytes));
+        let token_to_return = {
+            match response.headers.get_raw("X-Token") {
+                Some(token_vec) => {
+                    match token_vec.first() {
+                        Some(token_bytes) => {
+                            match std::str::from_utf8(&token_bytes) {
+                                Ok(s) => Some(s.to_owned()),
+                                Err(e) => {
+                                    warn!("Screeps server returned invalid token in response headers (not UTF8): {}",
+                                          e);
+                                    None
+                                }
+                            }
+                        }
+                        None => temp_token,
+                    }
+                }
+                None => temp_token,
             }
-        } else if let Some(token) = temp_token {
-            client.token.return_token(token)
+        };
+        if let Some(token) = token_to_return {
+            client.token.return_token(token);
         }
 
         let json: serde_json::Value = match serde_json::from_reader(&mut response) {

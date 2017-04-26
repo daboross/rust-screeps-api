@@ -1,13 +1,18 @@
 //! Handling of socket connections to screeps using ws-rs as a backend.
-use std::rc::Rc;
+
+pub extern crate ws;
+extern crate fnv;
+use serde_json;
+
 use std::time::Duration;
 use std::borrow::{Borrow, Cow};
+use std::str;
 
-use ws;
-use fnv::FnvHashMap;
-use ws::util::Token as WsToken;
+use self::fnv::FnvHashMap;
+use self::ws::util::Token as WsToken;
 
 pub use self::error::{Error, Result};
+pub use self::parsing::{ParsedResult, ParsedMessage};
 use error::{Error as HttpError, ErrorType as HttpErrorType};
 
 use TokenStorage;
@@ -29,10 +34,52 @@ pub trait Handler {
               err);
     }
 
+    /// Run on any messages from the server.
+    fn on_message(&mut self, msg: parsing::ParsedMessage) -> ws::Result<()>;
+
     /// Run on any communication from the server.
     ///
-    /// TODO: deal with non-ParsedMessage ParsedResults internally.
-    fn on_message(&mut self, msg: parsing::ParsedResult) -> ws::Result<()>;
+    /// Default behavior is to ignore heartbeats, open and close messages, and just send any actual messages
+    /// to on_message.
+    fn on_communication(&mut self, result: parsing::ParsedResult) -> ws::Result<()> {
+        match result {
+            ParsedResult::Message(msg) => {
+                debug!("screeps socket connection received single SockJS message");
+                self.on_message(msg)
+            }
+            ParsedResult::Messages(messages) => {
+                debug!("screeps socket connection received array of {} SockJS messages",
+                       messages.len());
+                for msg in messages {
+                    self.on_message(msg)?
+                }
+                Ok(())
+            }
+            ParsedResult::Heartbeat => {
+                debug!("screeps socket connection received SockJS heartbeat");
+                Ok(())
+            }
+            ParsedResult::Open => {
+                debug!("screeps socket connection received SockJS open");
+                Ok(())
+            }
+            ParsedResult::Close { code, reason } => {
+                // TODO: should we pass this on?
+                debug!("screeps socket connection received SockJS close ({}, {})",
+                       code,
+                       reason);
+                Ok(())
+            }
+        }
+    }
+}
+
+impl<T> Handler for T
+    where T: FnMut(parsing::ParsedMessage) -> ws::Result<()>
+{
+    fn on_message(&mut self, msg: parsing::ParsedMessage) -> ws::Result<()> {
+        (self)(msg)
+    }
 }
 
 enum FailState {
@@ -79,10 +126,6 @@ impl<H: Handler, T: TokenStorage> ApiHandler<H, T> {
 }
 
 impl<H: Handler, T: TokenStorage> ws::Handler for ApiHandler<H, T> {
-    fn on_open(&mut self, _handshake: ws::Handshake) -> ws::Result<()> {
-        self.try_or_retry_auth()
-    }
-
     fn on_error(&mut self, err: ws::Error) {
         self.handler.on_error(err.into());
     }
@@ -92,7 +135,16 @@ impl<H: Handler, T: TokenStorage> ws::Handler for ApiHandler<H, T> {
             ws::Message::Text(s) => {
                 match parsing::ParsedResult::parse(s) {
                     Ok(v) => {
-                        self.handler.on_message(v)?;
+                        match v {
+                            ParsedResult::Open => {
+                                self.try_or_retry_auth()
+                                    .map_err(Into::into)
+                                    .unwrap_or_else(|x| self.handler.on_error(x))
+                            }
+                            ParsedResult::Heartbeat => self.sender.sender().send("[]")?,
+                            _ => (),
+                        }
+                        self.handler.on_communication(v)?;
                     }
                     Err(e) => {
                         self.handler.on_error(e.into());
@@ -154,6 +206,10 @@ pub enum Channel<'a> {
         room_name: Cow<'a, str>,
     },
     /// Updates for all entities in a room.
+    ///
+    /// Note: this is limited to 2 per user account at a time, and if there are more than 2 room subscriptions active,
+    /// it is random which 2 will received updates on any given ticks. Rooms which are not updated do receive an error
+    /// message on "off" ticks.
     RoomUpdates {
         /// The room name of the subscription.
         room_name: Cow<'a, str>,
@@ -161,77 +217,142 @@ pub enum Channel<'a> {
 }
 
 impl<'a> Channel<'a> {
+    /// Creates a channel subscribing to server messages.
+    pub fn server_messages() -> Self {
+        Channel::ServerMessages
+    }
+
+    /// Creates a channel subscribing to a user's CPU and memory.
+    pub fn user_cpu<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
+        Channel::UserCpu { user_id: user_id.into() }
+    }
+
+    /// Creates a channel subscribing to a user's CPU and memory.
+    pub fn user_messages<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
+        Channel::UserMessages { user_id: user_id.into() }
+    }
+
+    /// Creates a channel subscribing to a user's credit count.
+    pub fn user_credits<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
+        Channel::UserCredits { user_id: user_id.into() }
+    }
+
+    /// Creates a channel subscribing to a path in a user's memory.
+    pub fn user_memory_path<T: Into<Cow<'a, str>>, U: Into<Cow<'a, str>>>(user_id: T, path: U) -> Self {
+        Channel::UserMemoryPath {
+            user_id: user_id.into(),
+            path: path.into(),
+        }
+    }
+
+    /// Creates a channel subscribing to a user's console output.
+    pub fn user_console<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
+        Channel::UserConsole { user_id: user_id.into() }
+    }
+
+    /// Creates a channel subscribing to map-view updates of a room.
+    pub fn map_room_updates<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
+        Channel::MapRoomUpdates { room_name: room_name.into() }
+    }
+
+    /// Creates a channel subscribing to detailed updates of a room's contents.
+    ///
+    /// Note: this is limited to 2 per user account at a time, and if there are more than 2 room subscriptions active,
+    /// it is random which 2 will received updates on any given ticks. Rooms which are not updated do receive an error
+    /// message on "off" ticks.
+    pub fn room_updates<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
+        Channel::RoomUpdates { room_name: room_name.into() }
+    }
+
     /// This is a really wonky scheme, but it is probably the best one right now.
     ///
     /// Adds the channel description to the message (does not add preceding space) and collects to a vec.
-    fn chain_and_complete_message<T: Iterator<Item = u8>>(&self, start: T) -> Vec<u8> {
+    fn chain_and_complete_message<T: Iterator<Item = char>>(&self, start: T) -> String {
         match *self {
-            Channel::ServerMessages => start.chain("server-messages".bytes()).collect(),
+            Channel::ServerMessages => start.chain("server-messages".chars()).collect(),
             Channel::UserCpu { ref user_id } => {
-                start.chain("user:".bytes()).chain(user_id.as_ref().bytes()).chain("/cpu".bytes()).collect()
+                start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/cpu".chars()).collect()
             }
             Channel::UserMessages { ref user_id } => {
-                start.chain("user:".bytes()).chain(user_id.as_ref().bytes()).chain("/newMessages".bytes()).collect()
+                start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/newMessages".chars()).collect()
             }
             Channel::UserCredits { ref user_id } => {
-                start.chain("user:".bytes()).chain(user_id.as_ref().bytes()).chain("/money".bytes()).collect()
+                start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/money".chars()).collect()
             }
             Channel::UserMemoryPath { ref user_id, ref path } => {
-                start.chain("user:".bytes())
-                    .chain(user_id.as_ref().bytes())
-                    .chain("/memory/".bytes())
-                    .chain(path.as_ref().bytes())
+                start.chain("user:".chars())
+                    .chain(user_id.as_ref().chars())
+                    .chain("/memory/".chars())
+                    .chain(path.as_ref().chars())
                     .collect()
             }
             Channel::UserConsole { ref user_id } => {
-                start.chain("user:".bytes()).chain(user_id.as_ref().bytes()).chain("/console".bytes()).collect()
+                start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/console".chars()).collect()
             }
             Channel::MapRoomUpdates { ref room_name } => {
-                start.chain("roomMap2:".bytes()).chain(room_name.as_ref().bytes()).collect()
+                start.chain("roomMap2:".chars()).chain(room_name.as_ref().chars()).collect()
             }
             Channel::RoomUpdates { ref room_name } => {
-                start.chain("room:".bytes()).chain(room_name.as_ref().bytes()).collect()
+                start.chain("room:".chars()).chain(room_name.as_ref().chars()).collect()
             }
         }
     }
 
     /// Allocates a vec with the byte representation of this channel.
-    pub fn to_vec(&self) -> Vec<u8> {
-        self.chain_and_complete_message("".bytes())
+    pub fn to_string(&self) -> String {
+        self.chain_and_complete_message("".chars())
     }
 }
 
 /// Sender structure wrapping websocket's sender with Screeps API methods.
-///
-/// This contains an Rc inside, so Clone will just clone the inner Rc to provide another reference.
 #[derive(Clone)]
-pub struct Sender(Rc<ws::Sender>);
+pub struct Sender(ws::Sender);
 
 impl Sender {
-    fn authenticate(&mut self, token: Token) -> ws::Result<()> {
+    fn authenticate(&self, token: Token) -> ws::Result<()> {
         let message = "auth "
-            .bytes()
-            .chain(token.into_iter())
-            .collect::<Vec<_>>();
+            .chars()
+            .chain(token.chars())
+            .collect::<String>();
 
-        self.0.send(message)
+        self.send_raw(&message)
     }
 
     /// Subscribes to a channel. Unknown effect if already subscribed, server error?
     ///
     /// Recommended that you keep track of what channels you are subscribed to separately.
-    pub fn subscribe(&mut self, channel: Channel) -> ws::Result<()> {
-        let message = channel.chain_and_complete_message("subscribe ".bytes());
+    pub fn subscribe(&self, channel: Channel) -> ws::Result<()> {
+        let message = channel.chain_and_complete_message("subscribe ".chars());
 
-        self.0.send(message)
+        self.send_raw(&message)
     }
+
     /// Unsubscribes from a channel. Unknown effect if not subscribed, server error?
     ///
     /// Recommended that you keep track of what channels you are subscribed to separately.
-    pub fn unsubscribe(&mut self, channel: Channel) -> ws::Result<()> {
-        let message = channel.chain_and_complete_message("unsubscribe ".bytes());
+    pub fn unsubscribe(&self, channel: Channel) -> ws::Result<()> {
+        let message = channel.chain_and_complete_message("unsubscribe ".chars());
+
+        self.send_raw(&message)
+    }
+
+    /// Sends an empty SockJS frame.
+    pub fn send_empty_frame(&self) -> ws::Result<()> {
+        let message = "[]";
+
+        debug!("[SockJS emulation] sending empty frame: {:?}", message);
 
         self.0.send(message)
+    }
+
+    /// Sends a raw SockJS frame.
+    pub fn send_raw(&self, message: &str) -> ws::Result<()> {
+        let encoded = serde_json::to_string(&(message,))
+            .expect("serializing a tuple containing a single string can't fail.");
+
+        debug!("[SockJS emulation] sending frame: {:?}", message);
+
+        self.0.send(encoded)
     }
 
     /// Gets the inner websocket sender.
@@ -258,7 +379,7 @@ pub fn connect<U, F, H, T>(websocket_address: U, mut factory: F, token: T) -> ws
           T: TokenStorage + Clone
 {
     ws::connect(websocket_address, |ws_sender| {
-        let sender = Sender(Rc::new(ws_sender));
+        let sender = Sender(ws_sender);
         let handler = factory(sender.clone());
 
         ApiHandler {

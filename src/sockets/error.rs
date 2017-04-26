@@ -1,4 +1,4 @@
-use ws;
+use super::ws;
 use serde_json;
 
 use std::fmt;
