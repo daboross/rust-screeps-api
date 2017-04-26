@@ -132,6 +132,8 @@ fn main() {
     };
 
     // TODO: somehow create a way to go from API url to websocket url.
-    screeps_api::sockets::connect("wss://screeps.com/socket/785/40128567/websocket", factory, token_storage)
+    screeps_api::sockets::connect("wss://screeps.com/socket/785/40128567/websocket",
+                                  factory,
+                                  token_storage)
         .expect("failed to connect to socket");
 }
