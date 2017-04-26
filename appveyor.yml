@@ -3,30 +3,35 @@
 
 # Note: we're explicitly only supporting MSVC and not MinGW here due to ring's support for MSCV.
 environment:
+    global:
+        OPENSSL_STATIC: true
+        SSL_CERT_DL: "C:\\Users\\appveyor\\cacert.pem"
     matrix:
     # Stable
     - TARGET: i686-pc-windows-msvc
       RUST_VERSION: stable
+      OPENSSL_DIR: C:\OpenSSL-Win32
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: stable
+      OPENSSL_DIR: C:\OpenSSL-Win64
     # Beta
     - TARGET: i686-pc-windows-msvc
       RUST_VERSION: beta
+      OPENSSL_DIR: C:\OpenSSL-Win32
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: beta
+      OPENSSL_DIR: C:\OpenSSL-Win64
     # Nightly
     - TARGET: i686-pc-windows-msvc
       RUST_VERSION: nightly
+      OPENSSL_DIR: C:\OpenSSL-Win32
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: nightly
+      OPENSSL_DIR: C:\OpenSSL-Win64
 
 install:
-- ps: >-
-    If ($Env:TARGET -eq 'x86_64-pc-windows-gnu') {
-        $Env:PATH += ';C:\msys64\mingw64\bin'
-    } ElseIf ($Env:TARGET -eq 'i686-pc-windows-gnu') {
-        $Env:PATH += ';C:\msys64\mingw32\bin'
-    }
+- curl --remote-name --time-cond %SSL_CERT_DL% -o %SSL_CERT_DL% https://curl.haxx.se/ca/cacert.pem
+- set SSL_CERT_FILE=%SSL_CERT_DL%
 - curl -sSf -o rustup-init.exe https://win.rustup.rs/
 - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
 - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
@@ -34,16 +39,19 @@ install:
 - cargo -V
 
 test_script:
-- cargo build --verbose --target %TARGET%
+- set SSL_CERT_FILE=%SSL_CERT_DL%
+# Websockets not yet fully supported/tested on windows.
+- cargo build --verbose --target %TARGET% --no-default-features
 # TODO: this doesn't test authenticated access, only parsing and non-auth calls.
 # We're probably OK not testing logging in on windows since it is tested on linux,
 # and we do test at least making HTTPS calls to the server with this, but it might
 # still be nice for completeness.
-- cargo test --verbose --target %TARGET% -- --skip auth
+- cargo test --verbose --target %TARGET% --no-default-features -- --skip auth
 
 cache:
 - C:\Users\appveyor\.cargo\registry
-- target
+- C:\Users\appveyor\cacert.pem
+- target -> C:\Users\appveyor\cacert.pem
 
 # Disable the appveyor build step so we can just build the rust project instead.
 build: off

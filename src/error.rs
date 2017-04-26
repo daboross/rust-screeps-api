@@ -1,6 +1,6 @@
 //! Error types for the screeps api.
-extern crate hyper;
-extern crate serde_json;
+use hyper;
+use serde_json;
 
 use self::ErrorType::*;
 use std::error::Error as StdError;

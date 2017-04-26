@@ -74,11 +74,15 @@ extern crate time;
 pub mod error;
 pub mod endpoints;
 pub mod data;
+#[cfg(feature = "websockets")]
+pub mod sockets;
 
 pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats};
 pub use endpoints::leaderboard::LeaderboardType;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use error::{Error, Result};
+#[cfg(feature = "websockets")]
+pub use sockets::{Sender as SocketsSender, Handler as SocketsHandler};
 
 use std::borrow::Cow;
 use std::convert::AsRef;
@@ -99,6 +103,10 @@ trait EndpointResult: Sized {
     fn from_raw(data: Self::RequestResult) -> Result<Self>;
 }
 
+/// An API token that allows for one-time authentication. Each use of an API token with the screeps API
+/// will cause the API to return a new token which should be stored in its place.
+pub type Token = String;
+
 /// A generic trait over hyper's Client which allows for references, owned clients, and Arc<hyper::Client>
 /// to be used.
 pub trait HyperClient {
@@ -109,10 +117,10 @@ pub trait HyperClient {
 /// A generic trait over some storage for auth tokens, possibly for use with sharing tokens between clients.
 pub trait TokenStorage {
     /// Takes a token from the token storage, if there are any tokens.
-    fn take_token(&mut self) -> Option<Vec<u8>>;
+    fn take_token(&mut self) -> Option<Token>;
 
     /// Gives a new token back to the token storage.
-    fn return_token(&mut self, Vec<u8>);
+    fn return_token(&mut self, Token);
 }
 
 impl HyperClient for hyper::Client {
@@ -139,49 +147,59 @@ impl HyperClient for Rc<hyper::Client> {
     }
 }
 
-impl TokenStorage for Option<Vec<u8>> {
-    fn take_token(&mut self) -> Option<Vec<u8>> {
+impl TokenStorage for Option<Token> {
+    fn take_token(&mut self) -> Option<Token> {
         self.take()
     }
 
-    fn return_token(&mut self, token: Vec<u8>) {
+    fn return_token(&mut self, token: Token) {
         *self = Some(token);
     }
 }
 
-impl TokenStorage for VecDeque<Vec<u8>> {
-    fn take_token(&mut self) -> Option<Vec<u8>> {
+impl TokenStorage for VecDeque<Token> {
+    fn take_token(&mut self) -> Option<Token> {
         self.pop_front()
     }
 
-    fn return_token(&mut self, token: Vec<u8>) {
+    fn return_token(&mut self, token: Token) {
         self.push_back(token)
     }
 }
 
 impl<T: TokenStorage> TokenStorage for Arc<Mutex<T>> {
-    fn take_token(&mut self) -> Option<Vec<u8>> {
+    fn take_token(&mut self) -> Option<Token> {
         self.lock().unwrap().take_token()
     }
 
-    fn return_token(&mut self, token: Vec<u8>) {
+    fn return_token(&mut self, token: Token) {
         self.lock().unwrap().return_token(token)
     }
 }
 
 impl<T: TokenStorage> TokenStorage for Rc<RefCell<T>> {
-    fn take_token(&mut self) -> Option<Vec<u8>> {
+    fn take_token(&mut self) -> Option<Token> {
         self.borrow_mut().take_token()
     }
 
-    fn return_token(&mut self, token: Vec<u8>) {
+    fn return_token(&mut self, token: Token) {
         self.borrow_mut().return_token(token)
+    }
+}
+
+impl<'a, T: TokenStorage> TokenStorage for &'a mut T {
+    fn take_token(&mut self) -> Option<Token> {
+        (**self).take_token()
+    }
+
+    fn return_token(&mut self, token: Token) {
+        (**self).return_token(token)
     }
 }
 
 /// API Object, stores the current API token and allows access to making requests.
 #[derive(Debug)]
-pub struct API<C: HyperClient = hyper::Client, T: TokenStorage = Option<Vec<u8>>> {
+pub struct API<C: HyperClient = hyper::Client, T: TokenStorage = Option<Token>> {
     /// The base URL for this API instance.
     pub url: hyper::Url,
     /// The current authentication token, in binary UTF8.
@@ -193,7 +211,7 @@ fn default_url() -> hyper::Url {
     hyper::Url::parse("https://screeps.com/api/").expect("expected pre-set url to parse, parsing failed")
 }
 
-impl<C: HyperClient> API<C, Option<Vec<u8>>> {
+impl<C: HyperClient> API<C, Option<Token>> {
     /// Creates a new API instance for the official server with the `https://screeps.com/api/` base url.
     ///
     /// The returned instance can be used to make anonymous calls, or `API.login` can be used to allow for
@@ -279,7 +297,7 @@ impl<C: HyperClient, T: TokenStorage> API<C, T> {
     {
         let result: login::LoginResult = self.post("auth/signin", login::Details::new(username, password)).send()?;
 
-        self.token.return_token(result.token.into_bytes());
+        self.token.return_token(result.token);
         Ok(())
     }
 
@@ -459,8 +477,8 @@ impl<'a, C: HyperClient, T: TokenStorage, S: serde::Serialize> PartialRequest<'a
 
         let temp_token = match (auth_required, client.token.take_token()) {
             (_, Some(token)) => {
-                headers.set_raw("X-Token", vec![token.clone()]);
-                headers.set_raw("X-Username", vec![token.clone()]);
+                headers.set_raw("X-Token", vec![token.clone().into_bytes()]);
+                headers.set_raw("X-Username", vec![token.clone().into_bytes()]);
                 Some(token)
             }
             (true, None) => {
@@ -508,12 +526,28 @@ impl<'a, C: HyperClient, T: TokenStorage, S: serde::Serialize> PartialRequest<'a
             return Err(Error::with_url(response.status, Some(response.url.clone())));
         }
 
-        if let Some(token_vec) = response.headers.get_raw("X-Token") {
-            if let Some(token_bytes) = token_vec.first() {
-                client.token.return_token(Vec::from(&**token_bytes));
+        let token_to_return = {
+            match response.headers.get_raw("X-Token") {
+                Some(token_vec) => {
+                    match token_vec.first() {
+                        Some(token_bytes) => {
+                            match std::str::from_utf8(&token_bytes) {
+                                Ok(s) => Some(s.to_owned()),
+                                Err(e) => {
+                                    warn!("Screeps server returned invalid token in response headers (not UTF8): {}",
+                                          e);
+                                    None
+                                }
+                            }
+                        }
+                        None => temp_token,
+                    }
+                }
+                None => temp_token,
             }
-        } else if let Some(token) = temp_token {
-            client.token.return_token(token)
+        };
+        if let Some(token) = token_to_return {
+            client.token.return_token(token);
         }
 
         let json: serde_json::Value = match serde_json::from_reader(&mut response) {
