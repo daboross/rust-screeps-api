@@ -11,6 +11,7 @@ env:
 before_script:
 - export PATH="$PATH:$HOME/.cargo/bin"
 - which rustfmt || cargo install rustfmt --vers 0.7.1
+- rustfmt --version
 script:
 - cargo build --verbose "${COMPILE_ARGS[@]}"
 - cargo fmt --verbose -- --write-mode=diff
