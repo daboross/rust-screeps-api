@@ -3,35 +3,24 @@
 
 # Note: we're explicitly only supporting MSVC and not MinGW here due to ring's support for MSCV.
 environment:
-    global:
-        OPENSSL_STATIC: true
-        SSL_CERT_DL: "C:\\Users\\appveyor\\cacert.pem"
     matrix:
     # Stable
     - TARGET: i686-pc-windows-msvc
       RUST_VERSION: stable
-      OPENSSL_DIR: C:\OpenSSL-Win32
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: stable
-      OPENSSL_DIR: C:\OpenSSL-Win64
     # Beta
     - TARGET: i686-pc-windows-msvc
       RUST_VERSION: beta
-      OPENSSL_DIR: C:\OpenSSL-Win32
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: beta
-      OPENSSL_DIR: C:\OpenSSL-Win64
     # Nightly
     - TARGET: i686-pc-windows-msvc
       RUST_VERSION: nightly
-      OPENSSL_DIR: C:\OpenSSL-Win32
     - TARGET: x86_64-pc-windows-msvc
       RUST_VERSION: nightly
-      OPENSSL_DIR: C:\OpenSSL-Win64
 
 install:
-- curl --remote-name --time-cond %SSL_CERT_DL% -o %SSL_CERT_DL% https://curl.haxx.se/ca/cacert.pem
-- set SSL_CERT_FILE=%SSL_CERT_DL%
 - curl -sSf -o rustup-init.exe https://win.rustup.rs/
 - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
 - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
@@ -39,7 +28,6 @@ install:
 - cargo -V
 
 test_script:
-- set SSL_CERT_FILE=%SSL_CERT_DL%
 # Websockets not yet fully supported/tested on windows.
 - cargo build --verbose --target %TARGET% --no-default-features
 # TODO: this doesn't test authenticated access, only parsing and non-auth calls.
@@ -50,8 +38,7 @@ test_script:
 
 cache:
 - C:\Users\appveyor\.cargo\registry
-- C:\Users\appveyor\cacert.pem
-- target -> C:\Users\appveyor\cacert.pem
+- target
 
 # Disable the appveyor build step so we can just build the rust project instead.
 build: off
