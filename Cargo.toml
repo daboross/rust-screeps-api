@@ -20,10 +20,10 @@ appveyor = { service = "github", repository = "daboross/rust-screeps-api", branc
 [dependencies]
 log = "0.3"
 hyper = "0.10"
-serde = "0.9"
-serde_derive = "0.9"
-serde_json = "0.9"
-serde-tuple-vec-map = "0.1"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+serde-tuple-vec-map = "0.2"
 time = "0.1"
 ws = {version = "0.7", features = ["ssl"], optional = true}
 fnv = {version = "1.0", optional = true}

@@ -97,8 +97,8 @@ use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent
 
 /// A trait for each endpoint
 trait EndpointResult: Sized {
-    type RequestResult: serde::Deserialize;
-    type ErrorResult: serde::Deserialize + Into<Error>;
+    type RequestResult: for<'de> serde::Deserialize<'de>;
+    type ErrorResult: for<'de> serde::Deserialize<'de> + Into<Error>;
 
     fn from_raw(data: Self::RequestResult) -> Result<Self>;
 }
