@@ -34,9 +34,10 @@ default = ["websockets"]
 
 [dev-dependencies]
 dotenv = "0.10"
-hyper-rustls = "0.3"
+hyper-rustls = "0.5"
 hyper-openssl = "0.2"
-fern = "0.3"
+fern = "0.4"
+chrono = "0.3"
 clap = "2.22"
 
 [[example]]

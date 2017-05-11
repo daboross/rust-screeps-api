@@ -7,7 +7,7 @@ extern crate clap;
 extern crate log;
 // console logging output
 extern crate fern;
-extern crate time;
+extern crate chrono;
 // Screeps API
 extern crate screeps_api;
 // HTTP connection
@@ -41,17 +41,23 @@ fn setup_logging(verbose: bool) {
     } else {
         log::LogLevelFilter::Info
     };
-    let logger_config = fern::DispatchConfig {
-        format: Box::new(|msg: &str, level: &log::LogLevel, _location: &log::LogLocation| {
-            let now = ::time::now();
-            format!("[{}][{}] {}", now.strftime("%H:%M:%S").unwrap(), level, msg)
-        }),
-        output: vec![fern::OutputConfig::stdout()],
-        level: log_level,
-    };
+    fern::Dispatch::new()
+        .level(log_level)
+        .level_for("rustls", log::LogLevelFilter::Warn)
+        .level_for("hyper", log::LogLevelFilter::Warn)
+        .format(|out, message, record| {
+            let now = chrono::Local::now();
 
-    fern::init_global_logger(logger_config, log_level).expect("failed to initialize logger");
-
+            out.finish(format_args!("[{}][{}] {}: {}",
+                                    now.format("%H:%M:%S"),
+                                    record.level(),
+                                    record.target(),
+                                    message));
+        })
+        .chain(std::io::stdout())
+        .apply()
+        // ignore errors
+        .unwrap_or(());
 }
 
 struct Handler<T: screeps_api::TokenStorage> {
