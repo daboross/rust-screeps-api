@@ -10,17 +10,14 @@ pub struct ApiError {
 
 impl Into<error::Error> for ApiError {
     fn into(self) -> error::Error {
-        if self.error == "invalid room" {
-            error::ApiError::InvalidRoom.into()
-        } else if self.error == "result not found" {
-            error::ApiError::ResultNotFound.into()
-        } else if self.error == "invalid params" {
-            error::ApiError::InvalidParameters.into()
-        } else if self.error == "user not found" {
-            error::ApiError::UserNotFound.into()
-        } else {
-            error::ApiError::GenericError(self.error).into()
-        }
+        match &*self.error {
+            "invalid room" => error::ApiError::InvalidRoom,
+            "result not found" => error::ApiError::ResultNotFound,
+            "invalid params" => error::ApiError::InvalidParameters,
+            "user not found" => error::ApiError::UserNotFound,
+            "server down" => error::ApiError::ServerDown,
+            _ => error::ApiError::GenericError(self.error)
+        }.into()
     }
 }
 

@@ -187,6 +187,8 @@ impl StdError for Error {
 pub enum ApiError {
     /// The server responded with an "ok" code which was not `1`.
     NotOk(i32),
+    /// The server is offline.
+    ServerDown,
     /// A known response to a query about an invalid room.
     InvalidRoom,
     /// The data being requested was not found.
@@ -216,7 +218,8 @@ impl fmt::Display for ApiError {
             ApiError::InvalidRoom |
             ApiError::ResultNotFound |
             ApiError::UserNotFound |
-            ApiError::InvalidParameters => write!(f, "{}", self.description()),
+            ApiError::InvalidParameters |
+            ApiError::ServerDown => write!(f, "{}", self.description()),
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }
@@ -233,6 +236,7 @@ impl StdError for ApiError {
             ApiError::ResultNotFound => "specific data requested was not found",
             ApiError::UserNotFound => "the user requested was not found",
             ApiError::InvalidParameters => "one or more parameters to the function were invalid",
+            ApiError::ServerDown => "the server requested is offline",
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }
