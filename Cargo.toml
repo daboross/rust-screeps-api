@@ -43,3 +43,11 @@ clap = "2.22"
 name = "ws-debug"
 path = "examples/ws_debug.rs"
 required-features = ["ws"]
+
+[[example]]
+name = "me"
+path = "examples/me.rs"
+
+[[example]]
+name = "top10"
+path = "examples/top10.rs"
