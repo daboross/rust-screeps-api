@@ -53,10 +53,12 @@ impl EndpointResult for LoginResult {
             return Err(ApiError::NotOk(ok).into());
         }
         match token {
-            Some(token) => Ok(LoginResult {
-                token: token,
-                _phantom: PhantomData,
-            }),
+            Some(token) => {
+                Ok(LoginResult {
+                    token: token,
+                    _phantom: PhantomData,
+                })
+            }
             None => Err(ApiError::MissingField("token").into()),
         }
     }

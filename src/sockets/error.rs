@@ -103,7 +103,11 @@ impl fmt::Display for ParseError {
         match *self {
             ParseError::Other(ref s) => write!(f, "parse error: {}", s),
             ParseError::Serde { ref error_desc, ref full_string, ref err } => {
-                write!(f, "error parsing `{}`: {}: {}", full_string, error_desc, err)
+                write!(f,
+                       "error parsing `{}`: {}: {}",
+                       full_string,
+                       error_desc,
+                       err)
             }
         }
     }

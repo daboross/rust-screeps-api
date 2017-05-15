@@ -10,14 +10,16 @@ pub struct ApiError {
 
 impl Into<error::Error> for ApiError {
     fn into(self) -> error::Error {
-        match &*self.error {
+        let api_error = match &*self.error {
             "invalid room" => error::ApiError::InvalidRoom,
             "result not found" => error::ApiError::ResultNotFound,
             "invalid params" => error::ApiError::InvalidParameters,
             "user not found" => error::ApiError::UserNotFound,
             "server down" => error::ApiError::ServerDown,
-            _ => error::ApiError::GenericError(self.error)
-        }.into()
+            _ => error::ApiError::GenericError(self.error),
+        };
+
+        api_error.into()
     }
 }
 
