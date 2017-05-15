@@ -169,7 +169,6 @@ impl<H: Handler, T: TokenStorage> ws::Handler for ApiHandler<H, T> {
 }
 
 /// Different channels one can subscribe to.
-// TODO: roomMap2
 pub enum Channel<'a> {
     /// Server messages (TODO: find message here).
     ServerMessages,
@@ -182,6 +181,13 @@ pub enum Channel<'a> {
     UserMessages {
         /// The user ID of the subscription.
         user_id: Cow<'a, str>,
+    },
+    /// User conversation alert: updates whenever a message is received from a specific user.
+    UserConversation {
+        /// The user ID of the connected user.
+        user_id: Cow<'a, str>,
+        /// The user ID on the other side of the conversation to listen to.
+        target_user_id: Cow<'a, str>,
     },
     /// User credit count when it changes.
     UserCredits {
@@ -197,6 +203,11 @@ pub enum Channel<'a> {
     },
     /// Any console log messages.
     UserConsole {
+        /// The user ID of the subscription.
+        user_id: Cow<'a, str>,
+    },
+    /// User active branch changes: updates whenever the active branch changes.
+    UserActiveBranch {
         /// The user ID of the subscription.
         user_id: Cow<'a, str>,
     },
@@ -227,9 +238,20 @@ impl<'a> Channel<'a> {
         Channel::UserCpu { user_id: user_id.into() }
     }
 
-    /// Creates a channel subscribing to a user's CPU and memory.
+    /// Creates a channel subscribing to a user's new message notifications.
     pub fn user_messages<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
         Channel::UserMessages { user_id: user_id.into() }
+    }
+
+    /// Creates a channel subscribing to new messages in a user's specific conversation.
+    pub fn user_convesation<T, U>(user_id: T, target_user_id: U) -> Self
+        where T: Into<Cow<'a, str>>,
+              U: Into<Cow<'a, str>>
+    {
+        Channel::UserConversation {
+            user_id: user_id.into(),
+            target_user_id: target_user_id.into(),
+        }
     }
 
     /// Creates a channel subscribing to a user's credit count.
@@ -238,7 +260,10 @@ impl<'a> Channel<'a> {
     }
 
     /// Creates a channel subscribing to a path in a user's memory.
-    pub fn user_memory_path<T: Into<Cow<'a, str>>, U: Into<Cow<'a, str>>>(user_id: T, path: U) -> Self {
+    pub fn user_memory_path<T, U>(user_id: T, path: U) -> Self
+        where T: Into<Cow<'a, str>>,
+              U: Into<Cow<'a, str>>
+    {
         Channel::UserMemoryPath {
             user_id: user_id.into(),
             path: path.into(),
@@ -248,6 +273,11 @@ impl<'a> Channel<'a> {
     /// Creates a channel subscribing to a user's console output.
     pub fn user_console<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
         Channel::UserConsole { user_id: user_id.into() }
+    }
+
+    /// Creates a channel subscribing to when a user's active code branch changes.
+    pub fn user_active_branch<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
+        Channel::UserActiveBranch { user_id: user_id.into() }
     }
 
     /// Creates a channel subscribing to map-view updates of a room.
@@ -269,12 +299,19 @@ impl<'a> Channel<'a> {
     /// Adds the channel description to the message (does not add preceding space) and collects to a vec.
     fn chain_and_complete_message<T: Iterator<Item = char>>(&self, start: T) -> String {
         match *self {
-            Channel::ServerMessages => start.chain("server-messages".chars()).collect(),
+            Channel::ServerMessages => start.chain("server-message".chars()).collect(),
             Channel::UserCpu { ref user_id } => {
                 start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/cpu".chars()).collect()
             }
             Channel::UserMessages { ref user_id } => {
-                start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/newMessages".chars()).collect()
+                start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/newMessage".chars()).collect()
+            }
+            Channel::UserConversation { ref user_id, ref target_user_id } => {
+                start.chain("user:".chars())
+                    .chain(user_id.as_ref().chars())
+                    .chain("/message:".chars())
+                    .chain(target_user_id.as_ref().chars())
+                    .collect()
             }
             Channel::UserCredits { ref user_id } => {
                 start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/money".chars()).collect()
@@ -288,6 +325,12 @@ impl<'a> Channel<'a> {
             }
             Channel::UserConsole { ref user_id } => {
                 start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/console".chars()).collect()
+            }
+            Channel::UserActiveBranch { ref user_id } => {
+                start.chain("user:".chars())
+                    .chain(user_id.as_ref().chars())
+                    .chain("/set-active-branch".chars())
+                    .collect()
             }
             Channel::MapRoomUpdates { ref room_name } => {
                 start.chain("roomMap2:".chars()).chain(room_name.as_ref().chars()).collect()
