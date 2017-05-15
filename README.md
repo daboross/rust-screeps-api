@@ -64,7 +64,7 @@ Use:
 
 [travis-image]: https://travis-ci.org/daboross/rust-screeps-api.svg?branch=master
 [travis-builds]: https://travis-ci.org/daboross/rust-screeps-api
-[appveyor-image]: https://ci.appveyor.com/api/projects/status/github/daboross/rust-screeps-api?branch=adding-appveyor&svg=true
+[appveyor-image]: https://ci.appveyor.com/api/projects/status/github/daboross/rust-screeps-api?branch=master&svg=true
 [appveyor-builds]: https://ci.appveyor.com/project/daboross/rust-screeps-api
 [screeps]: https://screeps.com
 [screeps-os]: https://github.com/screeps/screeps/
