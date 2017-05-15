@@ -56,8 +56,7 @@ pub struct RecentPvp {
     /// The current game time of the server when the call was completed, the tick up to which pvp has been reported.
     pub reported_up_to: i64,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 impl EndpointResult for RecentPvp {

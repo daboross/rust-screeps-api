@@ -20,6 +20,10 @@ pub enum StatName {
     /// Gets the room owner (always gotten even if other stats are requested).
     #[serde(rename = "owner0")]
     RoomOwner,
+    /// A marker variant that tells the compiler that users of this enum cannot match it exhaustively.
+    #[doc(hidden)]
+    #[serde(rename = "owner0")]
+    __Nonexhaustive,
 }
 
 /// Arguments to a map stats call, holds a single value which can be iterated to get rooms.
@@ -123,12 +127,15 @@ pub struct RoomOwner {
     /// Room control level of the room.
     #[serde(rename = "level")]
     pub room_controller_level: u32,
+    /// Phantom data in order to allow adding any additional fields in the future.
+    #[serde(skip_deserializing)]
+    _phantom: PhantomData<()>,
 }
 
 /// Statistics on a number of rooms.
 #[derive(Debug, Clone)]
 pub struct MapStats {
-    /// A list of results retrieved from this map stats call. Note: Invalid or non-existant room names will simply just
+    /// A list of results retrieved from this map stats call. Note: Invalid or non-existent room names will simply just
     /// not appear in this result!
     ///
     /// If you request some rooms, and only get part back, you can assume that all extra rooms requested simply do
@@ -137,8 +144,7 @@ pub struct MapStats {
     /// A list of user information for each user who either owns or signed a room that was requested.
     pub users: Vec<UserInfo>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 /// Information on a room.
@@ -155,8 +161,7 @@ pub struct RoomInfo {
     /// The room's system-set sign, if any.
     pub hard_sign: Option<data::HardSign>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 /// Information on a user.
@@ -168,6 +173,8 @@ pub struct UserInfo {
     pub username: String,
     /// The user's badge.
     pub badge: data::Badge,
+    /// Phantom data in order to allow adding any additional fields in the future.
+    _phantom: PhantomData<()>,
 }
 
 impl EndpointResult for MapStats {
@@ -222,6 +229,7 @@ impl EndpointResult for MapStats {
                         user_id: user_id,
                         username: username,
                         badge: badge,
+                        _phantom: PhantomData,
                     };
 
                     Ok(info)

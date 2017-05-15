@@ -72,8 +72,7 @@ pub struct StatPoint {
     /// The end time that this stat point is for.
     pub end_time: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 impl From<StatPointResponse> for StatPoint {
@@ -104,8 +103,7 @@ pub struct TotalStats {
     /// Creep parts lots during this time period
     creep_parts_lost: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 /// Various statistics about a single room, returned as a result from `room_overview` calls.
@@ -130,8 +128,7 @@ pub struct RoomOverview {
     /// A list of all total statistics provided (usually hour long, day long, and week long returned)
     pub total_stats: Vec<TotalStats>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 impl EndpointResult for RoomOverview {

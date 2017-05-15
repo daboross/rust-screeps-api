@@ -47,8 +47,7 @@ pub struct RoomTerrain {
     /// can use terrain[y_pos][x_pos] to get individual terrain.
     pub terrain: Vec<Vec<TerrainType>>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 impl EndpointResult for RoomTerrain {

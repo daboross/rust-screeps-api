@@ -46,8 +46,7 @@ pub struct LeaderboardPage {
     /// Details about all users listed. This is a map from user_id to info struct containing username, gcl, and badge.
     pub user_details: HashMap<String, UserDetails>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 /// Alias since the format is the same for the inner user ranks and found user ranks.
@@ -65,8 +64,7 @@ pub struct UserDetails {
     /// The user's username.
     pub username: String,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 impl EndpointResult for LeaderboardPage {

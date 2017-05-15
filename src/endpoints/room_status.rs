@@ -36,8 +36,7 @@ pub struct RoomStatus {
     /// retrieved from the system.
     pub state: RoomState,
     /// Phantom data in order to allow adding any additional fields in the future
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 impl EndpointResult for RoomStatus {

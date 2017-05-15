@@ -42,8 +42,7 @@ pub struct MyInfo {
     /// This user's current credit balance.
     pub credits: f64,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 impl EndpointResult for MyInfo {

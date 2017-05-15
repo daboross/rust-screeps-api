@@ -1,4 +1,5 @@
 //! Interpreting login responses.
+use std::marker::PhantomData;
 
 use EndpointResult;
 use data;
@@ -37,6 +38,8 @@ pub struct Response {
 pub struct LoginResult {
     /// The token which can be used to make future authenticated API calls.
     pub token: String,
+    /// Phantom data in order to allow adding any additional fields in the future.
+    _phantom: PhantomData<()>,
 }
 
 impl EndpointResult for LoginResult {
@@ -50,7 +53,10 @@ impl EndpointResult for LoginResult {
             return Err(ApiError::NotOk(ok).into());
         }
         match token {
-            Some(token) => Ok(LoginResult { token: token }),
+            Some(token) => Ok(LoginResult {
+                token: token,
+                _phantom: PhantomData,
+            }),
             None => Err(ApiError::MissingField("token").into()),
         }
     }

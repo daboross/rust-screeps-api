@@ -17,8 +17,7 @@ pub struct Response {
 #[derive(Debug, Clone)]
 pub struct CallInfo {
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: PhantomData<()>,
+    _phantom: PhantomData<()>,
 }
 
 impl EndpointResult for CallInfo {
