@@ -1,14 +1,23 @@
 use std::borrow::Cow;
 use std::convert::AsRef;
+use std::marker::PhantomData;
+use std::{cmp, fmt};
+
+use serde::{Deserializer, Deserialize};
+use serde::de::{Visitor, SeqAccess};
 
 use serde_json;
 
 use super::error::ParseError;
 use Token;
 
+pub use self::updates::{ChannelUpdate, RoomMapViewUpdate, UserCpuUpdate};
+
+mod updates;
+
 /// Result of parsing a message
 #[derive(Debug, Clone, PartialEq)]
-pub enum ParsedResult {
+pub enum ParsedResult<'a> {
     /// "Open"?
     Open,
     /// Heartbeat
@@ -18,21 +27,18 @@ pub enum ParsedResult {
         /// Close code
         code: i64,
         /// Close reason
-        reason: String,
+        reason: Cow<'a, str>,
     },
     /// Single message
-    Message(ParsedMessage),
+    Message(ParsedMessage<'a>),
     /// Multiple messages
-    Messages(Vec<ParsedMessage>),
+    Messages(Vec<ParsedMessage<'a>>),
 }
 
-impl ParsedResult {
+impl<'a> ParsedResult<'a> {
     /// Parses an incoming raw websockets messages on a Screeps SockJS socket into some result.
-    pub fn parse<'a, T: Into<Cow<'a, str>>>(message: T) -> Result<Self, ParseError> {
-        let full_message_cow = message.into();
-
-
-        let message = full_message_cow.as_ref();
+    pub fn parse<T: AsRef<str> + ?Sized>(message_generic: &'a T) -> Result<Self, ParseError> {
+        let message = message_generic.as_ref();
 
         let first = match message.chars().next() {
             // empty string
@@ -46,11 +52,11 @@ impl ParsedResult {
             'h' => ParsedResult::Heartbeat,
             'c' => {
                 let rest = &message[1..];
-                match serde_json::from_str(rest) {
+                match serde_json::from_str::<(i64, &str)>(rest) {
                     Ok((code, reason)) => {
                         ParsedResult::Close {
                             code: code,
-                            reason: reason,
+                            reason: reason.into(),
                         }
                     }
                     Err(e) => return Err(ParseError::serde("error parsing closed json message", rest.to_owned(), e)),
@@ -58,25 +64,20 @@ impl ParsedResult {
             }
             'm' => {
                 let rest = &message[1..];
-                // SockJS _might_ allow providing non-String json values here, but I _think_ the server only ever
-                // sends strings.
+                // SockJS _might_ allow providing non-String json values here, but the server has only ever sent
+                // strings so far.
 
-                // TODO: this shouldn't allocate a new string here.
+                // We have to parse into `String` since it contains json escapes.
                 match serde_json::from_str::<String>(rest) {
-                    Ok(message) => ParsedResult::Message(ParsedMessage::parse(message)?),
+                    Ok(message) => ParsedResult::Message(ParsedMessage::parse(&message)),
                     Err(e) => return Err(ParseError::serde("error parsing single message", rest.to_owned(), e)),
                 }
             }
             'a' => {
                 let rest = &message[1..];
 
-                // TODO: this shouldn't allocate new strings here.
-                match serde_json::from_str::<Vec<String>>(rest) {
-                    Ok(messages) => {
-                        ParsedResult::Messages(messages.into_iter()
-                            .map(ParsedMessage::parse)
-                            .collect::<Result<Vec<ParsedMessage>, ParseError>>()?)
-                    }
+                match serde_json::from_str::<MultipleMessagesIntermediate>(rest) {
+                    Ok(messages) => ParsedResult::Messages(messages.0),
                     Err(e) => return Err(ParseError::serde("error parsing array of messages", rest.to_owned(), e)),
                 }
             }
@@ -92,10 +93,50 @@ impl ParsedResult {
     }
 }
 
+struct MultipleMessagesIntermediate(Vec<ParsedMessage<'static>>);
+
+struct MultipleMessagesVisitor {
+    marker: PhantomData<MultipleMessagesIntermediate>,
+}
+
+impl MultipleMessagesVisitor {
+    fn new() -> Self {
+        MultipleMessagesVisitor { marker: PhantomData }
+    }
+}
+
+impl<'de> Visitor<'de> for MultipleMessagesVisitor {
+    type Value = MultipleMessagesIntermediate;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("a sequence")
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+        where A: SeqAccess<'de>
+    {
+
+        let mut values = Vec::with_capacity(cmp::min(seq.size_hint().unwrap_or(0), 4069));
+
+        while let Some(string) = seq.next_element::<String>()? {
+            values.push(ParsedMessage::parse(&string));
+        }
+
+        Ok(MultipleMessagesIntermediate(values))
+    }
+}
+
+impl<'de> Deserialize<'de> for MultipleMessagesIntermediate {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>
+    {
+        deserializer.deserialize_seq(MultipleMessagesVisitor::new())
+    }
+}
 
 /// A parsed message.
 #[derive(Debug, Clone, PartialEq)]
-pub enum ParsedMessage {
+pub enum ParsedMessage<'a> {
     /// Authentication failed.
     AuthFailed,
     /// Authentication successful!
@@ -115,18 +156,16 @@ pub enum ParsedMessage {
     },
     /// On initial connection, the server reports a "package" number.
     ServerPackage {
-        /// The package version? I'm not sure.
+        /// I'm not sure what this means at all.
         package: u32,
     },
     /// An update on one of the channels.
     ChannelUpdate {
-        /// The channel name. TODO: parse this into a Channel.
-        channel: String,
-        /// The message value. TODO: parse into per-channel types.
-        message: serde_json::Value,
+        /// The update.
+        update: ChannelUpdate<'a>,
     },
     /// Another kind of message.
-    Other(String),
+    Other(Cow<'a, str>),
 }
 
 
@@ -138,54 +177,53 @@ const AUTH_OK: &'static str = "ok ";
 const AUTH_FAILED: &'static str = "failed";
 
 
-impl ParsedMessage {
+impl ParsedMessage<'static> {
     /// Parses the internal message from a SockJS message into a meaningful type.
-    pub fn parse<'a, T: Into<Cow<'a, str>>>(message: T) -> Result<Self, ParseError> {
+    pub fn parse<T: AsRef<str> + ?Sized>(message: &T) -> Self {
         // TODO: deflate with base64 then zlib if the message starts with "gz:".
-        let full_message_cow = message.into();
 
         {
-            let full_message = full_message_cow.as_ref();
+            let message = message.as_ref();
 
-            if full_message.starts_with(AUTH_PREFIX) {
-                let rest = &full_message[AUTH_PREFIX.len()..];
+            if message.starts_with(AUTH_PREFIX) {
+                let rest = &message[AUTH_PREFIX.len()..];
 
-                return Ok({
+                return {
                     if rest.starts_with(AUTH_OK) {
                         ParsedMessage::AuthOk { new_token: rest[AUTH_OK.len()..].to_owned() }
                     } else if rest == AUTH_FAILED {
                         ParsedMessage::AuthFailed
                     } else {
                         warn!("expected \"auth failed\", found \"{}\" (occurred when parsing authentication failure)",
-                              full_message);
+                              message);
                         ParsedMessage::AuthFailed
                     }
-                });
-            } else if full_message.starts_with(TIME_PREFIX) {
-                let rest = &full_message[TIME_PREFIX.len()..];
+                };
+            } else if message.starts_with(TIME_PREFIX) {
+                let rest = &message[TIME_PREFIX.len()..];
 
                 match rest.parse::<u64>() {
-                    Ok(v) => return Ok(ParsedMessage::ServerTime { time: v }),
+                    Ok(v) => return ParsedMessage::ServerTime { time: v },
                     Err(_) => {
                         warn!("expected \"time <integer>\", found \"{}\". Ignoring inconsistent message!",
                               rest);
                     }
                 }
-            } else if full_message.starts_with(PROTOCOL_PREFIX) {
-                let rest = &full_message[PROTOCOL_PREFIX.len()..];
+            } else if message.starts_with(PROTOCOL_PREFIX) {
+                let rest = &message[PROTOCOL_PREFIX.len()..];
 
                 match rest.parse::<u32>() {
-                    Ok(v) => return Ok(ParsedMessage::ServerProtocol { protocol: v }),
+                    Ok(v) => return ParsedMessage::ServerProtocol { protocol: v },
                     Err(_) => {
                         warn!("expected \"protocol <integer>\", found \"{}\". Ignoring inconsistent message!",
                               rest);
                     }
                 }
-            } else if full_message.starts_with(PACKAGE_PREFIX) {
-                let rest = &full_message[PACKAGE_PREFIX.len()..];
+            } else if message.starts_with(PACKAGE_PREFIX) {
+                let rest = &message[PACKAGE_PREFIX.len()..];
 
                 match rest.parse::<u32>() {
-                    Ok(v) => return Ok(ParsedMessage::ServerPackage { package: v }),
+                    Ok(v) => return ParsedMessage::ServerPackage { package: v },
                     Err(_) => {
                         warn!("expected \"package <integer>\", found \"{}\". Ignoring inconsistent message!",
                               rest);
@@ -193,16 +231,14 @@ impl ParsedMessage {
                 }
             }
 
-            if let Ok((channel, message)) = serde_json::from_str(full_message) {
-                return Ok(ParsedMessage::ChannelUpdate {
-                    channel: channel,
-                    message: message,
-                });
+            // let failures just result in an 'other' message.
+            if let Ok(update) = serde_json::from_str(message) {
+                return ParsedMessage::ChannelUpdate { update: update };
             }
         }
 
         // If it isn't in the exact format we expect, treat it as "other"
         // (TODO: error there instead once we are confident in this)
-        Ok(ParsedMessage::Other(full_message_cow.into_owned()))
+        ParsedMessage::Other(message.as_ref().to_owned().into())
     }
 }

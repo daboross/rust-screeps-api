@@ -23,7 +23,7 @@ use std::collections::VecDeque;
 use hyper::client::Client;
 use hyper::net::HttpsConnector;
 
-use screeps_api::sockets::{ParsedMessage, Channel};
+use screeps_api::sockets::{ParsedMessage, Channel, ChannelUpdate};
 use screeps_api::sockets::ws::Result as WsResult;
 
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
@@ -86,20 +86,49 @@ impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> 
                 self.sender.subscribe(Channel::user_messages(id))?;
                 self.sender.subscribe(Channel::user_credits(id))?;
                 self.sender.subscribe(Channel::user_console(id))?;
+                self.sender.subscribe(Channel::map_room_updates("E0N0"))?;
+                self.sender.subscribe(Channel::map_room_updates("E25S23"))?;
+                // self.sender.subscribe(Channel::map_room_updates("E24S23"))?;
+                // self.sender.subscribe(Channel::map_room_updates("E23S23"))?;
+                // self.sender.subscribe(Channel::map_room_updates("E22S23"))?;
+                // self.sender.subscribe(Channel::room_updates("W0S0"))?;
+                // self.sender.subscribe(Channel::room_updates("W25S23"))?;
 
-                info!("now subscribed to user CPU, memory usage, messages, credits, console.");
+                info!("Successfully subscribed to channels!");
             }
-            ParsedMessage::ChannelUpdate { channel, message } => {
-                info!("channel update: [{}] {}",
-                      channel,
-                      serde_json::to_string_pretty(&message).expect("failed to serialize json string"));
+            ParsedMessage::ChannelUpdate { update } => {
+                match update {
+                    ChannelUpdate::UserCpu { user_id, update } => info!("CPU: [{}] {:#?}", user_id, update),
+                    ChannelUpdate::RoomMapView { room_name, update } => {
+                        info!("Map View: [{}] {:#?}", room_name, update);
+                    }
+                    ChannelUpdate::Other { channel, update } => {
+                        warn!("ChannelUpdate::Other: {}\n{}",
+                              channel,
+                              serde_json::to_string_pretty(&update).expect("failed to serialize json string"));
+                    }
+                }
             }
-            other => {
-                info!("other update! As follows: {:?}", other);
+            ParsedMessage::ServerProtocol { protocol } => {
+                info!("server protocol: {}", protocol);
+            }
+            ParsedMessage::ServerTime { time } => {
+                info!("server time: {}", time);
+            }
+            ParsedMessage::ServerPackage { package } => {
+                info!("server package: {}", package);
+            }
+            ParsedMessage::Other(other) => {
+                warn!("ParsedMessage::Other: {}", other);
             }
         }
 
         Ok(())
+    }
+
+    /// Run on any websocket error or message parsing error.
+    fn on_error(&mut self, err: screeps_api::sockets::Error) {
+        error!("{}", err);
     }
 }
 

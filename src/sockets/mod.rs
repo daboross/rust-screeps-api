@@ -12,7 +12,7 @@ use self::fnv::FnvHashMap;
 use self::ws::util::Token as WsToken;
 
 pub use self::error::{Error, Result};
-pub use self::parsing::{ParsedResult, ParsedMessage};
+pub use self::parsing::{ParsedResult, ParsedMessage, ChannelUpdate};
 use error::{Error as HttpError, ErrorType as HttpErrorType};
 
 use TokenStorage;
@@ -133,7 +133,7 @@ impl<H: Handler, T: TokenStorage> ws::Handler for ApiHandler<H, T> {
     fn on_message(&mut self, msg: ws::Message) -> ws::Result<()> {
         match msg {
             ws::Message::Text(s) => {
-                match parsing::ParsedResult::parse(s) {
+                match parsing::ParsedResult::parse(&s) {
                     Ok(v) => {
                         match v {
                             ParsedResult::Open => {
