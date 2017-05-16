@@ -172,36 +172,36 @@ impl<H: Handler, T: TokenStorage> ws::Handler for ApiHandler<H, T> {
 pub enum Channel<'a> {
     /// Server messages (TODO: find message here).
     ServerMessages,
-    /// User CPU and memory usage, updates each tick.
+    /// User CPU and memory usage updates. Sent at the end of each tick.
     UserCpu {
         /// The user ID of the subscription.
         user_id: Cow<'a, str>,
     },
-    /// User message alerts, updates whenever a message is received.
+    /// User message updates. Sent when the user receives any new message.
     UserMessages {
         /// The user ID of the subscription.
         user_id: Cow<'a, str>,
     },
-    /// User conversation alert: updates whenever a message is received from a specific user.
+    /// Specific conversation alerts. Updates when a new message is received from a particular user.
     UserConversation {
         /// The user ID of the connected user.
         user_id: Cow<'a, str>,
         /// The user ID on the other side of the conversation to listen to.
         target_user_id: Cow<'a, str>,
     },
-    /// User credit count when it changes.
+    /// User credit alerts. Updates whenever the user's credit changes.
     UserCredits {
         /// The user ID of the subscription.
         user_id: Cow<'a, str>,
     },
-    /// Any changes to a specific path in memory.
+    /// Memory path alerts. Updates whenever this specific memory path changes.
     UserMemoryPath {
         /// The user ID of the subscription.
         user_id: Cow<'a, str>,
         /// The memory path, separated with '.'.
         path: Cow<'a, str>,
     },
-    /// Any console log messages.
+    /// Console alerts. Updates at the end of every tick with all console messages during that tick.
     UserConsole {
         /// The user ID of the subscription.
         user_id: Cow<'a, str>,

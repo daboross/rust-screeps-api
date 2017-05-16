@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-/// Update for a user's last tick CPU usage and total memory usage.
+/// Notification for Update for a user's last tick CPU usage and total memory usage.
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct UserCpuUpdate {
     /// The CPU usage last tick.
@@ -12,7 +12,7 @@ pub struct UserCpuUpdate {
     /// This is number of bytes the stringified memory takes.
     #[serde(rename = "memory")]
     pub memory_usage_bytes: u32,
-    #[serde(skip_deserializing)]
     /// Phantom data in order to allow adding any additional fields in the future.
+    #[serde(skip_deserializing)]
     _phantom: PhantomData<()>,
 }

@@ -100,7 +100,10 @@ impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> 
                 match update {
                     ChannelUpdate::UserCpu { user_id, update } => info!("CPU: [{}] {:#?}", user_id, update),
                     ChannelUpdate::RoomMapView { room_name, update } => {
-                        info!("Map View: [{}] {:#?}", room_name, update);
+                        info!("Map View: [{}] {:?}", room_name, update);
+                    }
+                    ChannelUpdate::UserConsole { user_id, update } => {
+                        info!("Console: [{}] {:#?}", user_id, update);
                     }
                     ChannelUpdate::Other { channel, update } => {
                         warn!("ChannelUpdate::Other: {}\n{}",

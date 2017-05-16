@@ -10,28 +10,43 @@ use serde_json;
 
 pub use self::room_map_view::RoomMapViewUpdate;
 pub use self::user_cpu::UserCpuUpdate;
+pub use self::user_console::UserConsoleUpdate;
 
 use sockets::Channel;
 
 mod room_map_view;
 mod user_cpu;
+mod user_console;
 
 /// An update to a Screeps server 'channel' that has been subscribed to.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ChannelUpdate<'a> {
-    /// A 'map view' update of a room.
+    /// A 'map view' update of a room. Sent once per tick.
     RoomMapView {
         /// The name of the room this is an update for.
         room_name: Cow<'a, str>,
         /// The data: all entities in this room.
         update: RoomMapViewUpdate<'a>,
     },
-    /// A per-tick update for the subscribed user's cpu and memory usage.
+    /// An update on the last tick's CPU and memory usage. Sent once per tick.
     UserCpu {
         /// The user ID this is a cpu/memory update for.
         user_id: Cow<'a, str>,
-        /// The data: the CPU usage last tick, and memory usage as of the last tick.
+        /// The update.
         update: UserCpuUpdate,
+    },
+    /// An update on all user script log messages last tick or a specific error message.
+    /// Sent once and exactly once per tick unless:
+    ///
+    /// - Multiple script errors occurred.
+    /// - Normal log messages were sent and a script error also occurred.
+    ///
+    /// In either of these cases, two or more of these updates will occur in short succession.
+    UserConsole {
+        /// The user ID this console update is for.
+        user_id: Cow<'a, str>,
+        /// The update.
+        update: UserConsoleUpdate,
     },
     /// Another update that was not accounted for.
     ///
@@ -61,7 +76,8 @@ impl<'a> ChannelUpdate<'a> {
     /// notification, *not* the user id of the sender.
     pub fn user_id(&self) -> Option<&str> {
         match *self {
-            ChannelUpdate::UserCpu { ref user_id, .. } => Some(user_id.as_ref()),
+            ChannelUpdate::UserCpu { ref user_id, .. } |
+            ChannelUpdate::UserConsole { ref user_id, .. } => Some(user_id.as_ref()),
             _ => None,
         }
     }
@@ -73,6 +89,7 @@ impl<'a> ChannelUpdate<'a> {
         match *self {
             ChannelUpdate::RoomMapView { ref room_name, .. } => Channel::room_map_updates(room_name.as_ref()),
             ChannelUpdate::UserCpu { ref user_id, .. } => Channel::user_cpu(user_id.as_ref()),
+            ChannelUpdate::UserConsole { ref user_id, .. } => Channel::user_console(user_id.as_ref()),
             ChannelUpdate::Other { ref channel, .. } => Channel::other(channel.as_ref()),
         }
     }
@@ -101,6 +118,7 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
         const ROOM_MAP_VIEW_PREFIX: &'static str = "roomMap2:";
         const USER_PREFIX: &'static str = "user:";
         const USER_CPU: &'static str = "cpu";
+        const USER_CONSOLE: &'static str = "console";
 
         let channel: &str = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
@@ -136,7 +154,13 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                     return Ok(ChannelUpdate::UserCpu {
                         user_id: user_id.to_owned().into(),
                         update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
-                    })
+                    });
+                }
+                USER_CONSOLE => {
+                    return Ok(ChannelUpdate::UserConsole {
+                        user_id: user_id.to_owned().into(),
+                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                    });
                 }
                 _ => finish_other!(),
             }
