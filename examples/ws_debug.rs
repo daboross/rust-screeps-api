@@ -35,11 +35,11 @@ fn env(var: &str) -> String {
     }
 }
 
-fn setup_logging(verbose: bool) {
-    let log_level = if verbose {
-        log::LogLevelFilter::Debug
-    } else {
-        log::LogLevelFilter::Info
+fn setup_logging(verbosity: u64) {
+    let log_level = match verbosity {
+        0 => log::LogLevelFilter::Warn,
+        1 => log::LogLevelFilter::Info,
+        _ => log::LogLevelFilter::Debug,
     };
     fern::Dispatch::new()
         .level(log_level)
@@ -143,7 +143,7 @@ fn main() {
             .multiple(true)
             .help("Enables verbose logging"))
         .get_matches();
-    setup_logging(cmd_arguments.is_present("verbose"));
+    setup_logging(cmd_arguments.occurrences_of("verbose"));
 
     // Create a sharable hyper client
     let hyper = Arc::new(Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new())));
