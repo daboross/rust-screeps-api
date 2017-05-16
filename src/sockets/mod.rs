@@ -225,6 +225,11 @@ pub enum Channel<'a> {
         /// The room name of the subscription.
         room_name: Cow<'a, str>,
     },
+    /// A channel specified by the exact channel id.
+    Other {
+        /// The channel protocol string.
+        channel: Cow<'a, str>,
+    },
 }
 
 impl<'a> Channel<'a> {
@@ -281,7 +286,7 @@ impl<'a> Channel<'a> {
     }
 
     /// Creates a channel subscribing to map-view updates of a room.
-    pub fn map_room_updates<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
+    pub fn room_map_updates<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
         Channel::MapRoomUpdates { room_name: room_name.into() }
     }
 
@@ -292,6 +297,11 @@ impl<'a> Channel<'a> {
     /// message on "off" ticks.
     pub fn room_updates<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
         Channel::RoomUpdates { room_name: room_name.into() }
+    }
+
+    /// Creates a channel using the fully specified channel name.
+    pub fn other<T: Into<Cow<'a, str>>>(channel: T) -> Self {
+        Channel::Other { channel: channel.into() }
     }
 
     /// This is a really wonky scheme, but it is probably the best one right now.
@@ -338,6 +348,7 @@ impl<'a> Channel<'a> {
             Channel::RoomUpdates { ref room_name } => {
                 start.chain("room:".chars()).chain(room_name.as_ref().chars()).collect()
             }
+            Channel::Other { ref channel } => start.chain(channel.as_ref().chars()).collect(),
         }
     }
 
@@ -361,18 +372,29 @@ impl Sender {
         self.send_raw(&message)
     }
 
-    /// Subscribes to a channel. Unknown effect if already subscribed, server error?
+    /// Subscribes to a channel.
     ///
-    /// Recommended that you keep track of what channels you are subscribed to separately.
+    /// Subscribing to a channel you are already subscribed to may have differing
+    /// results depending on the server software (official vs. private). Note that if you subscribe
+    /// multiple times, it may be necessary to unsubscribe at least that many times to fully unsubscribe.
+    /// Subscribing multiple times may or may not result in duplicated messages, and may or may not
+    /// result in extra initial messages.
+    ///
+    /// It's recommended that you keep track of what channels you are subscribed to separately: this
+    /// is tracked by the server, but is not tracked by `screeps-api`, and cannot be queried from the
+    /// server.
     pub fn subscribe(&self, channel: Channel) -> ws::Result<()> {
         let message = channel.chain_and_complete_message("subscribe ".chars());
 
         self.send_raw(&message)
     }
 
-    /// Unsubscribes from a channel. Unknown effect if not subscribed, server error?
+    /// Unsubscribes from a channel. Unsubscribing from a channel you are not subscribed to appears to
+    /// have no affect.
     ///
-    /// Recommended that you keep track of what channels you are subscribed to separately.
+    /// Recommended that you keep track of what channels you are subscribed to separately: this
+    /// is tracked by the server, but is not tracked by `screeps-api`, and cannot be queried from the
+    /// server.
     pub fn unsubscribe(&self, channel: Channel) -> ws::Result<()> {
         let message = channel.chain_and_complete_message("unsubscribe ".chars());
 

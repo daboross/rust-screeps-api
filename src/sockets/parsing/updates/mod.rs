@@ -11,6 +11,8 @@ use serde_json;
 pub use self::room_map_view::RoomMapViewUpdate;
 pub use self::user_cpu::UserCpuUpdate;
 
+use sockets::Channel;
+
 mod room_map_view;
 mod user_cpu;
 
@@ -50,6 +52,7 @@ impl<'a> ChannelUpdate<'a> {
             _ => None,
         }
     }
+
     /// If this update is directly associated with a subscribed user id, gets the user id.
     ///
     /// The user_id is *always* the user id of the subscribed user, never another associated id.
@@ -60,6 +63,17 @@ impl<'a> ChannelUpdate<'a> {
         match *self {
             ChannelUpdate::UserCpu { ref user_id, .. } => Some(user_id.as_ref()),
             _ => None,
+        }
+    }
+
+    /// Gets the channel which this update is from.
+    ///
+    /// This channel specification can be used to subscribe or unsubscribe from this channel if needed.
+    pub fn channel(&self) -> Channel {
+        match *self {
+            ChannelUpdate::RoomMapView { ref room_name, .. } => Channel::room_map_updates(room_name.as_ref()),
+            ChannelUpdate::UserCpu { ref user_id, .. } => Channel::user_cpu(user_id.as_ref()),
+            ChannelUpdate::Other { ref channel, .. } => Channel::other(channel.as_ref()),
         }
     }
 }

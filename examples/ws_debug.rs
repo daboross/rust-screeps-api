@@ -86,11 +86,11 @@ impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> 
                 self.sender.subscribe(Channel::user_messages(id))?;
                 self.sender.subscribe(Channel::user_credits(id))?;
                 self.sender.subscribe(Channel::user_console(id))?;
-                self.sender.subscribe(Channel::map_room_updates("E0N0"))?;
-                self.sender.subscribe(Channel::map_room_updates("E25S23"))?;
-                // self.sender.subscribe(Channel::map_room_updates("E24S23"))?;
-                // self.sender.subscribe(Channel::map_room_updates("E23S23"))?;
-                // self.sender.subscribe(Channel::map_room_updates("E22S23"))?;
+                self.sender.subscribe(Channel::room_map_updates("E0N0"))?;
+                self.sender.subscribe(Channel::room_map_updates("E25S23"))?;
+                // self.sender.subscribe(Channel::room_map_updates("E24S23"))?;
+                // self.sender.subscribe(Channel::room_map_updates("E23S23"))?;
+                // self.sender.subscribe(Channel::room_map_updates("E22S23"))?;
                 // self.sender.subscribe(Channel::room_updates("W0S0"))?;
                 // self.sender.subscribe(Channel::room_updates("W25S23"))?;
 
