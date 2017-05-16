@@ -25,8 +25,8 @@ serde_derive = "1.0"
 serde_json = "1.0"
 serde-tuple-vec-map = "0.2"
 time = "0.1"
-ws = {version = "0.7", features = ["ssl"], optional = true}
-fnv = {version = "1.0", optional = true}
+ws = { version = "0.7", features = ["ssl"], optional = true }
+fnv = { version = "1.0", optional = true }
 
 [features]
 websockets = ["ws", "fnv"]
@@ -41,13 +41,10 @@ clap = "2.22"
 
 [[example]]
 name = "ws-debug"
-path = "examples/ws_debug.rs"
 required-features = ["ws"]
 
 [[example]]
 name = "me"
-path = "examples/me.rs"
 
 [[example]]
 name = "top10"
-path = "examples/top10.rs"
