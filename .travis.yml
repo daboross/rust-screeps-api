@@ -15,4 +15,4 @@ before_script:
 script:
 - cargo build --verbose "${COMPILE_ARGS[@]}"
 - cargo fmt --verbose -- --write-mode=diff
-- cargo test --verbose "${COMPILE_ARGS[@]}" --skip auth
+- cargo test --verbose "${COMPILE_ARGS[@]}" -- --skip auth
