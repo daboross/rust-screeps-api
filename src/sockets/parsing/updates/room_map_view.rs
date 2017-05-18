@@ -1,5 +1,4 @@
 use std::marker::PhantomData;
-use std::borrow::Cow;
 use std::{cmp, fmt};
 
 use serde::{Deserializer, Deserialize};
@@ -7,8 +6,8 @@ use serde::de::{MapAccess, Visitor};
 
 /// "Map view" room status update. This contains all entities in a given room,
 /// organized by what type of thing they are, or who owns them.
-#[derive(Default, Debug, Clone, PartialEq)]
-pub struct RoomMapViewUpdate<'a> {
+#[derive(Default, Debug, Clone, PartialEq, Hash)]
+pub struct RoomMapViewUpdate {
     /// Constructed walls in the room. Does not include terrain.
     pub walls: Vec<(u32, u32)>,
     /// All roads in the room.
@@ -29,40 +28,23 @@ pub struct RoomMapViewUpdate<'a> {
     ///
     /// This is a Vec of (user_id, owned_objects_of_that_user). The game does not provide
     /// more information on what type of object (creep or building, or type of building).
-    pub users_objects: Vec<(Cow<'a, str>, Vec<(u32, u32)>)>,
+    pub users_objects: Vec<(String, Vec<(u32, u32)>)>,
     /// Phantom data in order to allow adding any additional fields in the future.
     _phantom: PhantomData<()>,
 }
 
-impl<'a> RoomMapViewUpdate<'a> {
-    pub fn to_owned(self) -> RoomMapViewUpdate<'static> {
-        RoomMapViewUpdate {
-            walls: self.walls,
-            roads: self.roads,
-            power_or_power_bank: self.power_or_power_bank,
-            portals: self.portals,
-            sources: self.sources,
-            minerals: self.minerals,
-            controllers: self.controllers,
-            keeper_lairs: self.keeper_lairs,
-            users_objects: self.users_objects.into_iter().map(|(k, v)| (k.into_owned().into(), v)).collect(),
-            _phantom: PhantomData,
-        }
-    }
+struct RoomMapViewUpdateVisitor {
+    marker: PhantomData<RoomMapViewUpdate>,
 }
 
-struct RoomMapViewUpdateVisitor<'a> {
-    marker: PhantomData<RoomMapViewUpdate<'a>>,
-}
-
-impl<'a> RoomMapViewUpdateVisitor<'a> {
+impl RoomMapViewUpdateVisitor {
     pub fn new() -> Self {
         RoomMapViewUpdateVisitor { marker: PhantomData }
     }
 }
 
-impl<'de> Visitor<'de> for RoomMapViewUpdateVisitor<'de> {
-    type Value = RoomMapViewUpdate<'static>;
+impl<'de> Visitor<'de> for RoomMapViewUpdateVisitor {
+    type Value = RoomMapViewUpdate;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.write_str("a map")
@@ -98,7 +80,7 @@ impl<'de> Visitor<'de> for RoomMapViewUpdateVisitor<'de> {
                 "m" => minerals = Some(value),
                 "c" => controllers = Some(value),
                 "k" => keeper_lairs = Some(value),
-                user_id => users_objects.push((user_id.to_owned().into(), value)),
+                user_id => users_objects.push((user_id.to_owned(), value)),
             }
         }
 
@@ -119,7 +101,7 @@ impl<'de> Visitor<'de> for RoomMapViewUpdateVisitor<'de> {
     }
 }
 
-impl<'de> Deserialize<'de> for RoomMapViewUpdate<'static> {
+impl<'de> Deserialize<'de> for RoomMapViewUpdate {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer<'de>
     {

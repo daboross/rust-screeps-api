@@ -211,17 +211,19 @@ pub enum Channel<'a> {
         /// The user ID of the subscription.
         user_id: Cow<'a, str>,
     },
-    /// Small room tile view for map viewing.
-    MapRoomUpdates {
+    /// Room overview updates. Updates at the end of every tick with all room positions for each nondescript
+    /// type of structure (road, wall, energy, or player owned).
+    RoomMapView {
         /// The room name of the subscription.
         room_name: Cow<'a, str>,
     },
-    /// Updates for all entities in a room.
+    /// Detailed room updates. Updates at the end of every tick with all room object properties which have
+    /// changed since the last tick.
     ///
     /// Note: this is limited to 2 per user account at a time, and if there are more than 2 room subscriptions active,
     /// it is random which 2 will received updates on any given ticks. Rooms which are not updated do receive an error
     /// message on "off" ticks.
-    RoomUpdates {
+    RoomDetail {
         /// The room name of the subscription.
         room_name: Cow<'a, str>,
     },
@@ -286,8 +288,8 @@ impl<'a> Channel<'a> {
     }
 
     /// Creates a channel subscribing to map-view updates of a room.
-    pub fn room_map_updates<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
-        Channel::MapRoomUpdates { room_name: room_name.into() }
+    pub fn room_map_view<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
+        Channel::RoomMapView { room_name: room_name.into() }
     }
 
     /// Creates a channel subscribing to detailed updates of a room's contents.
@@ -295,8 +297,8 @@ impl<'a> Channel<'a> {
     /// Note: this is limited to 2 per user account at a time, and if there are more than 2 room subscriptions active,
     /// it is random which 2 will received updates on any given ticks. Rooms which are not updated do receive an error
     /// message on "off" ticks.
-    pub fn room_updates<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
-        Channel::RoomUpdates { room_name: room_name.into() }
+    pub fn room_detail<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
+        Channel::RoomDetail { room_name: room_name.into() }
     }
 
     /// Creates a channel using the fully specified channel name.
@@ -342,10 +344,10 @@ impl<'a> Channel<'a> {
                     .chain("/set-active-branch".chars())
                     .collect()
             }
-            Channel::MapRoomUpdates { ref room_name } => {
+            Channel::RoomMapView { ref room_name } => {
                 start.chain("roomMap2:".chars()).chain(room_name.as_ref().chars()).collect()
             }
-            Channel::RoomUpdates { ref room_name } => {
+            Channel::RoomDetail { ref room_name } => {
                 start.chain("room:".chars()).chain(room_name.as_ref().chars()).collect()
             }
             Channel::Other { ref channel } => start.chain(channel.as_ref().chars()).collect(),

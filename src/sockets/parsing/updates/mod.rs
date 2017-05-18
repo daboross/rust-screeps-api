@@ -25,8 +25,8 @@ pub enum ChannelUpdate<'a> {
     RoomMapView {
         /// The name of the room this is an update for.
         room_name: Cow<'a, str>,
-        /// The data: all entities in this room.
-        update: RoomMapViewUpdate<'a>,
+        /// The data: the positions and nondescript types of entities in this room.
+        update: RoomMapViewUpdate,
     },
     /// An update on the last tick's CPU and memory usage. Sent once per tick.
     UserCpu {
@@ -87,7 +87,7 @@ impl<'a> ChannelUpdate<'a> {
     /// This channel specification can be used to subscribe or unsubscribe from this channel if needed.
     pub fn channel(&self) -> Channel {
         match *self {
-            ChannelUpdate::RoomMapView { ref room_name, .. } => Channel::room_map_updates(room_name.as_ref()),
+            ChannelUpdate::RoomMapView { ref room_name, .. } => Channel::room_map_view(room_name.as_ref()),
             ChannelUpdate::UserCpu { ref user_id, .. } => Channel::user_cpu(user_id.as_ref()),
             ChannelUpdate::UserConsole { ref user_id, .. } => Channel::user_console(user_id.as_ref()),
             ChannelUpdate::Other { ref channel, .. } => Channel::other(channel.as_ref()),
