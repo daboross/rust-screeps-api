@@ -105,6 +105,9 @@ impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> 
                     ChannelUpdate::UserConsole { user_id, update } => {
                         info!("Console: [{}] {:#?}", user_id, update);
                     }
+                    ChannelUpdate::UserCredits { user_id, update } => {
+                        info!("Credits: [{}] {}", user_id, update);
+                    }
                     ChannelUpdate::Other { channel, update } => {
                         warn!("ChannelUpdate::Other: {}\n{}",
                               channel,

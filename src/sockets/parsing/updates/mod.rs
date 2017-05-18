@@ -48,6 +48,13 @@ pub enum ChannelUpdate<'a> {
         /// The update.
         update: UserConsoleUpdate,
     },
+    /// An update on the user's credit total at the end of the last tick. Sent once per tick.
+    UserCredits {
+        /// The user ID this credit update is for.
+        user_id: Cow<'a, str>,
+        /// The number of credits.
+        update: f64,
+    },
     /// Another update that was not accounted for.
     ///
     /// TODO: when we're sure of everything, remove this variant.
@@ -77,7 +84,8 @@ impl<'a> ChannelUpdate<'a> {
     pub fn user_id(&self) -> Option<&str> {
         match *self {
             ChannelUpdate::UserCpu { ref user_id, .. } |
-            ChannelUpdate::UserConsole { ref user_id, .. } => Some(user_id.as_ref()),
+            ChannelUpdate::UserConsole { ref user_id, .. } |
+            ChannelUpdate::UserCredits { ref user_id, .. } => Some(user_id.as_ref()),
             _ => None,
         }
     }
@@ -90,6 +98,7 @@ impl<'a> ChannelUpdate<'a> {
             ChannelUpdate::RoomMapView { ref room_name, .. } => Channel::room_map_view(room_name.as_ref()),
             ChannelUpdate::UserCpu { ref user_id, .. } => Channel::user_cpu(user_id.as_ref()),
             ChannelUpdate::UserConsole { ref user_id, .. } => Channel::user_console(user_id.as_ref()),
+            ChannelUpdate::UserCredits { ref user_id, .. } => Channel::user_credits(user_id.as_ref()),
             ChannelUpdate::Other { ref channel, .. } => Channel::other(channel.as_ref()),
         }
     }
@@ -119,6 +128,7 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
         const USER_PREFIX: &'static str = "user:";
         const USER_CPU: &'static str = "cpu";
         const USER_CONSOLE: &'static str = "console";
+        const USER_CREDITS: &'static str = "money";
 
         let channel: &str = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
@@ -161,6 +171,12 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                         user_id: user_id.to_owned().into(),
                         update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     });
+                }
+                USER_CREDITS => {
+                    return Ok(ChannelUpdate::UserCredits {
+                        user_id: user_id.to_owned().into(),
+                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                    })
                 }
                 _ => finish_other!(),
             }
