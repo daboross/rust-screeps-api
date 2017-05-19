@@ -6,7 +6,7 @@ use error::{Result, ApiError};
 use std::marker::PhantomData;
 
 /// Call raw result.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct Response {
@@ -14,7 +14,7 @@ pub struct Response {
     seasons: Vec<Season>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct Season {
     _id: String,
     name: String,
@@ -25,7 +25,7 @@ struct Season {
 ///
 /// A leaderboard season is a completed/past saved "season", which in the server marks a past ranking of all
 /// players based off of their earned points during that season.
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct LeaderboardSeason {
     /// The display name of the season.
     pub name: String,

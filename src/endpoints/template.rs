@@ -6,7 +6,7 @@ use error::{Result, ApiError};
 use std::marker::PhantomData;
 
 /// Call raw result.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct Response {
@@ -14,7 +14,7 @@ pub struct Response {
 }
 
 /// Call info
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct CallInfo {
     /// Phantom data in order to allow adding any additional fields in the future.
     _phantom: PhantomData<()>,

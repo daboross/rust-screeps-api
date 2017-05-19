@@ -7,7 +7,7 @@ use error::{Result, ApiError};
 use std::borrow::Cow;
 
 /// Login details
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Clone, Hash, Debug)]
 pub struct Details<'a> {
     /// The email or username to log in with (either works)
     pub email: Cow<'a, str>,
@@ -26,7 +26,7 @@ impl<'a> Details<'a> {
 }
 
 /// Login raw result.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
@@ -34,7 +34,7 @@ pub struct Response {
 }
 
 /// The result of a call to log in.
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct LoginResult {
     /// The token which can be used to make future authenticated API calls.
     pub token: String,

@@ -6,14 +6,14 @@ use error::{Result, ApiError};
 use std::marker::PhantomData;
 
 /// Room overview raw result.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
     terrain: Option<Vec<InnerResponse>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct InnerResponse {
     // this is returned as part of the data, but what the heck is it even for?
     // A cache key maybe?
@@ -25,7 +25,7 @@ struct InnerResponse {
 }
 
 /// Type of terrain
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum TerrainType {
     /// Plains terrain type, easy to move through
     Plains,

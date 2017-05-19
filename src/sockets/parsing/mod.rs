@@ -16,7 +16,7 @@ pub use self::updates::{ChannelUpdate, RoomMapViewUpdate, UserCpuUpdate};
 mod updates;
 
 /// Result of parsing a message
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum ParsedResult<'a> {
     /// "Open"?
     Open,
@@ -135,7 +135,7 @@ impl<'de> Deserialize<'de> for MultipleMessagesIntermediate {
 }
 
 /// A parsed message.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum ParsedMessage<'a> {
     /// Authentication failed.
     AuthFailed,

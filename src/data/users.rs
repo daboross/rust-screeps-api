@@ -1,6 +1,7 @@
-//!
+//! User-related shared data structures.
+
 /// Badge type - what shape a badge should be.
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Clone, Eq, PartialEq, Hash, Debug)]
 #[serde(untagged)]
 pub enum BadgeType {
     /// Specific built-in badge pattern. Each number from 1 to 24 inclusive represents two SVG paths built in to the
@@ -18,7 +19,7 @@ pub enum BadgeType {
 }
 
 /// Badge color - what color a specific part of a badge should be.
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Clone, Eq, PartialEq, Hash, Debug)]
 #[serde(untagged)]
 pub enum BadgeColor {
     /// Specific built-in badge color. Each number from 0 to 79 inclusive represents a specific color.
@@ -35,7 +36,7 @@ pub enum BadgeColor {
 /// Badges can be rendered as SVG by first filling the entire image with `color1`, filling the first path (defined by
 /// badge type) with `color2`, filling the second path with `color3`, and then cutting off corners to make the badge
 /// a round circle.
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct Badge {
     /// Badge type, used for different badge formats
     #[serde(rename = "type")]

@@ -15,7 +15,7 @@ use error::ApiError;
 use error::Result as ScapiResult;
 
 /// Stat name argument to the map stats call. Only one possible argument implemented, more to come!
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum StatName {
     /// Gets the room owner (always gotten even if other stats are requested).
     #[serde(rename = "owner0")]
@@ -27,7 +27,7 @@ pub enum StatName {
 }
 
 /// Arguments to a map stats call, holds a single value which can be iterated to get rooms.
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Clone, Debug)]
 #[serde(bound = "")]
 pub struct MapStatsArgs<'a, T, I>
     where I: AsRef<str>,
@@ -39,7 +39,7 @@ pub struct MapStatsArgs<'a, T, I>
     stat: StatName,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct MapStatsArgsInner<'a, T, I>
     where I: AsRef<str>,
           T: 'a,
@@ -86,7 +86,7 @@ impl<'a, T, I> Serialize for MapStatsArgsInner<'a, T, I>
 
 
 /// Map stats raw result.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct Response {
@@ -97,7 +97,7 @@ pub struct Response {
     users: Vec<(String, UserResponse)>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 struct RoomResponse {
     status: String,
@@ -110,7 +110,7 @@ struct RoomResponse {
     hardSign: Option<data::HardSignData>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 struct UserResponse {
     badge: data::Badge,
@@ -119,7 +119,7 @@ struct UserResponse {
 }
 
 /// Description of the owner of an owned room.
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 pub struct RoomOwner {
     /// User ID of the room owner
     #[serde(rename = "user")]
@@ -133,7 +133,7 @@ pub struct RoomOwner {
 }
 
 /// Statistics on a number of rooms.
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct MapStats {
     /// A list of results retrieved from this map stats call. Note: Invalid or non-existent room names will simply just
     /// not appear in this result!
@@ -148,7 +148,7 @@ pub struct MapStats {
 }
 
 /// Information on a room.
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct RoomInfo {
     /// The room name / id.
     pub name: String,
@@ -165,7 +165,7 @@ pub struct RoomInfo {
 }
 
 /// Information on a user.
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct UserInfo {
     /// The user's ID.
     pub user_id: String,

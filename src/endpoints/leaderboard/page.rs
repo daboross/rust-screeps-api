@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 
 /// Raw list results.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct Response {
@@ -18,7 +18,7 @@ pub struct Response {
     users: HashMap<String, ExtendedUserInfo>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct ResponseRankedUser {
     //_id: String, // exists, but I don't know what it's for.
     rank: u32,
@@ -27,7 +27,7 @@ struct ResponseRankedUser {
     user: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct ExtendedUserInfo {
     _id: String,
     username: String,
@@ -35,8 +35,8 @@ struct ExtendedUserInfo {
     badge: data::Badge,
 }
 
-/// Call info
-#[derive(Debug, Clone)]
+/// Single leaderboard page of users.
+#[derive(Clone, Debug)]
 pub struct LeaderboardPage {
     /// The total number of users present in this leaderboard.
     pub total_count: u64,
@@ -53,7 +53,7 @@ pub struct LeaderboardPage {
 pub type RankedUser = find_rank::FoundUserRank;
 
 /// Details on any user in a given leaderboard page result.
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct UserDetails {
     /// The user's id.
     pub user_id: String,

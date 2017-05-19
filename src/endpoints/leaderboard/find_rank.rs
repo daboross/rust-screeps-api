@@ -6,7 +6,7 @@ use error::{Result, ApiError};
 use std::marker::PhantomData;
 
 /// Raw result for when the API endpoint is called with a specific season id.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct SingleResponse {
     // I have no idea what this is for, so not including in the documented and expected response.
@@ -19,14 +19,14 @@ pub struct SingleResponse {
 }
 
 /// Raw result for when the API endpoint is called without a specific season id.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct AllSeasonRanksResponse {
     ok: i32,
     list: Vec<InnerAllSeasonsResponse>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct InnerAllSeasonsResponse {
     // Again, no idea what this is for, so I'm not including it in the documented response.
     // _id: String,
@@ -37,7 +37,7 @@ struct InnerAllSeasonsResponse {
 }
 
 /// Result from a lookup for a user's rank on the leaderboard
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct FoundUserRank {
     /// The season ID which this rank is for
     pub season_id: String,

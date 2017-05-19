@@ -6,7 +6,7 @@ use serde::de::{MapAccess, Visitor};
 
 /// "Map view" room status update. This contains all entities in a given room,
 /// organized by what type of thing they are, or who owns them.
-#[derive(Default, Debug, Clone, PartialEq, Hash)]
+#[derive(Default, Clone, Hash, Debug)]
 pub struct RoomMapViewUpdate {
     /// Constructed walls in the room. Does not include terrain.
     pub walls: Vec<(u32, u32)>,

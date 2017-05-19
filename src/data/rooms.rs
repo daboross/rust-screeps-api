@@ -3,7 +3,7 @@ use time;
 use error;
 
 /// String or number describing utc time.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Eq, Hash, Debug)]
 #[serde(untagged)]
 pub enum StringNumberTimeSpec {
     /// String representation, a base 10 representation of a large unix time number.
@@ -34,11 +34,27 @@ impl StringNumberTimeSpec {
     }
 }
 
+impl PartialEq for StringNumberTimeSpec {
+    fn eq(&self, other: &StringNumberTimeSpec) -> bool {
+        match (self, other) {
+            (&StringNumberTimeSpec::String(ref s), &StringNumberTimeSpec::String(ref s2)) => {
+                match (s.parse::<i64>(), s2.parse::<i64>()) {
+                    (Ok(i), Ok(i2)) => i == i2,
+                    (..) => s == s2,
+                }
+            }
+            (&StringNumberTimeSpec::String(ref s), &StringNumberTimeSpec::Number(i)) |
+            (&StringNumberTimeSpec::Number(i), &StringNumberTimeSpec::String(ref s)) => s.parse() == Ok(i),
+            (&StringNumberTimeSpec::Number(i), &StringNumberTimeSpec::Number(i2)) => i == i2,
+        }
+    }
+}
+
 /// A room state, returned by room status.
 ///
 /// Note that the API itself will return timestamps for "novice end" and "open time" even when the room is no longer
 /// novice, so the current system's knowledge of utc time is used to determine whether a room is novice or not.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum RoomState {
     /// Room name does not exist.
     Nonexistant,
@@ -113,7 +129,7 @@ impl RoomState {
 }
 
 /// Raw sign data from the server.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 pub struct RoomSignData {
     time: u64,
@@ -123,7 +139,7 @@ pub struct RoomSignData {
 }
 
 /// Raw "hard sign" data from the server.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 pub struct HardSignData {
     time: u64,
@@ -133,7 +149,7 @@ pub struct HardSignData {
 }
 
 /// Represents a room sign.
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct RoomSign {
     /// The game time when the sign was set.
     pub game_time_set: u64,
@@ -160,7 +176,7 @@ impl RoomSignData {
 }
 
 /// Represents a "hard sign" on a room, where the server has overwritten any player-placed signs for a specific period.
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct HardSign {
     /// The game time when the hard sign override was added.
     pub game_time_set: u64,

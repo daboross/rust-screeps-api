@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 /// Notification for Update for a user's last tick CPU usage and total memory usage.
-#[derive(Deserialize, Debug, Clone, PartialEq)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 pub struct UserCpuUpdate {
     /// The CPU usage last tick.
     #[serde(rename = "cpu")]

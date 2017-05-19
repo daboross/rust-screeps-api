@@ -6,7 +6,7 @@ use error::{ApiError, Result};
 use std::marker::PhantomData;
 
 /// User info raw result.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct Response {

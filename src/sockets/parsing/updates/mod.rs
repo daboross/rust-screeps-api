@@ -7,19 +7,18 @@ use serde::{Deserializer, Deserialize};
 use serde::de::{self, Visitor, SeqAccess};
 
 use serde_json;
+use sockets::Channel;
 
 pub use self::room_map_view::RoomMapViewUpdate;
 pub use self::user_cpu::UserCpuUpdate;
 pub use self::user_console::UserConsoleUpdate;
-
-use sockets::Channel;
 
 mod room_map_view;
 mod user_cpu;
 mod user_console;
 
 /// An update to a Screeps server 'channel' that has been subscribed to.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum ChannelUpdate<'a> {
     /// A 'map view' update of a room. Sent once per tick.
     RoomMapView {

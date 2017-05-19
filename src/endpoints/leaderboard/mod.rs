@@ -4,7 +4,7 @@ pub mod season_list;
 pub mod page;
 
 /// Type of leaderboards that are available for each season.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum LeaderboardType {
     /// Global control point leaderboard.
     GlobalControl,

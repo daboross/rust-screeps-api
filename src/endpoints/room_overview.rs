@@ -6,7 +6,7 @@ use error::{ApiError, Result};
 use std::marker::PhantomData;
 
 /// Room overview raw result.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct Response {
@@ -16,14 +16,14 @@ pub struct Response {
     statsMax: Option<RoomTotalStatsResponse>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 struct OwnerResponse {
     username: String,
     badge: Badge,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 struct RoomStatsResponse {
     energyHarvested: Vec<StatPointResponse>,
@@ -34,14 +34,14 @@ struct RoomStatsResponse {
     creepsLost: Vec<StatPointResponse>,
 }
 
-#[derive(Deserialize, Debug, Copy, Clone)]
+#[derive(Deserialize, Copy, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 struct StatPointResponse {
     value: u32,
     endTime: u32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Copy, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 struct RoomTotalStatsResponse {
     energy8: u32,
@@ -65,7 +65,7 @@ struct RoomTotalStatsResponse {
 }
 
 /// A single statistics point, representing a quantity for data over an interval of time.
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone, Hash, Debug)]
 pub struct StatPoint {
     /// The amount of whatever quantity this stat point is for
     pub amount: u32,
@@ -86,7 +86,7 @@ impl From<StatPointResponse> for StatPoint {
 }
 
 /// Total stats over a specific time period.
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone, Hash, Debug)]
 pub struct TotalStats {
     /// Time period. Currently either "8" for hour long stats, "180" for day long stats, or "1440" for week-long stats.
     pub time_period: u32,
@@ -107,7 +107,7 @@ pub struct TotalStats {
 }
 
 /// Various statistics about a single room, returned as a result from `room_overview` calls.
-#[derive(Debug, Clone)]
+#[derive(Clone, Hash, Debug)]
 pub struct RoomOverview {
     /// The username of the owner of the room.
     pub owner: Option<String>,

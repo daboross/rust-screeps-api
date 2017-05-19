@@ -1,7 +1,7 @@
 use serde::de::{Deserialize, Deserializer};
 
 /// Update for a user's log messages during the last tick.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, Hash, Debug)]
 pub enum UserConsoleUpdate {
     /// All log messages which occurred during the last tick. Will always be sent
     /// once per tick unless an error occurs *and* this would be empty.

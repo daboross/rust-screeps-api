@@ -7,14 +7,14 @@ use std::marker::PhantomData;
 use time;
 
 /// Room overview raw result.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
     room: Option<InnerRoom>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[allow(non_snake_case)]
 struct InnerRoom {
     /// The room's name
@@ -28,7 +28,7 @@ struct InnerRoom {
 }
 
 /// Struct describing the status of a room
-#[derive(Clone, Debug)]
+#[derive(Clone, Hash, Debug)]
 pub struct RoomStatus {
     /// The name of the room, or None if the room does not exist.
     pub room_name: Option<String>,
