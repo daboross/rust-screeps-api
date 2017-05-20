@@ -93,12 +93,12 @@ impl EndpointResult for RoomTerrain {
                             b'2' => Ok(TerrainType::Swamp),
                             b'3' => Ok(TerrainType::SwampyWall),
                             other => {
-                                return Err(ApiError::MalformedResponse(format!("expected terrain data to contain \
+                                Err(ApiError::MalformedResponse(format!("expected terrain data to contain \
                                                     only characters 0,1,2,3, found byte {} at x,y {},{}.",
-                                                                               other,
-                                                                               x,
-                                                                               y))
-                                    .into());
+                                                                        other,
+                                                                        x,
+                                                                        y))
+                                    .into())
                             }
                         })
                         .collect::<Result<Vec<TerrainType>>>()

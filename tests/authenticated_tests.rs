@@ -136,7 +136,7 @@ fn test_auth_retrieve_all_ranks() {
 
     let result = api.find_leaderboard_ranks(screeps_api::LeaderboardType::GlobalControl, "daboross")
         .unwrap();
-    assert!(result.len() > 0);
+    assert!(!result.is_empty());
 }
 
 #[test]
