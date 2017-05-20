@@ -9,7 +9,6 @@ use std::marker::PhantomData;
 
 /// Raw list results.
 #[derive(Deserialize, Clone, Debug)]
-#[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,

@@ -41,10 +41,10 @@ pub struct Response {
 }
 
 #[derive(Deserialize, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
 struct InnerRoom {
     _id: String,
-    lastPvpTime: i64,
+    #[serde(rename = "lastPvpTime")]
+    last_pvp_time: i64,
 }
 
 
@@ -71,7 +71,7 @@ impl EndpointResult for RecentPvp {
         }
 
         Ok(RecentPvp {
-            rooms: rooms.into_iter().map(|r| (r._id, r.lastPvpTime)).collect(),
+            rooms: rooms.into_iter().map(|r| (r._id, r.last_pvp_time)).collect(),
             reported_up_to: time,
             _phantom: PhantomData,
         })

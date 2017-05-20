@@ -87,7 +87,6 @@ impl<'a, T, I> Serialize for MapStatsArgsInner<'a, T, I>
 
 /// Map stats raw result.
 #[derive(Deserialize, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
@@ -98,20 +97,19 @@ pub struct Response {
 }
 
 #[derive(Deserialize, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
+#[serde(rename_all = "camelCase")]
 struct RoomResponse {
     status: String,
     own: Option<RoomOwner>,
     /// The end time for the novice area this room is or was last in.
     novice: Option<data::StringNumberTimeSpec>,
     /// The time this room will open or did open into the novice area as a second tier novice room.
-    openTime: Option<data::StringNumberTimeSpec>,
+    open_time: Option<data::StringNumberTimeSpec>,
     sign: Option<data::RoomSignData>,
-    hardSign: Option<data::HardSignData>,
+    hard_sign: Option<data::HardSignData>,
 }
 
 #[derive(Deserialize, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
 struct UserResponse {
     badge: data::Badge,
     _id: String,
@@ -133,7 +131,7 @@ pub struct RoomOwner {
 }
 
 /// Statistics on a number of rooms.
-#[derive(Clone, Hash, Debug)]
+#[derive(Clone, Debug)]
 pub struct MapStats {
     /// A list of results retrieved from this map stats call. Note: Invalid or non-existent room names will simply just
     /// not appear in this result!
@@ -191,8 +189,7 @@ impl EndpointResult for MapStats {
         Ok(MapStats {
             rooms: stats.into_iter()
                 .map(|(room_name, room_data)| {
-                    let RoomResponse { status, own: owner, novice, openTime: open_time, sign, hardSign: hard_sign } =
-                        room_data;
+                    let RoomResponse { status, own: owner, novice, open_time, sign, hard_sign } = room_data;
                     if status != "normal" {
                         return Err(ApiError::MalformedResponse(format!("expected room status for \"{}\" to be \
                                                                         \"normal\", found \"{}\"",

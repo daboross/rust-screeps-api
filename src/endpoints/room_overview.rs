@@ -7,61 +7,60 @@ use std::marker::PhantomData;
 
 /// Room overview raw result.
 #[derive(Deserialize, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
+#[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
     owner: Option<OwnerResponse>,
     stats: Option<RoomStatsResponse>,
-    statsMax: Option<RoomTotalStatsResponse>,
+    stats_max: Option<RoomTotalStatsResponse>,
 }
 
 #[derive(Deserialize, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
 struct OwnerResponse {
     username: String,
     badge: Badge,
 }
 
 #[derive(Deserialize, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
+#[serde(rename_all = "camelCase")]
 struct RoomStatsResponse {
-    energyHarvested: Vec<StatPointResponse>,
-    energyConstruction: Vec<StatPointResponse>,
-    energyCreeps: Vec<StatPointResponse>,
-    energyControl: Vec<StatPointResponse>,
-    creepsProduced: Vec<StatPointResponse>,
-    creepsLost: Vec<StatPointResponse>,
+    energy_harvested: Vec<StatPointResponse>,
+    energy_construction: Vec<StatPointResponse>,
+    energy_creeps: Vec<StatPointResponse>,
+    energy_control: Vec<StatPointResponse>,
+    creeps_produced: Vec<StatPointResponse>,
+    creeps_lost: Vec<StatPointResponse>,
 }
 
 #[derive(Deserialize, Copy, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
+#[serde(rename_all = "camelCase")]
 struct StatPointResponse {
     value: u32,
-    endTime: u32,
+    end_time: u32,
 }
 
 #[derive(Deserialize, Copy, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
+#[serde(rename_all = "camelCase")]
 struct RoomTotalStatsResponse {
-    energy8: u32,
-    energy180: u32,
-    energy1440: u32,
-    energyConstruction8: u32,
-    energyConstruction180: u32,
-    energyConstruction1440: u32,
-    energyControl8: u32,
-    energyControl180: u32,
-    energyControl1440: u32,
-    energyCreeps8: u32,
-    energyCreeps180: u32,
-    energyCreeps1440: u32,
-    creepsProduced8: u32,
-    creepsProduced180: u32,
-    creepsProduced1440: u32,
-    creepsLost8: u32,
-    creepsLost180: u32,
-    creepsLost1440: u32,
+    energy_8: u32,
+    energy_180: u32,
+    energy_1440: u32,
+    energy_construction_8: u32,
+    energy_construction_180: u32,
+    energy_construction_1440: u32,
+    energy_control_8: u32,
+    energy_control_180: u32,
+    energy_control_1440: u32,
+    energy_creeps_8: u32,
+    energy_creeps_180: u32,
+    energy_creeps_1440: u32,
+    creeps_produced_8: u32,
+    creeps_produced_180: u32,
+    creeps_produced_1440: u32,
+    creeps_lost_8: u32,
+    creeps_lost_180: u32,
+    creeps_lost_1440: u32,
 }
 
 /// A single statistics point, representing a quantity for data over an interval of time.
@@ -79,7 +78,7 @@ impl From<StatPointResponse> for StatPoint {
     fn from(stat: StatPointResponse) -> StatPoint {
         StatPoint {
             amount: stat.value,
-            end_time: stat.endTime,
+            end_time: stat.end_time,
             _phantom: PhantomData,
         }
     }
@@ -136,7 +135,7 @@ impl EndpointResult for RoomOverview {
     type ErrorResult = data::ApiError;
 
     fn from_raw(raw: Response) -> Result<RoomOverview> {
-        let Response { ok, owner, stats, statsMax: stats_max, .. } = raw;
+        let Response { ok, owner, stats, stats_max, .. } = raw;
         if ok != 1 {
             return Err(ApiError::NotOk(ok).into());
         }
@@ -156,40 +155,40 @@ impl EndpointResult for RoomOverview {
         Ok(RoomOverview {
             owner: username,
             owner_badge: badge,
-            energy_harvested: stats.energyHarvested.into_iter().map(Into::into).collect(),
-            energy_spent_construction: stats.energyConstruction.into_iter().map(Into::into).collect(),
-            energy_spent_creeps: stats.energyCreeps.into_iter().map(Into::into).collect(),
-            energy_spent_control: stats.energyControl.into_iter().map(Into::into).collect(),
-            creep_parts_produced: stats.creepsProduced.into_iter().map(Into::into).collect(),
-            creep_parts_lost: stats.creepsLost.into_iter().map(Into::into).collect(),
+            energy_harvested: stats.energy_harvested.into_iter().map(Into::into).collect(),
+            energy_spent_construction: stats.energy_construction.into_iter().map(Into::into).collect(),
+            energy_spent_creeps: stats.energy_creeps.into_iter().map(Into::into).collect(),
+            energy_spent_control: stats.energy_control.into_iter().map(Into::into).collect(),
+            creep_parts_produced: stats.creeps_produced.into_iter().map(Into::into).collect(),
+            creep_parts_lost: stats.creeps_lost.into_iter().map(Into::into).collect(),
             total_stats: vec![TotalStats {
                                   time_period: 8,
-                                  energy_harvested: stats_max.energy8,
-                                  energy_spent_creeps: stats_max.energyCreeps8,
-                                  energy_spent_control: stats_max.energyControl8,
-                                  energy_spent_construction: stats_max.energyConstruction8,
-                                  creep_parts_produced: stats_max.creepsProduced8,
-                                  creep_parts_lost: stats_max.creepsLost8,
+                                  energy_harvested: stats_max.energy_8,
+                                  energy_spent_creeps: stats_max.energy_creeps_8,
+                                  energy_spent_control: stats_max.energy_control_8,
+                                  energy_spent_construction: stats_max.energy_construction_8,
+                                  creep_parts_produced: stats_max.creeps_produced_8,
+                                  creep_parts_lost: stats_max.creeps_lost_8,
                                   _phantom: PhantomData,
                               },
                               TotalStats {
                                   time_period: 180,
-                                  energy_harvested: stats_max.energy180,
-                                  energy_spent_creeps: stats_max.energyCreeps180,
-                                  energy_spent_control: stats_max.energyControl180,
-                                  energy_spent_construction: stats_max.energyConstruction180,
-                                  creep_parts_produced: stats_max.creepsProduced180,
-                                  creep_parts_lost: stats_max.creepsLost180,
+                                  energy_harvested: stats_max.energy_180,
+                                  energy_spent_creeps: stats_max.energy_creeps_180,
+                                  energy_spent_control: stats_max.energy_control_180,
+                                  energy_spent_construction: stats_max.energy_construction_180,
+                                  creep_parts_produced: stats_max.creeps_produced_180,
+                                  creep_parts_lost: stats_max.creeps_lost_180,
                                   _phantom: PhantomData,
                               },
                               TotalStats {
                                   time_period: 1440,
-                                  energy_harvested: stats_max.energy1440,
-                                  energy_spent_creeps: stats_max.energyCreeps1440,
-                                  energy_spent_control: stats_max.energyControl1440,
-                                  energy_spent_construction: stats_max.energyConstruction1440,
-                                  creep_parts_produced: stats_max.creepsProduced1440,
-                                  creep_parts_lost: stats_max.creepsLost1440,
+                                  energy_harvested: stats_max.energy_1440,
+                                  energy_spent_creeps: stats_max.energy_creeps_1440,
+                                  energy_spent_control: stats_max.energy_control_1440,
+                                  energy_spent_construction: stats_max.energy_construction_1440,
+                                  creep_parts_produced: stats_max.creeps_produced_1440,
+                                  creep_parts_lost: stats_max.creeps_lost_1440,
                                   _phantom: PhantomData,
                               }],
             _phantom: PhantomData,

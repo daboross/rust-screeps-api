@@ -10,6 +10,9 @@ pub enum LeaderboardType {
     GlobalControl,
     /// Power processed leaderboard
     PowerProcessed,
+    /// A marker variant that tells the compiler that users of this enum cannot match it exhaustively.
+    #[doc(hidden)]
+    __Nonexhaustive,
 }
 
 impl LeaderboardType {
@@ -20,6 +23,7 @@ impl LeaderboardType {
         match self {
             &LeaderboardType::GlobalControl => "world",
             &LeaderboardType::PowerProcessed => "power",
+            &LeaderboardType::__Nonexhaustive => "world",
         }
     }
 }

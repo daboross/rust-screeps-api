@@ -7,7 +7,6 @@ use std::marker::PhantomData;
 
 /// User info raw result.
 #[derive(Deserialize, Clone, Debug)]
-#[allow(non_snake_case)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,

@@ -130,7 +130,6 @@ impl RoomState {
 
 /// Raw sign data from the server.
 #[derive(Deserialize, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
 pub struct RoomSignData {
     time: u64,
     datetime: StringNumberTimeSpec,
@@ -140,11 +139,11 @@ pub struct RoomSignData {
 
 /// Raw "hard sign" data from the server.
 #[derive(Deserialize, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
+#[serde(rename_all = "camelCase")]
 pub struct HardSignData {
     time: u64,
     datetime: StringNumberTimeSpec,
-    endDatetime: StringNumberTimeSpec,
+    end_datetime: StringNumberTimeSpec,
     text: String,
 }
 
@@ -191,7 +190,7 @@ pub struct HardSign {
 impl HardSignData {
     /// Transform the raw result with the possibility of failing due to invalid data.
     pub fn into_sign(self) -> Result<HardSign, error::ApiError> {
-        let HardSignData { time, datetime, endDatetime: end_datetime, text } = self;
+        let HardSignData { time, datetime, end_datetime, text } = self;
         let sign = HardSign {
             game_time_set: time,
             start: datetime.to_timespec()?,

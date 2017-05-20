@@ -15,7 +15,6 @@ pub struct Response {
 }
 
 #[derive(Deserialize, Clone, Hash, Debug)]
-#[allow(non_snake_case)]
 struct InnerRoom {
     /// The room's name
     _id: String,
@@ -24,7 +23,8 @@ struct InnerRoom {
     /// The end time for the novice area this room is or was last in.
     novice: Option<data::StringNumberTimeSpec>,
     /// The time this room will open or did open into the novice area as a second tier novice room.
-    openTime: Option<data::StringNumberTimeSpec>,
+    #[serde(rename = "openTime")]
+    open_time: Option<data::StringNumberTimeSpec>,
 }
 
 /// Struct describing the status of a room
@@ -50,7 +50,7 @@ impl EndpointResult for RoomStatus {
             return Err(ApiError::NotOk(ok).into());
         }
 
-        let InnerRoom { _id: room_name, status, novice, openTime: open_time } = match room {
+        let InnerRoom { _id: room_name, status, novice, open_time } = match room {
             Some(v) => v,
             None => {
                 return Ok(RoomStatus {
