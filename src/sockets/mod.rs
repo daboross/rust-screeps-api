@@ -251,7 +251,7 @@ impl<'a> Channel<'a> {
     }
 
     /// Creates a channel subscribing to new messages in a user's specific conversation.
-    pub fn user_convesation<T, U>(user_id: T, target_user_id: U) -> Self
+    pub fn user_conversation<T, U>(user_id: T, target_user_id: U) -> Self
         where T: Into<Cow<'a, str>>,
               U: Into<Cow<'a, str>>
     {

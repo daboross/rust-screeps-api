@@ -94,7 +94,7 @@ impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> 
                 //self.sender.subscribe(Channel::room_detail("W0S0"))?;
                 self.sender.subscribe(Channel::room_detail("E18S66"))?;
 
-                info!("Successfully subscribed to channels!");
+                info!("Subscribed.");
             }
             ParsedMessage::ChannelUpdate { update } => {
                 match update {
@@ -107,6 +107,15 @@ impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> 
                     }
                     ChannelUpdate::UserCredits { user_id, update } => {
                         info!("Credits: [{}] {}", user_id, update);
+                    }
+                    ChannelUpdate::UserMessage { user_id, update } => {
+                        info!("New message: [{}] {:#?}", user_id, update);
+                    }
+                    ChannelUpdate::UserConversation { user_id, target_user_id, update } => {
+                        info!("Conversation update: [{}->{}] {:#?}",
+                              user_id,
+                              target_user_id,
+                              update);
                     }
                     ChannelUpdate::Other { channel, update } => {
                         warn!("ChannelUpdate::Other: {}\n{}",

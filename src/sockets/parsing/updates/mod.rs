@@ -12,7 +12,9 @@ use sockets::Channel;
 pub use self::room_map_view::RoomMapViewUpdate;
 pub use self::user_cpu::UserCpuUpdate;
 pub use self::user_console::UserConsoleUpdate;
+use self::messages::{MessageUpdate, ConversationUpdate};
 
+pub mod messages;
 mod room_map_view;
 mod user_cpu;
 mod user_console;
@@ -54,6 +56,24 @@ pub enum ChannelUpdate<'a> {
         /// The number of credits.
         update: f64,
     },
+    /// An update on a new message received by a user. Sent each time a user receives a message.
+    UserMessage {
+        /// The user ID this message update is for.
+        user_id: Cow<'a, str>,
+        /// The message update.
+        update: MessageUpdate,
+    },
+    /// An update on a change in a conversation the user is participating in. Sent each time either
+    /// this user or the user or the respondent either sends a message, or reads a previously unread
+    /// message.
+    UserConversation {
+        /// The user ID of the subscribed user this update is for.
+        user_id: Cow<'a, str>,
+        /// The user ID of the other user in the conversation.
+        target_user_id: Cow<'a, str>,
+        /// The message update.
+        update: ConversationUpdate,
+    },
     /// Another update that was not accounted for.
     ///
     /// TODO: when we're sure of everything, remove this variant.
@@ -84,6 +104,8 @@ impl<'a> ChannelUpdate<'a> {
         match *self {
             ChannelUpdate::UserCpu { ref user_id, .. } |
             ChannelUpdate::UserConsole { ref user_id, .. } |
+            ChannelUpdate::UserMessage { ref user_id, .. } |
+            ChannelUpdate::UserConversation { ref user_id, .. } |
             ChannelUpdate::UserCredits { ref user_id, .. } => Some(user_id.as_ref()),
             _ => None,
         }
@@ -98,6 +120,10 @@ impl<'a> ChannelUpdate<'a> {
             ChannelUpdate::UserCpu { ref user_id, .. } => Channel::user_cpu(user_id.as_ref()),
             ChannelUpdate::UserConsole { ref user_id, .. } => Channel::user_console(user_id.as_ref()),
             ChannelUpdate::UserCredits { ref user_id, .. } => Channel::user_credits(user_id.as_ref()),
+            ChannelUpdate::UserMessage { ref user_id, .. } => Channel::user_messages(user_id.as_ref()),
+            ChannelUpdate::UserConversation { ref user_id, ref target_user_id, .. } => {
+                Channel::user_conversation(user_id.as_ref(), target_user_id.as_ref())
+            }
             ChannelUpdate::Other { ref channel, .. } => Channel::other(channel.as_ref()),
         }
     }
@@ -128,6 +154,8 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
         const USER_CPU: &'static str = "cpu";
         const USER_CONSOLE: &'static str = "console";
         const USER_CREDITS: &'static str = "money";
+        const USER_MESSAGE: &'static str = "newMessage";
+        const USER_CONVERSATION_PREFIX: &'static str = "message:";
 
         let channel: &str = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
@@ -177,7 +205,25 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                         update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     })
                 }
-                _ => finish_other!(),
+                USER_MESSAGE => {
+                    return Ok(ChannelUpdate::UserMessage {
+                        user_id: user_id.to_owned().into(),
+                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                    })
+                }
+                sub_channel => {
+                    if sub_channel.starts_with(USER_CONVERSATION_PREFIX) {
+                        let target_user_id = &sub_channel[USER_CONVERSATION_PREFIX.len()..];
+
+                        return Ok(ChannelUpdate::UserConversation {
+                            user_id: user_id.to_owned().into(),
+                            target_user_id: target_user_id.to_owned().into(),
+                            update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        });
+                    } else {
+                        finish_other!()
+                    }
+                }
             }
         }
 
