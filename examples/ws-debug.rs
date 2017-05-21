@@ -77,7 +77,7 @@ impl Config {
             credits: args.is_present("credits"),
             console: args.is_present("console"),
             map_view: args.values_of("map-view")
-                .map(|it| it.map(|v| v.to_owned()).collect())
+                .map(|it| it.map(|v| v.to_uppercase()).collect())
                 .unwrap_or_else(|| Vec::new()),
         }
     }
@@ -132,7 +132,7 @@ impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> 
 
                 self.config.subscribe_with(&self.info.user_id, &mut self.sender)?;
 
-                info!("Subscribed.");
+                warn!("Subscribed.");
             }
             ParsedMessage::ChannelUpdate { update } => {
                 match update {
