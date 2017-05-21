@@ -60,10 +60,61 @@ fn setup_logging(verbosity: u64) {
         .unwrap_or(());
 }
 
+#[derive(Clone, Debug)]
+struct Config {
+    cpu: bool,
+    messages: bool,
+    credits: bool,
+    console: bool,
+    map_view: Vec<String>,
+}
+
+impl Config {
+    fn new(args: &clap::ArgMatches) -> Self {
+        Config {
+            cpu: args.is_present("cpu"),
+            messages: args.is_present("messages"),
+            credits: args.is_present("credits"),
+            console: args.is_present("console"),
+            map_view: args.values_of("map-view")
+                .map(|it| it.map(|v| v.to_owned()).collect())
+                .unwrap_or_else(|| Vec::new()),
+        }
+    }
+
+    fn subscribe_with(&self, id: &str, sender: &mut screeps_api::sockets::Sender) -> WsResult<()> {
+        sender.subscribe(Channel::ServerMessages)?;
+
+        if self.cpu {
+            sender.subscribe(Channel::user_cpu(id))?;
+        }
+
+        if self.messages {
+            sender.subscribe(Channel::user_messages(id))?;
+            sender.subscribe(Channel::user_conversation(id, "57fb16b6e4dd183b746435b0"))?;
+        }
+
+        if self.credits {
+            sender.subscribe(Channel::user_credits(id))?;
+        }
+
+        if self.console {
+            sender.subscribe(Channel::user_console(id))?;
+        }
+
+        for room_name in &self.map_view {
+            sender.subscribe(Channel::room_map_view(&**room_name))?;
+        }
+
+        Ok(())
+    }
+}
+
 struct Handler<T: screeps_api::TokenStorage> {
     sender: screeps_api::sockets::Sender,
     tokens: T,
     info: screeps_api::MyInfo,
+    config: Config,
 }
 
 impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> {
@@ -79,20 +130,7 @@ impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> 
                 // TODO: find an efficient way to do this automatically in the handler.
                 self.tokens.return_token(new_token);
 
-                let id = &*self.info.user_id;
-
-                self.sender.subscribe(Channel::ServerMessages)?;
-                self.sender.subscribe(Channel::user_cpu(id))?;
-                self.sender.subscribe(Channel::user_messages(id))?;
-                self.sender.subscribe(Channel::user_credits(id))?;
-                self.sender.subscribe(Channel::user_console(id))?;
-                self.sender.subscribe(Channel::room_map_view("E0N0"))?;
-                self.sender.subscribe(Channel::room_map_view("E25S23"))?;
-                self.sender.subscribe(Channel::room_map_view("E24S23"))?;
-                self.sender.subscribe(Channel::room_map_view("E23S23"))?;
-                self.sender.subscribe(Channel::room_map_view("E22S23"))?;
-                //self.sender.subscribe(Channel::room_detail("W0S0"))?;
-                self.sender.subscribe(Channel::room_detail("E18S66"))?;
+                self.config.subscribe_with(&self.info.user_id, &mut self.sender)?;
 
                 info!("Subscribed.");
             }
@@ -154,8 +192,33 @@ fn main() {
             .long("verbose")
             .multiple(true)
             .help("Enables verbose logging"))
+        .arg(clap::Arg::with_name("cpu")
+            .short("p")
+            .long("cpu")
+            .help("Subscribe to user cpu and memory updates"))
+        .arg(clap::Arg::with_name("credits")
+            .short("c")
+            .long("credits")
+            .help("Subscribe to per-tick user credit updates"))
+        .arg(clap::Arg::with_name("console")
+            .short("o")
+            .long("console")
+            .help("Subscribe to user console messages"))
+        .arg(clap::Arg::with_name("messages")
+            .short("e")
+            .long("messages")
+            .help("Subscribe to user message alerts"))
+        .arg(clap::Arg::with_name("map-view")
+            .short("m")
+            .long("map-view")
+            .value_name("ROOM_NAME")
+            .help("Subscribes to a map-view room")
+            .takes_value(true)
+            .multiple(true))
         .get_matches();
     setup_logging(cmd_arguments.occurrences_of("verbose"));
+
+    let config = Config::new(&cmd_arguments);
 
     // Create a sharable hyper client
     let hyper = Arc::new(Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new())));
@@ -178,6 +241,7 @@ fn main() {
             sender: sender,
             tokens: factory_token.clone(),
             info: my_info.clone(),
+            config: config.clone(),
         }
     };
 
