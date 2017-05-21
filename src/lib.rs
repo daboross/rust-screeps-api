@@ -65,6 +65,7 @@ extern crate log;
 extern crate hyper;
 #[macro_use]
 extern crate serde_derive;
+extern crate serde_ignored;
 extern crate serde;
 extern crate tuple_vec_map;
 #[cfg_attr(test, macro_use)]

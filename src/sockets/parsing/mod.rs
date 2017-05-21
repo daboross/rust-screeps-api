@@ -6,7 +6,7 @@ use std::{cmp, fmt};
 use serde::{Deserializer, Deserialize};
 use serde::de::{Visitor, SeqAccess};
 
-use serde_json;
+use {serde_json, serde_ignored};
 
 use super::error::ParseError;
 use Token;
@@ -14,6 +14,20 @@ use Token;
 pub use self::updates::{ChannelUpdate, RoomMapViewUpdate, UserCpuUpdate};
 
 mod updates;
+
+fn from_str_with_warning<'de, T>(input: &'de str, context: &str) -> Result<T, serde_json::Error>
+    where T: Deserialize<'de>
+{
+    let mut deserializer = serde_json::Deserializer::new(serde_json::de::StrRead::new(input));
+
+    let value = serde_ignored::deserialize(&mut deserializer, |path| {
+        warn!("unparsed data in {}: {}", context, path);
+    })?;
+
+    deserializer.end()?;
+
+    Ok(value)
+}
 
 /// Result of parsing a message
 #[derive(Clone, Debug)]
@@ -76,7 +90,7 @@ impl<'a> ParsedResult<'a> {
             'a' => {
                 let rest = &message[1..];
 
-                match serde_json::from_str::<MultipleMessagesIntermediate>(rest) {
+                match from_str_with_warning::<MultipleMessagesIntermediate>(rest, "set of screeps update messages") {
                     Ok(messages) => ParsedResult::Messages(messages.0),
                     Err(e) => return Err(ParseError::serde("error parsing array of messages", rest.to_owned(), e)),
                 }
@@ -231,9 +245,10 @@ impl ParsedMessage<'static> {
                 }
             }
 
-            // let failures just result in an 'other' message.
-            if let Ok(update) = serde_json::from_str(message) {
-                return ParsedMessage::ChannelUpdate { update: update };
+            match from_str_with_warning(message, "screeps typed channel update") {
+                Ok(update) => return ParsedMessage::ChannelUpdate { update: update },
+                // let failures just result in an 'other' message.
+                Err(e) => warn!("error parsing update message: {}", e),
             }
         }
 
