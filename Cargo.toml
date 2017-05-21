@@ -19,6 +19,7 @@ appveyor = { service = "github", repository = "daboross/rust-screeps-api", branc
 
 [dependencies]
 log = "0.3"
+url = "1.0"
 hyper = "0.10"
 serde = "1.0"
 serde_derive = "1.0"
@@ -32,9 +33,10 @@ typenum = "1.0"
 arrayvec = { version = "0.3", features = ["use_generic_array"] }
 ws = { version = "0.7", features = ["ssl"], optional = true }
 fnv = { version = "1.0", optional = true }
+rand = { version = "0.3", optional = true }
 
 [features]
-websockets = ["ws", "fnv"]
+websockets = ["ws", "fnv", "rand"]
 default = ["websockets"]
 
 [dev-dependencies]

@@ -1,5 +1,5 @@
 use super::ws;
-use serde_json;
+use {serde_json, url};
 
 use std::fmt;
 
@@ -15,6 +15,10 @@ pub enum Error {
     Ws(ws::Error),
     /// A SockJS parse error.
     ParseError(ParseError),
+    /// A URL parse error.
+    Url(url::ParseError),
+    /// A URL parse error: unknown scheme.
+    UnknownScheme(String),
     /// An HTTP error.
     Other(HttpError),
     /// A marker variant that tells the compiler that users of this enum cannot match it exhaustively.
@@ -34,6 +38,12 @@ impl From<ParseError> for Error {
     }
 }
 
+impl From<url::ParseError> for Error {
+    fn from(err: url::ParseError) -> Error {
+        Error::Url(err)
+    }
+}
+
 impl From<HttpError> for Error {
     fn from(err: HttpError) -> Error {
         Error::Other(err)
@@ -46,6 +56,8 @@ impl fmt::Display for Error {
             Error::Ws(ref err) => write!(f, "websocket error: {}", err),
             Error::Other(ref err) => write!(f, "http error: {}", err),
             Error::ParseError(ref err) => write!(f, "parse error: {}", err),
+            Error::Url(ref err) => write!(f, "url error: {}", err),
+            Error::UnknownScheme(ref err) => write!(f, "unknown url scheme: {}", err),
             Error::__Nonexhaustive => unreachable!(),
         }
     }
@@ -57,6 +69,8 @@ impl ::std::error::Error for Error {
             Error::Ws(ref err) => err.description(),
             Error::Other(ref err) => err.description(),
             Error::ParseError(ref err) => err.description(),
+            Error::Url(ref err) => err.description(),
+            Error::UnknownScheme(_) => "unknown url scheme",
             Error::__Nonexhaustive => unreachable!(),
         }
     }
@@ -66,6 +80,8 @@ impl ::std::error::Error for Error {
             Error::Ws(ref err) => Some(err),
             Error::Other(ref err) => Some(err),
             Error::ParseError(ref err) => Some(err),
+            Error::Url(ref err) => Some(err),
+            Error::UnknownScheme(_) => None,
             Error::__Nonexhaustive => unreachable!(),
         }
     }

@@ -74,6 +74,7 @@ extern crate time;
 extern crate arrayvec;
 extern crate generic_array;
 extern crate typenum;
+extern crate url;
 
 pub mod error;
 pub mod endpoints;
