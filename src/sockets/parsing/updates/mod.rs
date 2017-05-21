@@ -12,8 +12,10 @@ use sockets::Channel;
 pub use self::room_map_view::RoomMapViewUpdate;
 pub use self::user_cpu::UserCpuUpdate;
 pub use self::user_console::UserConsoleUpdate;
+use self::room::RoomUpdate;
 use self::messages::{MessageUpdate, ConversationUpdate};
 
+pub mod room;
 pub mod messages;
 mod room_map_view;
 mod user_cpu;
@@ -28,6 +30,24 @@ pub enum ChannelUpdate<'a> {
         room_name: Cow<'a, str>,
         /// The data: the positions and nondescript types of entities in this room.
         update: RoomMapViewUpdate,
+    },
+    /// An update of objects in a room. Sent once per tick for up to 2 rooms per account.
+    /// Other subscribed rooms receive `ChannelUpdate::NoRoomDetail` instead.
+    RoomDetail {
+        /// The name of the room this is an update for.
+        room_name: Cow<'a, str>,
+        /// The data: all properties of all objects in this room that have changed since the last tick.
+        update: RoomUpdate,
+    },
+    /// An update/error received for room detail subscriptions which will not receive an update this tick.
+    ///
+    /// This is due to screeps having a 2-room subscription limit. If more are subscribed globally (per-account,
+    /// not per-connection) then only 2 receive actual updates.
+    ///
+    /// TODO: This should have a better name, and possibly be incorporated into `ChannelUpdate::RoomDetail`.
+    NoRoomDetail {
+        /// The name of the room this is a notification for.
+        room_name: Cow<'a, str>,
     },
     /// An update on the last tick's CPU and memory usage. Sent once per tick.
     UserCpu {
@@ -89,7 +109,9 @@ impl<'a> ChannelUpdate<'a> {
     /// If this update is directly associated with a room, gets the room name.
     pub fn room_name(&self) -> Option<&str> {
         match *self {
-            ChannelUpdate::RoomMapView { ref room_name, .. } => Some(room_name.as_ref()),
+            ChannelUpdate::RoomMapView { ref room_name, .. } |
+            ChannelUpdate::RoomDetail { ref room_name, .. } |
+            ChannelUpdate::NoRoomDetail { ref room_name, .. } => Some(room_name.as_ref()),
             _ => None,
         }
     }
@@ -117,6 +139,8 @@ impl<'a> ChannelUpdate<'a> {
     pub fn channel(&self) -> Channel {
         match *self {
             ChannelUpdate::RoomMapView { ref room_name, .. } => Channel::room_map_view(room_name.as_ref()),
+            ChannelUpdate::RoomDetail { ref room_name, .. } |
+            ChannelUpdate::NoRoomDetail { ref room_name, .. } => Channel::room_detail(room_name.as_ref()),
             ChannelUpdate::UserCpu { ref user_id, .. } => Channel::user_cpu(user_id.as_ref()),
             ChannelUpdate::UserConsole { ref user_id, .. } => Channel::user_console(user_id.as_ref()),
             ChannelUpdate::UserCredits { ref user_id, .. } => Channel::user_credits(user_id.as_ref()),
@@ -150,6 +174,8 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
         where A: SeqAccess<'de>
     {
         const ROOM_MAP_VIEW_PREFIX: &'static str = "roomMap2:";
+        const ROOM_PREFIX: &'static str = "room:";
+        const ROOM_ERR_PREFIX: &'static str = "err@room:"; // TODO: generic error handling with this `err@` format.
         const USER_PREFIX: &'static str = "user:";
         const USER_CPU: &'static str = "cpu";
         const USER_CONSOLE: &'static str = "console";
@@ -175,6 +201,29 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                 room_name: room_name.to_owned().into(),
                 update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
+        } else if channel.starts_with(ROOM_PREFIX) {
+            let room_name = &channel[ROOM_PREFIX.len()..];
+
+            return Ok(ChannelUpdate::RoomDetail {
+                room_name: room_name.to_owned().into(),
+                update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+            });
+        } else if channel.starts_with(ROOM_ERR_PREFIX) {
+            let room_name = &channel[ROOM_ERR_PREFIX.len()..];
+
+            let err_message = seq.next_element::<&str>()?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
+
+            // TODO: This is currently just a patch in for a common error message, but we don't handle any other
+            // errors that are reported as `err@<rest of channel name>`.
+            //
+            // We should:
+            // A. find out if the server actually ever sends other error messages, or if this is hardcoded on the
+            //    other side too.
+            // B. add handling of all err@ messages into a variant which can then just parse the channel name into
+            //    a `Channel`.
+            if err_message == "subscribe limit reached" {
+                return Ok(ChannelUpdate::NoRoomDetail { room_name: room_name.to_owned().into() });
+            }
         } else if channel.starts_with(USER_PREFIX) {
             let user_id_and_part = &channel[USER_PREFIX.len()..];
 

@@ -66,6 +66,7 @@ struct Config {
     messages: bool,
     credits: bool,
     console: bool,
+    rooms: Vec<String>,
     map_view: Vec<String>,
 }
 
@@ -76,6 +77,9 @@ impl Config {
             messages: args.is_present("messages"),
             credits: args.is_present("credits"),
             console: args.is_present("console"),
+            rooms: args.values_of("room")
+                .map(|it| it.map(|v| v.to_uppercase()).collect())
+                .unwrap_or_else(|| Vec::new()),
             map_view: args.values_of("map-view")
                 .map(|it| it.map(|v| v.to_uppercase()).collect())
                 .unwrap_or_else(|| Vec::new()),
@@ -100,6 +104,10 @@ impl Config {
 
         if self.console {
             sender.subscribe(Channel::user_console(id))?;
+        }
+
+        for room_name in &self.rooms {
+            sender.subscribe(Channel::room_detail(&**room_name))?;
         }
 
         for room_name in &self.map_view {
@@ -139,6 +147,12 @@ impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> 
                     ChannelUpdate::UserCpu { user_id, update } => info!("CPU: [{}] {:#?}", user_id, update),
                     ChannelUpdate::RoomMapView { room_name, update } => {
                         info!("Map View: [{}] {:?}", room_name, update);
+                    }
+                    ChannelUpdate::RoomDetail { room_name, update } => {
+                        info!("Room Detail: [{}] {:?}", room_name, update);
+                    }
+                    ChannelUpdate::NoRoomDetail { room_name } => {
+                        info!("Room Skipped: {}", room_name);
                     }
                     ChannelUpdate::UserConsole { user_id, update } => {
                         info!("Console: [{}] {:#?}", user_id, update);
@@ -208,6 +222,13 @@ fn main() {
             .short("e")
             .long("messages")
             .help("Subscribe to user message alerts"))
+        .arg(clap::Arg::with_name("room")
+            .short("r")
+            .long("room")
+            .value_name("ROOM_NAME")
+            .help("Subscribes to a room")
+            .takes_value(true)
+            .multiple(true))
         .arg(clap::Arg::with_name("map-view")
             .short("m")
             .long("map-view")
