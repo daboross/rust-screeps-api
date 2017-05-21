@@ -39,6 +39,12 @@ Unofficial documentation for HTTP endpoints can be found at https://github.com/s
 - Getting room overview info
 - Getting logged in user's info
 - Getting rooms where PvP recently occurred
+- Websocket connections:
+  - Getting user CPU and Memory usage each tick
+  - Getting a map overview of a room
+  - Getting new message notifications
+  - Getting console messages
+  - Parts of getting room detailed updates
 
 ### What isn't implemented
 
@@ -47,7 +53,8 @@ Unofficial documentation for HTTP endpoints can be found at https://github.com/s
 - Detailed user information API
 - Game manipulation API
 - Room history API
-- Room update / user console websocket API
+- Parsing room objects from room socket updates.
+  - Right now you'll just get a HashMap of object id -> [`serde_json::Value`]
 
 ## Testing
 
@@ -70,3 +77,4 @@ Use:
 [screeps-os]: https://github.com/screeps/screeps/
 [hyper]: https://github.com/hyperium/hyper/
 [serde]: https://github.com/serde-rs/json/
+[`serde_json::Value`]: https://docs.serde.rs/serde_json/value/enum.Value.html
