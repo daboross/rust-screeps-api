@@ -85,6 +85,9 @@ pub enum ParseError {
         /// Inner error
         err: serde_json::Error,
     },
+    /// A marker variant that tells the compiler that users of this enum cannot match it exhaustively.
+    #[doc(hidden)]
+    __Nonexhaustive,
 }
 
 impl ParseError {
@@ -109,6 +112,7 @@ impl fmt::Display for ParseError {
                        error_desc,
                        err)
             }
+            ParseError::__Nonexhaustive => unreachable!(),
         }
     }
 }
@@ -118,6 +122,7 @@ impl ::std::error::Error for ParseError {
         match *self {
             ParseError::Other(_) => "a parsing error occurred",
             ParseError::Serde { ref error_desc, .. } => error_desc,
+            ParseError::__Nonexhaustive => unreachable!(),
         }
     }
 
@@ -125,6 +130,7 @@ impl ::std::error::Error for ParseError {
         match *self {
             ParseError::Serde { ref err, .. } => Some(err),
             ParseError::Other(_) => None,
+            ParseError::__Nonexhaustive => unreachable!(),
         }
     }
 }
