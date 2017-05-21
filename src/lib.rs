@@ -71,6 +71,9 @@ extern crate tuple_vec_map;
 #[cfg_attr(test, macro_use)]
 extern crate serde_json;
 extern crate time;
+extern crate arrayvec;
+extern crate generic_array;
+extern crate typenum;
 
 pub mod error;
 pub mod endpoints;

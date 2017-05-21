@@ -26,6 +26,10 @@ serde_json = "1.0"
 serde_ignored = "0.0.4"
 serde-tuple-vec-map = "0.2"
 time = "0.1"
+# generic-array 0.5 needed for arrayvec support.
+generic-array = "0.5"
+typenum = "1.0"
+arrayvec = { version = "0.3", features = ["use_generic_array"] }
 ws = { version = "0.7", features = ["ssl"], optional = true }
 fnv = { version = "1.0", optional = true }
 

@@ -4,6 +4,7 @@ use EndpointResult;
 use data;
 use error::{Result, ApiError};
 use std::marker::PhantomData;
+use {arrayvec, generic_array, typenum};
 
 /// Room overview raw result.
 #[derive(Deserialize, Clone, Hash, Debug)]
@@ -37,15 +38,23 @@ pub enum TerrainType {
     SwampyWall,
 }
 
+/// A type alias for a single row in the terrain grid.
+pub type TerrainRow = arrayvec::ArrayVec<generic_array::GenericArray<TerrainType, typenum::U50>>;
+
+/// A type alias for a 50x50 terrain grid. terrain[y_pos][x_pos] can be used to access any terrain
+/// from x 0-49, y 0-49.
+pub type TerrainGrid = arrayvec::ArrayVec<generic_array::GenericArray<TerrainRow, typenum::U50>>;
+
 /// Structure describing the terrain of a room
 pub struct RoomTerrain {
     /// The name of the room
     pub room_name: String,
-    /// A 50x50 grid of terrain squares.
+    /// A 50x50 grid of terrain squares. When coming from the API, this is guaranteed to be
+    /// completely filled, and accessing any square between (0, 0) and (49, 49) inclusive will
+    /// succeed.
     ///
-    /// When coming from an API result, this is guaranteed to contain 50 `Vec`s, each containing 50 `TerrainType`s. You
-    /// can use terrain[y_pos][x_pos] to get individual terrain.
-    pub terrain: Vec<Vec<TerrainType>>,
+    /// You can use terrain[y_pos][x_pos] to get any individual terrain square.
+    pub terrain: TerrainGrid,
     /// Phantom data in order to allow adding any additional fields in the future.
     _phantom: PhantomData<()>,
 }
@@ -101,9 +110,9 @@ impl EndpointResult for RoomTerrain {
                                     .into())
                             }
                         })
-                        .collect::<Result<Vec<TerrainType>>>()
+                        .collect::<Result<_>>()
                 })
-                .collect::<Result<Vec<Vec<TerrainType>>>>()?,
+                .collect::<Result<_>>()?,
             _phantom: PhantomData,
         })
     }
