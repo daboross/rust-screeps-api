@@ -11,22 +11,22 @@ pub enum PvpArgs {
     /// Retrieves rooms where pvp has occurred recently, with a given number of game ticks.
     WithinLast {
         /// The interval of game ticks to request. It is unknown the maximum interval that may be requested.
-        ticks: i64,
+        ticks: u32,
     },
     /// Retrieves rooms where pvp has occurred since a given game time.
     Since {
         /// The game "time" (tick number) to request PvP since. It is unknown how far back of a time may be requested.
-        time: i64,
+        time: u32,
     },
 }
 
 impl PvpArgs {
     /// Creates a new PvP call parameter to request any PvP occurring since the given game tick.
-    pub fn since(tick: i64) -> PvpArgs {
+    pub fn since(tick: u32) -> PvpArgs {
         PvpArgs::Since { time: tick }
     }
     /// Creates a new PvP call parameter to request any PvP occurring within the last x ticks.
-    pub fn within(ticks: i64) -> PvpArgs {
+    pub fn within(ticks: u32) -> PvpArgs {
         PvpArgs::WithinLast { ticks: ticks }
     }
 }
@@ -37,14 +37,14 @@ impl PvpArgs {
 pub struct Response {
     ok: i32,
     rooms: Vec<InnerRoom>,
-    time: i64,
+    time: u32,
 }
 
 #[derive(Deserialize, Clone, Hash, Debug)]
 struct InnerRoom {
     _id: String,
     #[serde(rename = "lastPvpTime")]
-    last_pvp_time: i64,
+    last_pvp_time: u32,
 }
 
 
@@ -52,9 +52,9 @@ struct InnerRoom {
 #[derive(Clone, Hash, Debug)]
 pub struct RecentPvp {
     /// A list of room names in which pvp has recently occurred, and the time at which pvp last occurred.
-    pub rooms: Vec<(data::RoomName, i64)>,
+    pub rooms: Vec<(data::RoomName, u32)>,
     /// The current game time of the server when the call was completed, the tick up to which pvp has been reported.
-    pub reported_up_to: i64,
+    pub reported_up_to: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
     _phantom: PhantomData<()>,
 }
