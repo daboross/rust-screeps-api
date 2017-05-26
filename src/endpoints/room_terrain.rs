@@ -46,6 +46,7 @@ pub type TerrainRow = arrayvec::ArrayVec<generic_array::GenericArray<TerrainType
 pub type TerrainGrid = arrayvec::ArrayVec<generic_array::GenericArray<TerrainRow, typenum::U50>>;
 
 /// Structure describing the terrain of a room
+#[derive(Clone, Debug)]
 pub struct RoomTerrain {
     /// The name of the room
     pub room_name: data::RoomName,

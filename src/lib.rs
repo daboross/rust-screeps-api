@@ -85,6 +85,7 @@ pub mod sockets;
 pub use data::RoomName;
 pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats};
 pub use endpoints::leaderboard::LeaderboardType;
+pub use endpoints::room_terrain::TerrainGrid;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use error::{Error, Result};
 #[cfg(feature = "websockets")]
