@@ -52,7 +52,7 @@ struct InnerRoom {
 #[derive(Clone, Hash, Debug)]
 pub struct RecentPvp {
     /// A list of room names in which pvp has recently occurred, and the time at which pvp last occurred.
-    pub rooms: Vec<(String, i64)>,
+    pub rooms: Vec<(data::RoomName, i64)>,
     /// The current game time of the server when the call was completed, the tick up to which pvp has been reported.
     pub reported_up_to: i64,
     /// Phantom data in order to allow adding any additional fields in the future.
@@ -71,7 +71,9 @@ impl EndpointResult for RecentPvp {
         }
 
         Ok(RecentPvp {
-            rooms: rooms.into_iter().map(|r| (r._id, r.last_pvp_time)).collect(),
+            rooms: rooms.into_iter()
+                .map(|r| Ok((data::RoomName::new(&r._id)?, r.last_pvp_time)))
+                .collect::<Result<_>>()?,
             reported_up_to: time,
             _phantom: PhantomData,
         })

@@ -7,7 +7,7 @@ use std::convert::AsRef;
 use time;
 use serde::{Serialize, Serializer};
 
-use data;
+use data::{self, RoomName};
 use tuple_vec_map;
 
 use EndpointResult;
@@ -149,7 +149,7 @@ pub struct MapStats {
 #[derive(Clone, Hash, Debug)]
 pub struct RoomInfo {
     /// The room name / id.
-    pub name: String,
+    pub name: RoomName,
     /// The room state.
     pub state: data::RoomState,
     /// Info on the room's owner, if any.
@@ -199,7 +199,7 @@ impl EndpointResult for MapStats {
                     }
 
                     let info = RoomInfo {
-                        name: room_name,
+                        name: RoomName::new(&room_name)?,
                         state: data::RoomState::from_data(time::get_time(), novice, open_time)?,
                         owner: owner,
                         // turn Option<Result<A, B>> into Result<Option<A>, B>

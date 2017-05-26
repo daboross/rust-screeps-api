@@ -48,7 +48,7 @@ pub type TerrainGrid = arrayvec::ArrayVec<generic_array::GenericArray<TerrainRow
 /// Structure describing the terrain of a room
 pub struct RoomTerrain {
     /// The name of the room
-    pub room_name: String,
+    pub room_name: data::RoomName,
     /// A 50x50 grid of terrain squares. When coming from the API, this is guaranteed to be
     /// completely filled, and accessing any square between (0, 0) and (49, 49) inclusive will
     /// succeed.
@@ -90,7 +90,7 @@ impl EndpointResult for RoomTerrain {
         }
 
         Ok(RoomTerrain {
-            room_name: terrain_data.room,
+            room_name: data::RoomName::new(&terrain_data.room)?,
             terrain: terrain_bytes.chunks(50)
                 .enumerate()
                 .map(|(y, chunk)| {

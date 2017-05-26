@@ -1,7 +1,7 @@
 //! Interpreting room status results.
 
 use EndpointResult;
-use data::{self, RoomState};
+use data::{self, RoomState, RoomName};
 use error::{Result, ApiError};
 use std::marker::PhantomData;
 use time;
@@ -31,7 +31,7 @@ struct InnerRoom {
 #[derive(Clone, Hash, Debug)]
 pub struct RoomStatus {
     /// The name of the room, or None if the room does not exist.
-    pub room_name: Option<String>,
+    pub room_name: Option<RoomName>,
     /// The state of the room, determined by comparing the API response timestamps with the current UTC time, as
     /// retrieved from the system.
     pub state: RoomState,
@@ -71,7 +71,7 @@ impl EndpointResult for RoomStatus {
         let state = RoomState::from_data(time::get_time(), novice, open_time)?;
 
         Ok(RoomStatus {
-            room_name: Some(room_name),
+            room_name: Some(RoomName::new(&room_name)?),
             state: state,
             _phantom: PhantomData,
         })

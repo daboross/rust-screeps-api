@@ -1,12 +1,12 @@
 //! Error types for the screeps api.
-use hyper;
-use serde_json;
+use std::{io, fmt, marker};
+use std::error::Error as StdError;
+
+use {hyper, serde_json};
+
+use data::room_name::RoomNameParseError;
 
 use self::ErrorType::*;
-use std::error::Error as StdError;
-use std::fmt;
-use std::io;
-use std::marker;
 
 #[derive(Debug)]
 /// Possible error types for library errors.
@@ -27,6 +27,8 @@ pub enum ErrorType {
     /// API Error. Either missing fields in the response that were expected, or the API did not include the regular
     /// `"ok": 1` which indicates success.
     Api(ApiError),
+    /// Error parsing a room name.
+    RoomNameParse(RoomNameParseError<'static>),
     /// A marker variant that tells the compiler that users of this enum cannot match it exhaustively.
     #[doc(hidden)]
     __Nonexhaustive,
@@ -117,6 +119,12 @@ impl From<ApiError> for Error {
     }
 }
 
+impl<'a> From<RoomNameParseError<'a>> for Error {
+    fn from(err: RoomNameParseError<'a>) -> Error {
+        ErrorType::RoomNameParse(err.into_owned()).into()
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.err {
@@ -125,6 +133,7 @@ impl fmt::Display for Error {
             Io(ref err) => fmt::Display::fmt(err, f)?,
             StatusCode(ref status) => fmt::Display::fmt(status, f)?,
             Api(ref err) => fmt::Display::fmt(err, f)?,
+            RoomNameParse(ref err) => fmt::Display::fmt(err, f)?,
             Unauthorized => {
                 write!(f,
                        "access not authorized: token expired, username/password
@@ -165,6 +174,7 @@ impl StdError for Error {
                 }
             }
             Api(ref err) => err.description(),
+            RoomNameParse(ref err) => err.description(),
             Unauthorized => "access not authorized: token expired, username/password incorrect or no login provided",
             __Nonexhaustive => unreachable!(),
         }
@@ -176,6 +186,7 @@ impl StdError for Error {
             Hyper(ref err) => Some(err),
             Io(ref err) => Some(err),
             Api(ref err) => Some(err),
+            RoomNameParse(ref err) => Some(err),
             StatusCode(_) | Unauthorized => None,
             __Nonexhaustive => unreachable!(),
         }
