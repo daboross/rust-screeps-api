@@ -1,23 +1,23 @@
 //! Structures relating to room name parsing.
 
-use std::{error, fmt};
+use std::{error, fmt, ops};
 use std::borrow::Cow;
 
 /// A structure representing a room name.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct RoomName {
-    /// If true, room is north, above the x-axis.
-    pub north: bool,
-    /// If true, room is east, right of the y-axis.
-    pub east: bool,
-    /// The x coordinate - direction is determined by `east`.
+    /// Inner x coordinate representation.
     ///
-    /// Note that both `E0N0` and `W0N0` exist, and are separate rooms.
-    pub x_coord: u32,
-    /// The y coordinate - direction is determined by `north`.
+    /// 0 represents E0, positive numbers represent E(x)
     ///
-    /// Note that both `E0N0` and `E0S0` exist, and are separate rooms.
-    pub y_coord: u32,
+    /// -1 represents W0, negative numbers represent W((-x) - 1)
+    pub x_coord: i32,
+    /// Inner y coordinate representation.
+    ///
+    /// 0 represents N0, positive numbers represent N(y)
+    ///
+    /// -1 represents S0, negative numbers represent S((-y) - 1)
+    pub y_coord: i32,
 }
 
 impl fmt::Display for RoomName {
@@ -28,21 +28,53 @@ impl fmt::Display for RoomName {
     ///
     /// [`into_room_name`]: trait.IntoRoomName.html
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-               "{}{}{}{}",
-               if self.east { "E" } else { "W" },
-               self.x_coord,
-               if self.north { "N" } else { "S" },
-               self.y_coord)
+        if self.x_coord >= 0 {
+            write!(f, "E{}", self.x_coord)?;
+        } else {
+            write!(f, "W{}", (-self.x_coord) - 1)?;
+        }
+
+        if self.y_coord >= 0 {
+            write!(f, "N{}", self.y_coord)?;
+        } else {
+            write!(f, "S{}", (-self.y_coord) - 1)?;
+        }
+
+        Ok(())
     }
 }
 
 impl RoomName {
     /// Creates a new room name from the given input.
-    pub fn new<T>(x: &T) -> Result<RoomName, RoomNameParseError>
+    ///
+    /// This will parse the input, and return an error if it is in an invalid format.
+    #[inline]
+    pub fn new<T>(x: &T) -> Result<Self, RoomNameParseError>
         where T: IntoRoomName + ?Sized
     {
         x.into_room_name()
+    }
+
+    /// Creates a new room name from the given position parameters.
+    #[inline]
+    pub fn from_pos(east: bool, north: bool, x_pos: i32, y_pos: i32) -> Self {
+        RoomName {
+            x_coord: if east { x_pos } else { -x_pos - 1 },
+            y_coord: if north { y_pos } else { -y_pos - 1 },
+        }
+    }
+}
+
+impl ops::Add<(i32, i32)> for RoomName {
+    type Output = RoomName;
+
+    /// Adds an (x, y) coordinate pair to this room name.
+    #[inline]
+    fn add(self, (x, y): (i32, i32)) -> RoomName {
+        RoomName {
+            x_coord: self.x_coord + x,
+            y_coord: self.y_coord + y,
+        }
     }
 }
 
@@ -53,6 +85,7 @@ pub trait IntoRoomName {
 }
 
 impl IntoRoomName for RoomName {
+    #[inline]
     fn into_room_name(&self) -> Result<RoomName, RoomNameParseError> {
         // data is copy
         Ok(*self)
@@ -106,14 +139,7 @@ impl<T> IntoRoomName for T
             s[start_index..s.len()].parse().map_err(|_| RoomNameParseError::new(s))?
         };
 
-        let finished = RoomName {
-            north: north,
-            east: east,
-            x_coord: x_coord,
-            y_coord: y_coord,
-        };
-
-        Ok(finished)
+        Ok(RoomName::from_pos(east, north, x_coord, y_coord))
     }
 }
 
@@ -175,27 +201,9 @@ mod tests {
 
     #[test]
     fn parse_and_test_result() {
-        let pairs = [("E0N0",
-                      RoomName {
-                          east: true,
-                          north: true,
-                          x_coord: 0,
-                          y_coord: 0,
-                      }),
-                     ("W0S0",
-                      RoomName {
-                          east: false,
-                          north: false,
-                          x_coord: 0,
-                          y_coord: 0,
-                      }),
-                     ("E20S7777",
-                      RoomName {
-                          east: true,
-                          north: false,
-                          x_coord: 20,
-                          y_coord: 7777,
-                      })];
+        let pairs = [("E0N0", RoomName::from_pos(true, true, 0, 0)),
+                     ("W0S0", RoomName::from_pos(false, false, 0, 0)),
+                     ("E20S7777", RoomName::from_pos(true, false, 20, 7777))];
 
         for &(ref string, ref expected) in pairs.iter() {
             assert_eq!(&RoomName::new(string).unwrap(), expected);
