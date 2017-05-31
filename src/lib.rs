@@ -562,18 +562,7 @@ impl<'a, C: HyperClient, T: TokenStorage, S: serde::Serialize> PartialRequest<'a
             Err(e) => return Err(Error::with_url(e, Some(response.url.clone()))),
         };
 
-        use serde::Deserialize;
-
-        let result = match R::RequestResult::deserialize(&json) {
-            Ok(v) => v,
-            Err(e) => {
-                match R::ErrorResult::deserialize(&json) {
-                    Ok(v) => return Err(Error::with_json(v, Some(response.url.clone()), Some(json))),
-                    // Favor the primary parsing error if one occurs parsing the error type as well.
-                    Err(_) => return Err(Error::with_json(e, Some(response.url.clone()), Some(json))),
-                }
-            }
-        };
+        let result = deserialize_with_warning::<R>(&json, &response.url)?;
 
         R::from_raw(result)
     }
@@ -588,6 +577,36 @@ pub fn gcl_calc(gcl_points: u64) -> u64 {
     ((gcl_points as f64) * GCL_INV_MULTIPLY)
         .powf(GCL_INV_POW)
         .floor() as u64 + 1
+}
+
+fn deserialize_with_warning<T: EndpointResult>(input: &serde_json::Value,
+                                               url: &hyper::Url)
+                                               -> Result<T::RequestResult> {
+    let mut unused = Vec::new();
+
+    let res = match serde_ignored::deserialize::<_, _, T::RequestResult>(input, |path| unused.push(path.to_string())) {
+        Ok(v) => Ok(v),
+        Err(e1) => {
+            unused.clear();
+            match serde_ignored::deserialize::<_, _, T::ErrorResult>(input, |path| unused.push(path.to_string())) {
+                Ok(v) => Err(Error::with_json(v, Some(url.clone()), Some(input.clone()))),
+                // Favor the primary parsing error if one occurs parsing the error type as well.
+                Err(_) => Err(Error::with_json(e1, Some(url.clone()), Some(input.clone()))),
+            }
+        }
+    };
+
+
+    if !unused.is_empty() {
+        warn!("screeps API lib didn't parse some data retrieved from: {}\n\
+               full data: {}\n\
+               unparsed fields: {:?}",
+              url,
+              serde_json::to_string(input).unwrap(),
+              unused);
+    }
+
+    res
 }
 
 
