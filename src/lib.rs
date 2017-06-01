@@ -21,7 +21,7 @@
 //! let client = hyper::Client::with_connector(
 //!         HttpsConnector::new(hyper_rustls::TlsClient::new()));
 //!
-//! let mut api = screeps_api::API::new(&client);
+//! let mut api = screeps_api::Api::new(&client);
 //! # }
 //! ```
 //!
@@ -39,7 +39,7 @@
 //! #   let client = hyper::Client::with_connector(
 //! #           HttpsConnector::new(hyper_rustls::TlsClient::new()));
 //!
-//! let mut api = screeps_api::API::new(&client);
+//! let mut api = screeps_api::Api::new(&client);
 //!
 //! api.login("username", "password").unwrap();
 //!
@@ -60,37 +60,49 @@
 //! in multiple thread simultaneously, you need to create and log in to multiple `API` structures.
 #![deny(missing_docs)]
 #![recursion_limit="512"]
+// Logging
 #[macro_use]
 extern crate log;
-extern crate hyper;
+extern crate time;
+// Parsing
+extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_ignored;
-extern crate serde;
-extern crate tuple_vec_map;
 #[cfg_attr(test, macro_use)]
 extern crate serde_json;
-extern crate time;
+extern crate serde_ignored;
+extern crate tuple_vec_map;
 extern crate arrayvec;
 extern crate generic_array;
 extern crate typenum;
+// HTTP
+extern crate futures;
 extern crate url;
+#[macro_use]
+extern crate hyper;
 
 pub mod error;
 pub mod endpoints;
 pub mod data;
+pub mod connecting;
 #[cfg(feature = "websockets")]
 pub mod sockets;
 
+pub use error::{Error, NoToken};
 pub use data::RoomName;
 pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats};
 pub use endpoints::leaderboard::LeaderboardType;
 pub use endpoints::room_terrain::TerrainGrid;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
-pub use error::{Error, Result};
+pub use endpoints::login::LoggedIn;
+pub use endpoints::leaderboard::season_list::LeaderboardSeason;
+pub use endpoints::leaderboard::find_rank::FoundUserRank;
+pub use endpoints::leaderboard::page::LeaderboardPage;
+pub use connecting::FutureResponse;
 #[cfg(feature = "websockets")]
 pub use sockets::{Sender as SocketsSender, Handler as SocketsHandler};
 
+use std::marker::PhantomData;
 use std::borrow::Cow;
 use std::convert::AsRef;
 use std::collections::VecDeque;
@@ -98,17 +110,33 @@ use std::sync::{Arc, Mutex};
 use std::rc::Rc;
 use std::cell::RefCell;
 
-use hyper::header::{Headers, ContentType};
+use url::Url;
+use hyper::header::ContentType;
 
-use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp, leaderboard, map_stats};
+use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp, map_stats};
 
-/// A trait for each endpoint
-trait EndpointResult: Sized {
-    type RequestResult: for<'de> serde::Deserialize<'de>;
-    type ErrorResult: for<'de> serde::Deserialize<'de> + Into<Error>;
+use sealed::EndpointResult;
 
-    fn from_raw(data: Self::RequestResult) -> Result<Self>;
+mod sealed {
+    use serde;
+    use error::Error;
+
+    /// A trait for each endpoint
+    pub trait EndpointResult: Sized + 'static {
+        type RequestResult: for<'de> serde::Deserialize<'de>;
+        type ErrorResult: for<'de> serde::Deserialize<'de> + Into<Error>;
+
+        fn from_raw(data: Self::RequestResult) -> Result<Self, Error>;
+    }
+
+    pub trait Sealed: ::EndpointResult {}
+    impl<T> Sealed for T where T: ::EndpointResult {}
 }
+
+/// Sealed trait implemented for each endpoint.
+pub trait EndpointType: sealed::Sealed {}
+
+impl<T> EndpointType for T where T: sealed::Sealed {}
 
 /// An API token that allows for one-time authentication. Each use of an API token with the screeps API
 /// will cause the API to return a new token which should be stored in its place.
@@ -116,118 +144,111 @@ pub type Token = String;
 
 /// A generic trait over hyper's Client which allows for references, owned clients, and Arc<hyper::Client>
 /// to be used.
-pub trait HyperClient {
+pub trait HyperClient<C>
+    where C: hyper::client::Connect
+{
     /// Get a reference to this client.
-    fn client(&self) -> &hyper::Client;
+    fn client(&self) -> &hyper::Client<C>;
 }
 
 /// A generic trait over some storage for auth tokens, possibly for use with sharing tokens between clients.
-pub trait TokenStorage {
+pub trait TokenStorage: Clone + 'static {
     /// Takes a token from the token storage, if there are any tokens.
-    fn take_token(&mut self) -> Option<Token>;
+    fn take_token(&self) -> Option<Token>;
 
     /// Gives a new token back to the token storage.
-    fn return_token(&mut self, Token);
+    fn return_token(&self, Token);
 }
 
-impl HyperClient for hyper::Client {
-    fn client(&self) -> &hyper::Client {
+/// Convenience type representing the regular token storage when sending between threads is required.
+pub type ArcTokenStorage = Arc<Mutex<VecDeque<Token>>>;
+
+/// Convenience type representing the regular token storage when sending between threads is not required.
+pub type RcTokenStorage = Rc<RefCell<VecDeque<Token>>>;
+
+impl<C> HyperClient<C> for hyper::Client<C>
+    where C: hyper::client::Connect
+{
+    fn client(&self) -> &hyper::Client<C> {
         self
     }
 }
 
-impl<'a> HyperClient for &'a hyper::Client {
-    fn client(&self) -> &hyper::Client {
+impl<'a, C> HyperClient<C> for &'a hyper::Client<C>
+    where C: hyper::client::Connect
+{
+    fn client(&self) -> &hyper::Client<C> {
         self
     }
 }
 
-impl HyperClient for Arc<hyper::Client> {
-    fn client(&self) -> &hyper::Client {
+impl<C> HyperClient<C> for Arc<hyper::Client<C>>
+    where C: hyper::client::Connect
+{
+    fn client(&self) -> &hyper::Client<C> {
         &self
     }
 }
 
-impl HyperClient for Rc<hyper::Client> {
-    fn client(&self) -> &hyper::Client {
+impl<C> HyperClient<C> for Rc<hyper::Client<C>>
+    where C: hyper::client::Connect
+{
+    fn client(&self) -> &hyper::Client<C> {
         &self
     }
 }
 
-impl TokenStorage for Option<Token> {
-    fn take_token(&mut self) -> Option<Token> {
-        self.take()
+impl TokenStorage for Rc<RefCell<VecDeque<Token>>> {
+    fn take_token(&self) -> Option<Token> {
+        self.borrow_mut().pop_front()
     }
 
-    fn return_token(&mut self, token: Token) {
-        *self = Some(token);
-    }
-}
-
-impl TokenStorage for VecDeque<Token> {
-    fn take_token(&mut self) -> Option<Token> {
-        self.pop_front()
-    }
-
-    fn return_token(&mut self, token: Token) {
-        self.push_back(token)
+    fn return_token(&self, token: Token) {
+        self.borrow_mut().push_back(token)
     }
 }
 
-impl<T: TokenStorage> TokenStorage for Arc<Mutex<T>> {
-    fn take_token(&mut self) -> Option<Token> {
-        self.lock().unwrap().take_token()
+impl TokenStorage for Arc<Mutex<VecDeque<Token>>> {
+    fn take_token(&self) -> Option<Token> {
+        self.lock().unwrap_or_else(|e| e.into_inner()).pop_front()
     }
 
-    fn return_token(&mut self, token: Token) {
-        self.lock().unwrap().return_token(token)
-    }
-}
-
-impl<T: TokenStorage> TokenStorage for Rc<RefCell<T>> {
-    fn take_token(&mut self) -> Option<Token> {
-        self.borrow_mut().take_token()
-    }
-
-    fn return_token(&mut self, token: Token) {
-        self.borrow_mut().return_token(token)
-    }
-}
-
-impl<'a, T: TokenStorage> TokenStorage for &'a mut T {
-    fn take_token(&mut self) -> Option<Token> {
-        (**self).take_token()
-    }
-
-    fn return_token(&mut self, token: Token) {
-        (**self).return_token(token)
+    fn return_token(&self, token: Token) {
+        self.lock().unwrap_or_else(|e| e.into_inner()).push_back(token)
     }
 }
 
 /// API Object, stores the current API token and allows access to making requests.
-#[derive(Debug)]
-pub struct API<C: HyperClient = hyper::Client, T: TokenStorage = Option<Token>> {
+#[derive(Debug, Clone)]
+pub struct Api<C: hyper::client::Connect, H: HyperClient<C> = hyper::Client<C>, T = RcTokenStorage> {
     /// The base URL for this API instance.
-    pub url: hyper::Url,
-    /// The current authentication token, in binary UTF8.
-    pub token: T,
-    client: C,
+    pub url: Url,
+    /// The stored authentication tokens.
+    pub tokens: T,
+    /// The hyper client.
+    client: H,
+    /// Phantom data required in order to have C bound here.
+    _phantom: PhantomData<C>,
 }
 
-fn default_url() -> hyper::Url {
-    hyper::Url::parse("https://screeps.com/api/").expect("expected pre-set url to parse, parsing failed")
+static DEFAULT_URL_STR: &'static str = "https://screeps.com/api/";
+
+fn default_url() -> Url {
+    Url::parse(DEFAULT_URL_STR).expect("expected pre-set url to parse, parsing failed")
 }
 
-impl<C: HyperClient> API<C, Option<Token>> {
+impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage + Default> Api<C, H, T> {
     /// Creates a new API instance for the official server with the `https://screeps.com/api/` base url.
     ///
     /// The returned instance can be used to make anonymous calls, or `API.login` can be used to allow for
     /// authenticated API calls.
-    pub fn new(client: C) -> Self {
-        API {
+    #[inline]
+    pub fn new(client: H) -> Self {
+        Api {
             url: default_url(),
             client: client,
-            token: None,
+            tokens: T::default(),
+            _phantom: PhantomData,
         }
     }
 
@@ -235,26 +256,30 @@ impl<C: HyperClient> API<C, Option<Token>> {
     ///
     /// The returned instance can be used to make anonymous calls, or `API.login` can be used to allow for
     /// authenticated API calls.
-    pub fn with_url<U: hyper::client::IntoUrl>(client: C, url: U) -> Result<Self> {
-        let api = API {
-            url: url.into_url()?,
+    #[inline]
+    pub fn with_url<U: AsRef<str>>(client: H, url: U) -> Result<Self, url::ParseError> {
+        let api = Api {
+            url: Url::parse(url.as_ref())?,
             client: client,
-            token: Default::default(),
+            tokens: T::default(),
+            _phantom: PhantomData,
         };
         Ok(api)
     }
 }
 
-impl<C: HyperClient, T: TokenStorage> API<C, T> {
+impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T> {
     /// Creates a new API instance for the official server with a stored token.
     ///
     /// The returned instance can be used to make both anonymous calls, and authenticated calls, provided
     /// the token is valid.
-    pub fn with_token(client: C, token: T) -> Self {
-        API {
+    #[inline]
+    pub fn with_tokens(client: H, tokens: T) -> Self {
+        Api {
             url: default_url(),
             client: client,
-            token: token,
+            tokens: tokens,
+            _phantom: PhantomData,
         }
     }
 
@@ -263,58 +288,74 @@ impl<C: HyperClient, T: TokenStorage> API<C, T> {
     ///
     /// The returned instance can be used to make anonymous calls and will be allowed to make authenticated calls
     /// if the token is valid.
-    pub fn with_token_and_url<U: hyper::client::IntoUrl>(client: C, token: T, url: U) -> Result<Self> {
-        let api = API {
-            url: url.into_url()?,
+    #[inline]
+    pub fn with_url_and_tokens<U: AsRef<str>>(client: H, url: U, tokens: T) -> Result<Self, url::ParseError> {
+        let api = Api {
+            url: Url::parse(url.as_ref())?,
             client: client,
-            token: token,
+            tokens: tokens,
+            _phantom: PhantomData,
         };
         Ok(api)
     }
 
     /// Starts preparing a POST or GET request to the given endpoint URL
     #[inline]
-    fn request<'a, S: serde::Serialize>(&'a mut self, endpoint: &'a str) -> PartialRequest<'a, C, T, S> {
+    fn request<'a, R, S>(&'a self,
+                         endpoint: &'a str)
+                         -> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, S>
+        where R: EndpointResult,
+              S: serde::Serialize
+    {
         PartialRequest {
             client: self,
             endpoint: endpoint,
             post_body: None,
             query_params: None,
-            auth_required: false,
+            _phantom: PhantomData,
         }
     }
 
     /// Makes a new GET request to the given endpoint URL, with given the query parameters added to the end.
     #[inline]
-    fn get<'a>(&'a mut self, endpoint: &'a str) -> PartialRequest<'a, C, T, &'static str> {
+    fn get<'a, R>(&'a self,
+                  endpoint: &'a str)
+                  -> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, &'static str>
+        where R: EndpointResult
+    {
         self.request(endpoint)
     }
 
 
     /// Makes a POST request to the given endpoint URL, with the given data encoded as JSON in the body of the request.
     #[inline]
-    fn post<'a, U: serde::Serialize>(&'a mut self, endpoint: &'a str, request_text: U) -> PartialRequest<'a, C, T, U> {
+    fn post<'a, U, R>(&'a self,
+                      endpoint: &'a str,
+                      request_text: U)
+                      -> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, U>
+        where U: serde::Serialize,
+              R: EndpointResult
+    {
         self.request(endpoint).post(request_text)
     }
 
-    /// Logs in using a given username and password, and stores the resulting token inside this structure.
-    pub fn login<'b, U, V>(&mut self, username: U, password: V) -> Result<()>
+    /// Logs in with the given username and password and returns a result containing the token.
+    ///
+    /// Use `logged_in.return_to(client.tokens)` to let the client use the token from logging in.
+    pub fn login<'b, U, V>(&self, username: U, password: V) -> FutureResponse<LoggedIn>
         where U: Into<Cow<'b, str>>,
               V: Into<Cow<'b, str>>
     {
-        let result: login::LoginResult = self.post("auth/signin", login::Details::new(username, password)).send()?;
-
-        self.token.return_token(result.token);
-        Ok(())
+        self.post("auth/signin", login::Details::new(username, password)).send()
     }
 
     /// Gets user information on the user currently logged in, including username and user id.
-    pub fn my_info(&mut self) -> Result<my_info::MyInfo> {
-        self.get("auth/me").auth(true).send()
+    pub fn my_info(&self) -> Result<FutureResponse<MyInfo>, NoToken> {
+        self.get("auth/me").auth().send()
     }
 
     /// Get information on a number of rooms.
-    pub fn map_stats<'a, U, V>(&mut self, rooms: &'a V) -> Result<map_stats::MapStats>
+    pub fn map_stats<'a, U, V>(&self, rooms: &'a V) -> Result<FutureResponse<MapStats>, NoToken>
         where U: AsRef<str>,
               &'a V: IntoIterator<Item = U>
     {
@@ -322,7 +363,7 @@ impl<C: HyperClient, T: TokenStorage> API<C, T> {
         let args = map_stats::MapStatsArgs::new(rooms, map_stats::StatName::RoomOwner);
 
         self.post("game/map-stats", args)
-            .auth(true)
+            .auth()
             .send()
     }
 
@@ -332,43 +373,45 @@ impl<C: HyperClient, T: TokenStorage> API<C, T> {
     /// All Allowed request_intervals are not known, but at least `8`, `180` and `1440` are allowed. The returned data,
     /// at the time of writing, includes 8 data points of each type, representing equal portions of the time period
     /// requested (hour for `8`, day for `180`, week for `1440`).
-    pub fn room_overview<'b, U>(&mut self, room_name: U, request_interval: u32) -> Result<room_overview::RoomOverview>
+    pub fn room_overview<'b, U>(&self,
+                                room_name: U,
+                                request_interval: u32)
+                                -> Result<FutureResponse<RoomOverview>, NoToken>
         where U: Into<Cow<'b, str>>
     {
         self.get("game/room-overview")
             .params(&[("room", room_name.into().into_owned()), ("interval", request_interval.to_string())])
-            .auth(true)
+            .auth()
             .send()
     }
 
     /// Gets the terrain of a room, returning a 2d array of 50x50 points.
     ///
     /// Does not require authentication.
-    pub fn room_terrain<'b, U>(&mut self, room_name: U) -> Result<room_terrain::RoomTerrain>
+    pub fn room_terrain<'b, U>(&self, room_name: U) -> FutureResponse<RoomTerrain>
         where U: Into<Cow<'b, str>>
     {
         self.get("game/room-terrain")
             .params(&[("room", room_name.into().into_owned()), ("encoded", true.to_string())])
-            .auth(false)
             .send()
     }
 
     /// Gets the "status" of a room: if it is open, if it is in a novice area, if it exists.
-    pub fn room_status<'b, U>(&mut self, room_name: U) -> Result<room_status::RoomStatus>
+    pub fn room_status<'b, U>(&self, room_name: U) -> Result<FutureResponse<RoomStatus>, NoToken>
         where U: Into<Cow<'b, str>>
     {
-        self.get("game/room-status").params(&[("room", room_name.into().into_owned())]).auth(true).send()
+        self.get("game/room-status").params(&[("room", room_name.into().into_owned())]).auth().send()
     }
 
     /// Experimental endpoint to get all rooms in which PvP has recently occurred, or where PvP has occurred since a
     /// certain game tick.
-    pub fn recent_pvp(&mut self, details: RecentPvpDetails) -> Result<recent_pvp::RecentPvp> {
+    pub fn recent_pvp(&self, details: RecentPvpDetails) -> FutureResponse<RecentPvp> {
         let args = match details {
             recent_pvp::PvpArgs::WithinLast { ticks } => [("interval", ticks.to_string())],
             recent_pvp::PvpArgs::Since { time } => [("start", time.to_string())],
         };
 
-        self.get("experimental/pvp").params(&args).auth(false).send()
+        self.get("experimental/pvp").params(&args).send()
     }
 
     /// Gets a list of all past leaderboard seasons, with end dates, display names, and season ids for each season.
@@ -378,8 +421,8 @@ impl<C: HyperClient, T: TokenStorage> API<C, T> {
     ///
     /// This method does not return any actual data, but rather just a list of valid past season, any of the ids of
     /// which can then be used to retrieve more information.
-    pub fn leaderboard_season_list(&mut self) -> Result<Vec<leaderboard::season_list::LeaderboardSeason>> {
-        self.get("leaderboard/seasons").auth(true).send()
+    pub fn leaderboard_season_list(&self) -> Result<FutureResponse<Vec<LeaderboardSeason>>, NoToken> {
+        self.get("leaderboard/seasons").auth().send()
     }
 
     /// Finds the rank of a user in a specific season for a specific leaderboard type.
@@ -391,16 +434,16 @@ impl<C: HyperClient, T: TokenStorage> API<C, T> {
     ///
     /// This is technically the same API endpoint as find_leaderboard_rank, but the result format differs when
     /// requesting a specific season from when requesting all season ranks.
-    pub fn find_season_leaderboard_rank<'b, U, V>(&mut self,
+    pub fn find_season_leaderboard_rank<'b, U, V>(&self,
                                                   leaderboard_type: LeaderboardType,
                                                   username: U,
                                                   season: V)
-                                                  -> Result<leaderboard::find_rank::FoundUserRank>
+                                                  -> Result<FutureResponse<FoundUserRank>, NoToken>
         where U: Into<Cow<'b, str>>,
               V: Into<Cow<'b, str>>
     {
         self.get("leaderboard/find")
-            .auth(true)
+            .auth()
             .params(&[("mode", leaderboard_type.api_representation().to_string()),
                       ("season", season.into().into_owned()),
                       ("username", username.into().into_owned())])
@@ -412,14 +455,14 @@ impl<C: HyperClient, T: TokenStorage> API<C, T> {
     /// This will return `ApiError::UserNotFound` if a username does not exist, and may also return an empty `Vec` as
     /// the result if the user does not have any ranks in the given leaderboard type (they have never contributed any
     /// global control points, or processed power, depending on the type).
-    pub fn find_leaderboard_ranks<'b, U>(&mut self,
+    pub fn find_leaderboard_ranks<'b, U>(&self,
                                          leaderboard_type: LeaderboardType,
                                          username: U)
-                                         -> Result<Vec<leaderboard::find_rank::FoundUserRank>>
+                                         -> Result<FutureResponse<Vec<FoundUserRank>>, NoToken>
         where U: Into<Cow<'b, str>>
     {
         self.get("leaderboard/find")
-            .auth(true)
+            .auth()
             .params(&[("mode", leaderboard_type.api_representation().to_string()),
                       ("username", username.into().into_owned())])
             .send()
@@ -432,16 +475,16 @@ impl<C: HyperClient, T: TokenStorage> API<C, T> {
     ///
     /// Offset doesn't have to be a multiple of limit, but it's most likely most useful that it is. Offset 0 will get
     /// you the start/top of the ranked list.
-    pub fn leaderboard_page<'b, U>(&mut self,
+    pub fn leaderboard_page<'b, U>(&self,
                                    leaderboard_type: LeaderboardType,
                                    season: U,
                                    limit: u32,
                                    offset: u32)
-                                   -> Result<leaderboard::page::LeaderboardPage>
+                                   -> Result<FutureResponse<LeaderboardPage>, NoToken>
         where U: Into<Cow<'b, str>>
     {
         self.get("leaderboard/list")
-            .auth(true)
+            .auth()
             .params(&[("mode", leaderboard_type.api_representation().to_string()),
                       ("season", season.into().into_owned()),
                       ("limit", limit.to_string()),
@@ -450,24 +493,113 @@ impl<C: HyperClient, T: TokenStorage> API<C, T> {
     }
 }
 
-struct PartialRequest<'a, C: HyperClient + 'a, T: TokenStorage + 'a, S: serde::Serialize + 'a = &'static str> {
-    client: &'a mut API<C, T>,
+/// Really hacky way of having compile-time assurance there's no
+/// auth errors for non-auth requiring types.
+trait PartialRequestAuth<T> {
+    type Result;
+
+    fn token_or_result<U: TokenStorage>(token_storage: &U) -> Result<Option<Token>, Self::Result>;
+
+    fn successful_result(success: T) -> Self::Result;
+}
+
+struct NoAuthRequired<T>(PhantomData<T>);
+
+impl<T> PartialRequestAuth<T> for NoAuthRequired<T> {
+    type Result = T;
+
+    fn token_or_result<U: TokenStorage>(_: &U) -> Result<Option<Token>, T> {
+        Ok(None)
+    }
+
+    fn successful_result(success: T) -> T {
+        success
+    }
+}
+
+struct AuthRequired<T>(PhantomData<T>);
+
+impl<T> PartialRequestAuth<T> for AuthRequired<T> {
+    type Result = Result<T, NoToken>;
+
+    fn token_or_result<U: TokenStorage>(token_storage: &U) -> Result<Option<Token>, Result<T, NoToken>> {
+        match token_storage.take_token() {
+            Some(v) => Ok(Some(v)),
+            None => Err(Err(NoToken)),
+        }
+    }
+
+    fn successful_result(success: T) -> Result<T, NoToken> {
+        Ok(success)
+    }
+}
+
+struct PartialRequest<'a, C, H, T, R, A = NoAuthRequired<FutureResponse<R>>, S = &'static str>
+    where C: hyper::client::Connect,
+          H: HyperClient<C> + 'a,
+          T: TokenStorage + 'a,
+          R: EndpointResult,
+          A: PartialRequestAuth<FutureResponse<R>>,
+          S: serde::Serialize + 'a
+{
+    client: &'a Api<C, H, T>,
     endpoint: &'a str,
     query_params: Option<&'a [(&'static str, String)]>,
     post_body: Option<S>,
-    auth_required: bool,
+    _phantom: PhantomData<(R, A)>,
 }
 
-impl<'a, C: HyperClient, T: TokenStorage, S: serde::Serialize> PartialRequest<'a, C, T, S> {
+impl<'a, C, H, T, R, S> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, S>
+    where C: hyper::client::Connect,
+          H: HyperClient<C> + 'a,
+          T: TokenStorage + 'a,
+          R: EndpointResult,
+          S: serde::Serialize
+{
+    #[inline]
+    fn auth(self) -> PartialRequest<'a, C, H, T, R, AuthRequired<FutureResponse<R>>, S> {
+        PartialRequest {
+            client: self.client,
+            endpoint: self.endpoint,
+            query_params: self.query_params,
+            post_body: self.post_body,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<'a, C, H, T, R, S> PartialRequest<'a, C, H, T, R, AuthRequired<FutureResponse<R>>, S>
+    where C: hyper::client::Connect,
+          H: HyperClient<C> + 'a,
+          T: TokenStorage + 'a,
+          R: EndpointResult,
+          S: serde::Serialize
+{
+    // This particular method should be a useful one to have around, even if just for completeness.
+    #[allow(dead_code)]
+    #[inline]
+    fn no_auth(self) -> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, S> {
+        PartialRequest {
+            client: self.client,
+            endpoint: self.endpoint,
+            query_params: self.query_params,
+            post_body: self.post_body,
+            _phantom: PhantomData,
+        }
+    }
+}
+
+impl<'a, C, H, T, R, A, S> PartialRequest<'a, C, H, T, R, A, S>
+    where C: hyper::client::Connect,
+          H: HyperClient<C> + 'a,
+          T: TokenStorage + 'a,
+          R: EndpointResult,
+          A: PartialRequestAuth<FutureResponse<R>>,
+          S: serde::Serialize
+{
     #[inline]
     fn params(mut self, params: &'a [(&'static str, String)]) -> Self {
         self.query_params = Some(params);
-        self
-    }
-
-    #[inline]
-    fn auth(mut self, auth: bool) -> Self {
-        self.auth_required = auth;
         self
     }
 
@@ -477,94 +609,120 @@ impl<'a, C: HyperClient, T: TokenStorage, S: serde::Serialize> PartialRequest<'a
         self
     }
 
-    fn send<R: EndpointResult>(self) -> Result<R> {
-        let PartialRequest { client, endpoint, query_params, post_body, auth_required } = self;
-        let mut headers = Headers::new();
-        headers.set(ContentType::json());
+    /// Result type here _so hacky!_ Glad this is an internal API.
+    ///
+    /// Returns either `connecting::FutureResponse<R>` or `Result<connecting::FutureResponse<R>, NoToken>`
+    /// depending on if auth() has been called.
+    fn send(self) -> A::Result {
+        let PartialRequest { client, endpoint, query_params, post_body, _phantom: _ } = self;
 
-        let temp_token = match (auth_required, client.token.take_token()) {
-            (_, Some(token)) => {
-                headers.set_raw("X-Token", vec![token.clone().into_bytes()]);
-                headers.set_raw("X-Username", vec![token.clone().into_bytes()]);
-                Some(token)
-            }
-            (true, None) => {
-                return Err(Error::with_url(error::ErrorType::Unauthorized, None));
-            }
-            (false, None) => None,
+        // this checks if authentication is required.
+        //
+        // like:
+        // ```
+        // let auth_token = if auth_required {
+        //     match client.tokens.take_token() {
+        //         Some(token) => Some(token),
+        //         None => return Err(NoToken),
+        //     }
+        // } else {
+        //     None
+        // };
+        // ```
+        //
+        // but this way we can return without a Result if authentication isn't required.
+        let auth_token = match A::token_or_result(&client.tokens) {
+            Ok(token_option) => token_option,
+            Err(return_value) => return return_value,
+        };
+
+        let method = match post_body {
+            Some(_) => hyper::Method::Post,
+            None => hyper::Method::Get,
         };
 
         let url = {
-            let mut temp = client.url.join(endpoint)?;
+            let mut temp =
+                client.url.join(endpoint).expect("expected pre-set endpoint url text to succeed, but it failed.");
 
             if let Some(pairs) = query_params {
                 temp.query_pairs_mut().extend_pairs(pairs).finish();
             }
+
             temp
         };
 
+        let mut request = hyper::client::Request::new(method,
+                                                      url.as_str()
+                                                          .parse()
+                                                          .expect("expected parsed url to successfully \
+                                                               parse as uri, but it failed."));
 
-        // Option<Result<A, B>> -> Result<Option<A>, B>
-        let post_body = post_body.map_or(Ok(None), |body| serde_json::to_string(&body).map(Some))?;
+        // headers
+        {
+            let mut headers = request.headers_mut();
 
-        let mut response = {
-            let client = client.client.client();
-            let request = match post_body.as_ref() {
-                Some(body) => client.post(url).body(body),
-                None => client.get(url),
-            };
+            headers.set(ContentType::json());
 
-            request.headers(headers).send()?
-        };
-
-        if !response.status.is_success() {
-            if log_enabled!(log::LogLevel::Debug) {
-                if response.status == hyper::status::StatusCode::Unauthorized {
-                    if auth_required {
-                        debug!("Token was passed, but still received unauthorized error for {}.",
-                               response.url);
-                    }
-                    if !auth_required {
-                        debug!("authentication not required for endpoint {}, but unauthorized error returned anyways.",
-                               endpoint);
-                    }
-                }
+            if let Some(token) = auth_token.as_ref() {
+                let arc = Arc::new(token.to_owned());
+                headers.set(headers::XTokenHeader(arc.clone()));
+                headers.set(headers::XUsernameHeader(arc));
             }
-            return Err(Error::with_url(response.status, Some(response.url.clone())));
         }
 
-        let token_to_return = {
-            match response.headers.get_raw("X-Token") {
-                Some(token_vec) => {
-                    match token_vec.first() {
-                        Some(token_bytes) if !token_bytes.is_empty() => {
-                            match std::str::from_utf8(&token_bytes) {
-                                Ok(s) => Some(s.to_owned()),
-                                Err(e) => {
-                                    warn!("Screeps server returned invalid token in response headers (not UTF8): {}",
-                                          e);
-                                    None
-                                }
-                            }
-                        }
-                        _ => temp_token,
-                    }
-                }
-                None => temp_token,
-            }
-        };
-        if let Some(token) = token_to_return {
-            client.token.return_token(token);
+        if let Some(ref serializable) = post_body {
+            request.set_body(serde_json::to_string(serializable)
+                .expect("expected serde_json::to_string to unfailingly succeed, but it failed."));
         }
 
-        let json: serde_json::Value = match serde_json::from_reader(&mut response) {
-            Ok(v) => v,
-            Err(e) => return Err(Error::with_url(e, Some(response.url.clone()))),
-        };
+        let hyper_future = client.client.client().request(request);
+        let finished = connecting::interpret(client.tokens.clone(), auth_token, url, hyper_future);
 
-        let result = deserialize_with_warning::<R>(&json, &response.url)?;
+        // turns into either `Result<FutureResponse<..>>` or `FutureResponse<..>` depending on
+        // if we required auth.
+        A::successful_result(finished)
+    }
+}
 
-        R::from_raw(result)
+mod headers {
+    use std::fmt;
+    use std::sync::Arc;
+
+    use hyper::{self, header};
+
+    #[derive(Clone, Debug)]
+    pub struct XTokenHeader(pub Arc<String>);
+
+    impl header::Header for XTokenHeader {
+        fn header_name() -> &'static str {
+            "X-Token"
+        }
+
+        fn parse_header(raw: &header::Raw) -> hyper::Result<Self> {
+            header::parsing::from_one_raw_str(raw).map(Arc::new).map(XTokenHeader)
+        }
+
+        fn fmt_header(&self, f: &mut header::Formatter) -> fmt::Result {
+            f.fmt_line(&&**self.0)
+        }
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct XUsernameHeader(pub Arc<String>);
+
+    impl header::Header for XUsernameHeader {
+        fn header_name() -> &'static str {
+            "X-Username"
+        }
+
+        fn parse_header(raw: &header::Raw) -> hyper::Result<Self> {
+            header::parsing::from_one_raw_str(raw).map(Arc::new).map(XUsernameHeader)
+        }
+
+        fn fmt_header(&self, f: &mut header::Formatter) -> fmt::Result {
+            f.fmt_line(&&**self.0)
+        }
     }
 }
 
@@ -578,37 +736,6 @@ pub fn gcl_calc(gcl_points: u64) -> u64 {
         .powf(GCL_INV_POW)
         .floor() as u64 + 1
 }
-
-fn deserialize_with_warning<T: EndpointResult>(input: &serde_json::Value,
-                                               url: &hyper::Url)
-                                               -> Result<T::RequestResult> {
-    let mut unused = Vec::new();
-
-    let res = match serde_ignored::deserialize::<_, _, T::RequestResult>(input, |path| unused.push(path.to_string())) {
-        Ok(v) => Ok(v),
-        Err(e1) => {
-            unused.clear();
-            match serde_ignored::deserialize::<_, _, T::ErrorResult>(input, |path| unused.push(path.to_string())) {
-                Ok(v) => Err(Error::with_json(v, Some(url.clone()), Some(input.clone()))),
-                // Favor the primary parsing error if one occurs parsing the error type as well.
-                Err(_) => Err(Error::with_json(e1, Some(url.clone()), Some(input.clone()))),
-            }
-        }
-    };
-
-
-    if !unused.is_empty() {
-        warn!("screeps API lib didn't parse some data retrieved from: {}\n\
-               full data: {}\n\
-               unparsed fields: {:?}",
-              url,
-              serde_json::to_string(input).unwrap(),
-              unused);
-    }
-
-    res
-}
-
 
 #[cfg(test)]
 mod tests {

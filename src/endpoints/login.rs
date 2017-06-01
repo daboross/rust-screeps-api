@@ -1,10 +1,11 @@
 //! Interpreting login responses.
 use std::marker::PhantomData;
+use std::borrow::Cow;
 
-use EndpointResult;
 use data;
 use error::{Result, ApiError};
-use std::borrow::Cow;
+
+use {EndpointResult, TokenStorage};
 
 /// Login details
 #[derive(Serialize, Clone, Hash, Debug)]
@@ -34,19 +35,29 @@ pub struct Response {
 }
 
 /// The result of a call to log in.
+#[must_use = "LoggedIn does not do anything unless registered in a token store"]
 #[derive(Clone, Hash, Debug)]
-pub struct LoginResult {
+pub struct LoggedIn {
     /// The token which can be used to make future authenticated API calls.
     pub token: String,
     /// Phantom data in order to allow adding any additional fields in the future.
     _phantom: PhantomData<()>,
 }
 
-impl EndpointResult for LoginResult {
+impl LoggedIn {
+    /// Stores the token into the given token storage.
+    pub fn return_to<T>(self, storage: &T)
+        where T: TokenStorage
+    {
+        storage.return_token(self.token);
+    }
+}
+
+impl EndpointResult for LoggedIn {
     type RequestResult = Response;
     type ErrorResult = data::ApiError;
 
-    fn from_raw(raw: Response) -> Result<LoginResult> {
+    fn from_raw(raw: Response) -> Result<LoggedIn> {
         let Response { ok, token } = raw;
 
         if ok != 1 {
@@ -54,7 +65,7 @@ impl EndpointResult for LoginResult {
         }
         match token {
             Some(token) => {
-                Ok(LoginResult {
+                Ok(LoggedIn {
                     token: token,
                     _phantom: PhantomData,
                 })
@@ -66,14 +77,14 @@ impl EndpointResult for LoginResult {
 
 #[cfg(test)]
 mod tests {
-    use super::LoginResult;
+    use super::LoggedIn;
     use EndpointResult;
     use serde_json;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();
 
-        let _ = LoginResult::from_raw(response).unwrap();
+        let _ = LoggedIn::from_raw(response).unwrap();
     }
 
     #[test]

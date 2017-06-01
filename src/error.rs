@@ -2,7 +2,7 @@
 use std::{io, fmt, marker};
 use std::error::Error as StdError;
 
-use {hyper, serde_json};
+use {url, hyper, serde_json};
 
 use data::room_name::RoomNameParseError;
 
@@ -18,6 +18,8 @@ pub enum ErrorType {
     /// Error parsing a server response. This is most likely caused by the server providing unparsable JSON, but it
     /// could also be the server's API response structure has changed and no longer matches the expected data structure.
     SerdeJson(serde_json::error::Error),
+    /// URL parsing error.
+    Url(url::ParseError),
     /// Error connecting to the server, or error parsing a URL provided.
     Hyper(hyper::error::Error),
     /// IO error.
@@ -40,7 +42,7 @@ pub struct Error {
     /// The type specifying what kind of error, and a detailed description if available.
     pub err: ErrorType,
     /// The whole URL which was being accessed when this error occurred (not included for URL parsing errors).
-    pub url: Option<hyper::Url>,
+    pub url: Option<url::Url>,
     /// The json data from the request which resulted in this error (not included for URL or JSON parsing errors).
     pub json: Option<serde_json::Value>,
     /// Phantom data in order to allow adding any additional fields in the future.
@@ -50,11 +52,11 @@ pub struct Error {
 
 impl Error {
     /// Creates a new error from the given error and the given possible url.
-    pub fn with_url<T: Into<Error>>(err: T, url: Option<hyper::Url>) -> Error {
+    pub fn with_url<T: Into<Error>>(err: T, url: Option<url::Url>) -> Error {
         Error::with_json(err, url, None)
     }
     /// Creates a new error from the given error, the given possible url, and the given possible JSON data.
-    pub fn with_json<T: Into<Error>>(err: T, url: Option<hyper::Url>, json: Option<serde_json::Value>) -> Error {
+    pub fn with_json<T: Into<Error>>(err: T, url: Option<url::Url>, json: Option<serde_json::Value>) -> Error {
         let err = err.into();
         Error {
             err: err.err,
@@ -91,9 +93,9 @@ impl From<hyper::error::Error> for Error {
     }
 }
 
-impl From<hyper::error::ParseError> for Error {
-    fn from(err: hyper::error::ParseError) -> Error {
-        ErrorType::Hyper(hyper::Error::Uri(err)).into()
+impl From<url::ParseError> for Error {
+    fn from(err: url::ParseError) -> Error {
+        ErrorType::Url(err).into()
     }
 }
 
@@ -125,11 +127,20 @@ impl<'a> From<RoomNameParseError<'a>> for Error {
     }
 }
 
+impl From<NoToken> for Error {
+    /// Creates an `Error` with `ErrorType::Unauthorized`.
+    // NoToken is a no-value struct.
+    fn from(_: NoToken) -> Error {
+        ErrorType::Unauthorized.into()
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.err {
             SerdeJson(ref err) => fmt::Display::fmt(err, f)?,
             Hyper(ref err) => fmt::Display::fmt(err, f)?,
+            Url(ref err) => fmt::Display::fmt(err, f)?,
             Io(ref err) => fmt::Display::fmt(err, f)?,
             StatusCode(ref status) => fmt::Display::fmt(status, f)?,
             Api(ref err) => fmt::Display::fmt(err, f)?,
@@ -156,19 +167,26 @@ impl StdError for Error {
         match self.err {
             SerdeJson(ref err) => err.description(),
             Hyper(ref err) => err.description(),
+            Url(ref err) => err.description(),
             Io(ref err) => err.description(),
             StatusCode(ref status) => {
                 match status.canonical_reason() {
                     Some(reason) => reason,
                     None => {
-                        use hyper::status::StatusClass::*;
-                        match status.class() {
-                            Informational => "status code error: informational",
-                            Success => "status code error: success",
-                            Redirection => "status code error: redirection",
-                            ClientError => "status code error: client error",
-                            ServerError => "status code error: server error",
-                            NoClass => "status code error: strange status",
+                        if status.is_informational() {
+                            "status code error: informational"
+                        } else if status.is_success() {
+                            "status code error: success"
+                        } else if status.is_redirection() {
+                            "status code error: redirection"
+                        } else if status.is_client_error() {
+                            "status code error: client error"
+                        } else if status.is_server_error() {
+                            "status code error: server error"
+                        } else if status.is_strange_status() {
+                            "status code error: strange status"
+                        } else {
+                            "status code error: wrong status"
                         }
                     }
                 }
@@ -184,12 +202,31 @@ impl StdError for Error {
         match self.err {
             SerdeJson(ref err) => Some(err),
             Hyper(ref err) => Some(err),
+            Url(ref err) => Some(err),
             Io(ref err) => Some(err),
             Api(ref err) => Some(err),
             RoomNameParse(ref err) => Some(err),
             StatusCode(_) | Unauthorized => None,
             __Nonexhaustive => unreachable!(),
         }
+    }
+}
+
+/// Error representing when an authenticated call is made, but there is no token currently available.
+#[derive(Debug, Clone, Copy)]
+pub struct NoToken;
+
+const NO_TOKEN: &'static str = "token storage empty when attempting to make authenticated call.";
+
+impl fmt::Display for NoToken {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(NO_TOKEN, f)
+    }
+}
+
+impl StdError for NoToken {
+    fn description(&self) -> &str {
+        NO_TOKEN
     }
 }
 
