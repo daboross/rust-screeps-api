@@ -18,23 +18,26 @@ travis-ci = { repository = "daboross/rust-screeps-api", branch = "master" }
 appveyor = { service = "github", repository = "daboross/rust-screeps-api", branch = "master" }
 
 [dependencies]
+# Logging
 log = "0.3"
-url = "1.0"
-hyper = { git = "https://github.com/hyperium/hyper.git" }
+time = "0.1"
+# Parsing
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 serde_ignored = "0.0.4"
 serde-tuple-vec-map = "0.2"
-time = "0.1"
-# generic-array 0.5 needed for arrayvec support.
-generic-array = "0.5"
 typenum = "1.0"
+generic-array = "0.5"
 arrayvec = { version = "0.3", features = ["use_generic_array"] }
-ws = { version = "0.7", features = ["ssl"], optional = true }
+# HTTP
+futures = "0.1"
+url = "1.0"
+hyper = { git = "https://github.com/hyperium/hyper.git" }
+# Sockets
 fnv = { version = "1.0", optional = true }
 rand = { version = "0.3", optional = true }
-futures = "0.1"
+ws = { version = "0.7", features = ["ssl"], optional = true }
 
 [features]
 websockets = ["ws", "fnv", "rand"]
@@ -49,7 +52,7 @@ clap = "2.22"
 
 [[example]]
 name = "ws-debug"
-required-features = ["ws"]
+required-features = ["websockets"]
 
 [[example]]
 name = "me"
