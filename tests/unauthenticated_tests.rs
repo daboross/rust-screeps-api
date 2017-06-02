@@ -1,20 +1,12 @@
 extern crate screeps_api;
-extern crate hyper;
-extern crate hyper_rustls;
 extern crate dotenv;
 
-use hyper::client::Client;
-use hyper::net::HttpsConnector;
 use screeps_api::error::{Error, ErrorType, ApiError};
-
-fn create_secure_client() -> hyper::Client {
-    Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()))
-}
+use screeps_api::SyncApi;
 
 #[test]
 fn test_login_failure() {
-    let client = create_secure_client();
-    let mut api = screeps_api::API::new(&client);
+    let mut api = SyncApi::new().unwrap();
 
     match api.login("username", "password") {
         Err(Error { err: ErrorType::Unauthorized, .. }) => (),
@@ -25,8 +17,7 @@ fn test_login_failure() {
 
 #[test]
 fn test_room_terrain() {
-    let client = create_secure_client();
-    let mut api = screeps_api::API::new(&client);
+    let mut api = SyncApi::new().unwrap();
 
     api.room_terrain("W0N0").unwrap();
     api.room_terrain("W3N9").unwrap();
@@ -34,8 +25,7 @@ fn test_room_terrain() {
 
 #[test]
 fn test_room_terrain_invalid_room() {
-    let client = create_secure_client();
-    let mut api = screeps_api::API::new(&client);
+    let mut api = SyncApi::new().unwrap();
 
     match api.room_terrain("asdffdsa") {
         Err(Error { err: ErrorType::Api(ApiError::InvalidRoom), .. }) => (),
@@ -46,8 +36,7 @@ fn test_room_terrain_invalid_room() {
 
 #[test]
 fn test_recent_pvp() {
-    let client = create_secure_client();
-    let mut api = screeps_api::API::new(&client);
+    let mut api = SyncApi::new().unwrap();
 
     let pvp_results_a = api.recent_pvp(screeps_api::RecentPvpDetails::within(15)).unwrap();
 

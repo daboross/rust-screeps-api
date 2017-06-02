@@ -4,42 +4,31 @@
 //!
 //! # Usage
 //!
-//! To start, create a hyper client and an `API` instance. `API` keeps track of the base API url and the current
-//! authentication token.
+//! Screeps API is built on two levels: an underlying asynchronous [`Api`] structure, and an easier-to-use [`SyncApi`]
+//! built on top of it.
 //!
-//! `screeps-api` requires a separate hyper client in order to let you choose your own SSL crate. `rustls` is
-//! pure rust, but `openssl` is much more vetted.
+//! To start using screeps through the blocking synchronous API, simply create a `SyncApi` object:
 //!
 //! ```
-//! extern crate hyper;
 //! extern crate screeps_api;
-//! extern crate hyper_rustls;
 //!
-//! use hyper::net::HttpsConnector;
+//! use screeps_api::SyncApi;
 //!
 //! # fn main() {
-//! let client = hyper::Client::with_connector(
-//!         HttpsConnector::new(hyper_rustls::TlsClient::new()));
-//!
-//! let mut api = screeps_api::Api::new(&client);
+//! let mut api = SyncApi::new().expect("starting screeps Api failed");
 //! # }
 //! ```
 //!
 //! This API object can then be used to make any number of API calls. Each will return a `Result` with a typed response
-//! or an error. All calls require mutable access (more info below).
+//! or an error. All calls require mutable access to manage tokens and the underlying tokio instance:
 //!
 //! ```no_run
-//! # extern crate hyper;
 //! # extern crate screeps_api;
-//! # extern crate hyper_rustls;
 //! #
-//! # use hyper::net::HttpsConnector;
+//! # use screeps_api::SyncApi;
 //! #
 //! # fn main() {
-//! #   let client = hyper::Client::with_connector(
-//! #           HttpsConnector::new(hyper_rustls::TlsClient::new()));
-//!
-//! let mut api = screeps_api::Api::new(&client);
+//! let mut api = SyncApi::new().unwrap();
 //!
 //! api.login("username", "password").unwrap();
 //!
@@ -50,14 +39,8 @@
 //! # }
 //! ```
 //!
-//! # Multiple clients
-//!
-//! Unlike hyper, screeps-api clients can not be used in multiple thread simultaneously. The reason for this is Screep's
-//! authentication model, a rotating token. Each auth token can only be used for one call, and that call will return
-//! the auth new token.
-//!
-//! For this reason, all API calls made require mutable access to the `API` structure, and if you want to call the API
-//! in multiple thread simultaneously, you need to create and log in to multiple `API` structures.
+//! [`Api`]: struct.Api.html
+//! [`SyncApi`]: sync/struct.SyncApi.html
 #![deny(missing_docs)]
 #![recursion_limit="512"]
 // Logging
@@ -87,6 +70,8 @@ pub mod data;
 pub mod connecting;
 #[cfg(feature = "websockets")]
 pub mod sockets;
+#[cfg(feature = "sync")]
+pub mod sync;
 
 pub use error::{Error, NoToken};
 pub use data::RoomName;
@@ -101,6 +86,8 @@ pub use endpoints::leaderboard::page::LeaderboardPage;
 pub use connecting::FutureResponse;
 #[cfg(feature = "websockets")]
 pub use sockets::{Sender as SocketsSender, Handler as SocketsHandler};
+#[cfg(feature = "sync")]
+pub use sync::SyncApi;
 
 use std::marker::PhantomData;
 use std::borrow::Cow;

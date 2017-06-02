@@ -10,18 +10,10 @@ extern crate fern;
 extern crate chrono;
 // Screeps API
 extern crate screeps_api;
-// HTTP connection
-extern crate hyper;
-// secure HTTPS connection
-extern crate hyper_rustls;
 // json pretty printing
 extern crate serde_json;
 
-use std::sync::{Arc, Mutex};
-use std::collections::VecDeque;
-
-use hyper::client::Client;
-use hyper::net::HttpsConnector;
+use screeps_api::SyncApi;
 
 use screeps_api::sockets::{ParsedMessage, Channel, ChannelUpdate};
 use screeps_api::sockets::ws::Result as WsResult;
@@ -241,12 +233,9 @@ fn main() {
 
     let config = Config::new(&cmd_arguments);
 
-    // Create a sharable hyper client
-    let hyper = Arc::new(Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new())));
-    // Create a sharable token storage.
-    let token_storage = Arc::new(Mutex::new(VecDeque::new()));
-    // Create the API client for this thread.
-    let mut client = screeps_api::API::with_token(hyper, token_storage.clone());
+    let mut client = SyncApi::new_shared_tokens().unwrap();
+
+    let token_storage = client.tokens.clone();
 
     // Login using the API client - this will storage the auth token in token_storage.
     client.login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD")).expect("failed to login");

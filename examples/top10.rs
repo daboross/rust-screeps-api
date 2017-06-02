@@ -2,12 +2,9 @@
 //!
 //! Logs in using the SCREEPS_API_USERNAME and SCREEPS_API_PASSWORD env variables.
 extern crate screeps_api;
-extern crate hyper;
-extern crate hyper_rustls;
 extern crate dotenv;
 
-use hyper::client::Client;
-use hyper::net::HttpsConnector;
+use screeps_api::SyncApi;
 use screeps_api::LeaderboardType::*;
 use screeps_api::endpoints::leaderboard::page::LeaderboardPage;
 
@@ -38,8 +35,7 @@ fn print_ranks(result: &LeaderboardPage) {
 }
 
 fn main() {
-    let hyper = Client::with_connector(HttpsConnector::new(hyper_rustls::TlsClient::new()));
-    let mut client = screeps_api::API::new(&hyper);
+    let mut client = SyncApi::new().unwrap();
 
     client.login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD")).unwrap();
 
