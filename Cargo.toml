@@ -35,7 +35,7 @@ futures = "0.1"
 url = "1.0"
 hyper = { git = "https://github.com/hyperium/hyper.git" }
 # Sync HTTP wrapper
-tokio-core = { version = "", optional = true }
+tokio-core = { version = "0.1", optional = true }
 hyper-tls = { git = "https://github.com/hyperium/hyper-tls.git", optional = true }
 # Sockets
 fnv = { version = "1.0", optional = true }
