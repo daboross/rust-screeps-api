@@ -1,6 +1,6 @@
 [package]
 name = "screeps-api"
-version = "0.1.2-dev"
+version = "0.2.0"
 authors = ["Dabo Ross <daboross@daboross.net>"]
 description = "Fully typed and tested wrapper over the Screeps Game's HTTP API"
 
