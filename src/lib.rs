@@ -537,7 +537,7 @@ impl<'a, C: HyperClient, T: TokenStorage, S: serde::Serialize> PartialRequest<'a
             match response.headers.get_raw("X-Token") {
                 Some(token_vec) => {
                     match token_vec.first() {
-                        Some(token_bytes) => {
+                        Some(token_bytes) if !token_bytes.is_empty() => {
                             match std::str::from_utf8(&token_bytes) {
                                 Ok(s) => Some(s.to_owned()),
                                 Err(e) => {
@@ -547,7 +547,7 @@ impl<'a, C: HyperClient, T: TokenStorage, S: serde::Serialize> PartialRequest<'a
                                 }
                             }
                         }
-                        None => temp_token,
+                        _ => temp_token,
                     }
                 }
                 None => temp_token,
