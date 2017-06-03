@@ -24,10 +24,10 @@ pub enum ErrorKind {
     Hyper(hyper::error::Error),
     /// IO error.
     Io(io::Error),
-    /// Error for when the server responds with a non-success status code.
+    /// Error for when the server responds with a non-success HTTP status code.
     StatusCode(hyper::status::StatusCode),
-    /// API Error. Either missing fields in the response that were expected, or the API did not include the regular
-    /// `"ok": 1` which indicates success.
+    /// API Error: when the server responds with a successful HTTP response, but the returned format is not what we
+    /// expected.
     Api(ApiError),
     /// Error parsing a room name.
     RoomNameParse(RoomNameParseError<'static>),
