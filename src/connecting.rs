@@ -107,13 +107,13 @@ pub fn interpret<T, R>(token_storage: T,
                 if let Ok(json) = json_result {
                     return Err(Error::with_json(status, Some(url), Some(json)));
                 } else {
-                    return Err(Error::with_url(status, Some(url)));
+                    return Err(Error::with_body(status, Some(url), Some(data)));
                 }
             }
 
             let parsed = match json_result {
                 Ok(json) => deserialize_with_warnings::<R>(&json, &url)?,
-                Err(e) => return Err(Error::with_url(e, Some(url))),
+                Err(e) => return Err(Error::with_body(e, Some(url), Some(data))),
             };
 
             R::from_raw(parsed)

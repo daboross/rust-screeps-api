@@ -1,5 +1,5 @@
 //! Error types for the screeps api.
-use std::{io, fmt};
+use std::{io, fmt, str};
 use std::error::Error as StdError;
 
 use {url, hyper, serde_json};
@@ -43,8 +43,55 @@ pub struct Error {
     err: ErrorKind,
     /// The whole URL which was being accessed when this error occurred (not included for URL parsing errors).
     url: Option<url::Url>,
-    /// The json data from the request which resulted in this error (not included for URL or JSON parsing errors).
-    json: Option<serde_json::Value>,
+    /// The json or body data from the request which resulted in this error
+    /// (not included for URL parsing errors).
+    data: AdditionalData,
+}
+
+#[derive(Debug)]
+enum AdditionalData {
+    Json(serde_json::Value),
+    Body(hyper::Chunk),
+    None,
+}
+
+impl From<Option<serde_json::Value>> for AdditionalData {
+    fn from(value: Option<serde_json::Value>) -> Self {
+        match value {
+            Some(v) => AdditionalData::Json(v),
+            None => AdditionalData::None,
+        }
+    }
+}
+impl From<Option<hyper::Chunk>> for AdditionalData {
+    fn from(value: Option<hyper::Chunk>) -> Self {
+        match value {
+            Some(v) => AdditionalData::Body(v),
+            None => AdditionalData::None,
+        }
+    }
+}
+
+impl AdditionalData {
+    fn or(self, other: AdditionalData) -> Self {
+        match self {
+            AdditionalData::Json(v) => AdditionalData::Json(v),
+            AdditionalData::Body(v) => AdditionalData::Body(v),
+            AdditionalData::None => other,
+        }
+    }
+    fn json(&self) -> Option<&serde_json::Value> {
+        match *self {
+            AdditionalData::Json(ref v) => Some(v),
+            _ => None,
+        }
+    }
+    fn body(&self) -> Option<&hyper::Chunk> {
+        match *self {
+            AdditionalData::Body(ref v) => Some(v),
+            _ => None,
+        }
+    }
 }
 
 impl Error {
@@ -58,7 +105,17 @@ impl Error {
         Error {
             err: err.err,
             url: url.or(err.url),
-            json: json.or(err.json),
+            data: AdditionalData::from(json).or(err.data),
+        }
+    }
+
+    /// Creates a new error from the given error, the given possible url, and the given possible body.
+    pub fn with_body<T: Into<Error>>(err: T, url: Option<url::Url>, body: Option<hyper::Chunk>) -> Error {
+        let err = err.into();
+        Error {
+            err: err.err,
+            url: url.or(err.url),
+            data: AdditionalData::from(body).or(err.data),
         }
     }
 
@@ -74,7 +131,12 @@ impl Error {
 
     /// Retrieves the JSON data associated with this error, if any.
     pub fn json(&self) -> Option<&serde_json::Value> {
-        self.json.as_ref()
+        self.data.json()
+    }
+
+    /// Retrieves the body data associated with this error, if any.
+    pub fn body(&self) -> Option<&hyper::Chunk> {
+        self.data.body()
     }
 }
 
@@ -86,7 +148,7 @@ impl From<ErrorKind> for Error {
         Error {
             err: err,
             url: None,
-            json: None,
+            data: AdditionalData::None,
         }
     }
 }
@@ -165,8 +227,15 @@ impl fmt::Display for Error {
         if let Some(ref url) = self.url {
             write!(f, " | at url '{}'", url)?;
         }
-        if let Some(ref json) = self.json {
-            write!(f, " | return json: '{}'", json)?;
+        match self.data {
+            AdditionalData::Json(ref json) => write!(f, " | return json: '{}'", json)?,
+            AdditionalData::Body(ref body) => {
+                match str::from_utf8(&body) {
+                    Ok(v) => write!(f, " | return body: '{}'", v)?,
+                    Err(_) => write!(f, " | return body: '{:?}'", &*body)?,
+                }
+            }
+            AdditionalData::None => (),
         }
         Ok(())
     }
