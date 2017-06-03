@@ -73,7 +73,6 @@ pub fn interpret<T, R>(token_storage: T,
             }
 
             let token_to_return = {
-                println!("\nheaders: {:#?}", response.headers());
                 header! { (TokenHeader, "X-Token") => [String] }
 
                 let new_token = response.headers_mut().remove::<TokenHeader>().map(|h| h.0);
