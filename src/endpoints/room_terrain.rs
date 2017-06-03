@@ -17,8 +17,11 @@ pub struct Response {
 #[derive(Deserialize, Clone, Hash, Debug)]
 struct InnerResponse {
     // this is returned as part of the data, but what the heck is it even for?
-    // A cache key maybe?
-    // _id: String,
+    /// A cache key maybe?
+    _id: String,
+    /// Should be `terrain`.
+    #[serde(rename = "type")]
+    response_type: String,
     /// room name
     room: String,
     /// encoded data
@@ -50,6 +53,8 @@ pub type TerrainGrid = arrayvec::ArrayVec<generic_array::GenericArray<TerrainRow
 pub struct RoomTerrain {
     /// The name of the room
     pub room_name: data::RoomName,
+    /// Cache ID? Not sure exactly...
+    pub response_id: String,
     /// A 50x50 grid of terrain squares. When coming from the API, this is guaranteed to be
     /// completely filled, and accessing any square between (0, 0) and (49, 49) inclusive will
     /// succeed.
@@ -81,18 +86,27 @@ impl EndpointResult for RoomTerrain {
             None => return Err(ApiError::MissingField("terrain").into()),
         };
 
-        let terrain_bytes = terrain_data.terrain.into_bytes();
+        let InnerResponse { response_type, room: room_string, _id: response_id, terrain } = terrain_data;
 
-        if terrain_bytes.len() != 2500 {
+        if terrain.len() != 2500 {
             return Err(ApiError::MalformedResponse(format!("expected response.terrain[0].\
                 terrain to be a 2500 byte string, found a {} byte string.",
-                                                           terrain_bytes.len()))
+                                                           terrain.len()))
+                .into());
+        }
+
+        if response_type != "terrain" {
+            return Err(ApiError::MalformedResponse(format!("expected response.terrain[0].type \
+                                                            to be 'terrain', found {:?}",
+                                                           response_type))
                 .into());
         }
 
         Ok(RoomTerrain {
-            room_name: data::RoomName::new(&terrain_data.room)?,
-            terrain: terrain_bytes.chunks(50)
+            room_name: data::RoomName::new(&room_string)?,
+            response_id: response_id,
+            terrain: terrain.into_bytes()
+                .chunks(50)
                 .enumerate()
                 .map(|(y, chunk)| {
                     chunk.iter()
