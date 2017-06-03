@@ -207,7 +207,7 @@ impl TokenStorage for Arc<Mutex<VecDeque<Token>>> {
 
 /// API Object, stores the current API token and allows access to making requests.
 #[derive(Debug)]
-pub struct Api<C: hyper::client::Connect, H: HyperClient<C> = hyper::Client<C>, T = RcTokenStorage> {
+pub struct Api<C, H = hyper::Client<C>, T = RcTokenStorage> {
     /// The base URL for this API instance.
     pub url: Url,
     /// The stored authentication tokens.
@@ -218,7 +218,7 @@ pub struct Api<C: hyper::client::Connect, H: HyperClient<C> = hyper::Client<C>, 
     _phantom: PhantomData<C>,
 }
 
-impl<C: hyper::client::Connect, H: HyperClient<C> + Clone, T: Clone> Clone for Api<C, H, T> {
+impl<C, H: Clone, T: Clone> Clone for Api<C, H, T> {
     fn clone(&self) -> Self {
         Api {
             url: self.url.clone(),
@@ -235,7 +235,7 @@ fn default_url() -> Url {
     Url::parse(DEFAULT_URL_STR).expect("expected pre-set url to parse, parsing failed")
 }
 
-impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage + Default> Api<C, H, T> {
+impl<C, H, T: Default> Api<C, H, T> {
     /// Creates a new API instance for the official server with the `https://screeps.com/api/` base url.
     ///
     /// The returned instance can be used to make anonymous calls, or `API.login` can be used to allow for
@@ -266,7 +266,7 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage + Default> Ap
     }
 }
 
-impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T> {
+impl<C, H, T> Api<C, H, T> {
     /// Creates a new API instance for the official server with a stored token.
     ///
     /// The returned instance can be used to make both anonymous calls, and authenticated calls, provided
@@ -296,7 +296,9 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
         };
         Ok(api)
     }
+}
 
+impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T> {
     /// Starts preparing a POST or GET request to the given endpoint URL
     #[inline]
     fn request<'a, R, S>(&'a self,
