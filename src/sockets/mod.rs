@@ -14,7 +14,7 @@ use self::ws::util::Token as WsToken;
 
 pub use self::error::{Error, Result};
 pub use self::parsing::{ParsedResult, ParsedMessage, ChannelUpdate};
-use error::{Error as HttpError, ErrorType as HttpErrorType};
+use error::{Error as HttpError, ErrorKind as HttpErrorKind};
 
 use TokenStorage;
 use Token;
@@ -110,7 +110,7 @@ impl<H: Handler, T: TokenStorage> ApiHandler<H, T> {
         let token = match self.token.take_token() {
             Some(t) => t,
             None => {
-                self.handler.on_error(HttpError::from(HttpErrorType::Unauthorized).into());
+                self.handler.on_error(HttpError::from(HttpErrorKind::Unauthorized).into());
                 self.mark_retry(FailState::Login, Duration::from_secs(15))?;
                 return Ok(());
             }

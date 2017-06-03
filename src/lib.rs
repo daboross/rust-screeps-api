@@ -73,7 +73,7 @@ pub mod sockets;
 #[cfg(feature = "sync")]
 pub mod sync;
 
-pub use error::{Error, NoToken};
+pub use error::{Error, ErrorKind, NoToken};
 pub use data::RoomName;
 pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats};
 pub use endpoints::leaderboard::LeaderboardType;

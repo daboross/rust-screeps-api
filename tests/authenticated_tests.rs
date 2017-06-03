@@ -1,7 +1,7 @@
 extern crate screeps_api;
 extern crate dotenv;
 
-use screeps_api::error::{Error, ErrorType, ApiError};
+use screeps_api::error::{ErrorKind, ApiError};
 use screeps_api::SyncApi;
 
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
@@ -108,16 +108,24 @@ fn test_auth_retrieve_single_rank() {
     match api.find_season_leaderboard_rank(screeps_api::LeaderboardType::GlobalControl,
                                            "username_should_not_exist_ever_let's_just_make_it_long",
                                            "2017-02") {
-        Err(Error { err: ErrorType::Api(ApiError::UserNotFound), .. }) => (),
-        Err(other) => panic!("expected UserNotFound error, found other error {}", other),
+        Err(err) => {
+            match *err.kind() {
+                ErrorKind::Api(ApiError::UserNotFound) => (),
+                _ => panic!("expected UserNotFound error, found other error {}", err),
+            }
+        }
         Ok(other) => panic!("expected UserNotFound error, found success: {:?}", other),
     }
     // "daboross" did not process any power during the 2017-02 season of the official server.
     match api.find_season_leaderboard_rank(screeps_api::LeaderboardType::PowerProcessed,
                                            "daboross",
                                            "2017-02") {
-        Err(Error { err: ErrorType::Api(ApiError::ResultNotFound), .. }) => (),
-        Err(other) => panic!("expected ResultNotFound error, found other error {}", other),
+        Err(err) => {
+            match *err.kind() {
+                ErrorKind::Api(ApiError::ResultNotFound) => (),
+                _ => panic!("expected ResultNotFound error, found other error {}", err),
+            }
+        }
         Ok(other) => panic!("expected ResultNotFound error, found success: {:?}", other),
     }
 }
@@ -159,14 +167,18 @@ fn test_auth_leaderboard_limit_parameter_error() {
                                "2017-02",
                                21,
                                0) {
-        Err(Error { err: ErrorType::Api(ApiError::InvalidParameters), .. }) => (),
-        Err(other) => {
-            panic!("expected InvalidParameters error, found other error {}",
-                   other)
+        Err(err) => {
+            match *err.kind() {
+                ErrorKind::Api(ApiError::InvalidParameters) => (),
+                _ => {
+                    panic!("expected InvalidParameters error, found other error {}",
+                           err);
+                }
+            }
         }
         Ok(other) => {
             panic!("expected InvalidParameters error, found success: {:?}",
-                   other)
+                   other);
         }
     }
 

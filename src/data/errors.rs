@@ -46,8 +46,8 @@ mod tests {
 
         let error: error::Error = result.into();
 
-        match error.err {
-            error::ErrorType::Api(error::ApiError::InvalidRoom) => (),
+        match error.kind() {
+            &error::ErrorKind::Api(error::ApiError::InvalidRoom) => (),
             _ => panic!("expected invalid room error, found {}", error),
         }
     }

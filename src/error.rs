@@ -1,16 +1,16 @@
 //! Error types for the screeps api.
-use std::{io, fmt, marker};
+use std::{io, fmt};
 use std::error::Error as StdError;
 
 use {url, hyper, serde_json};
 
 use data::room_name::RoomNameParseError;
 
-use self::ErrorType::*;
+use self::ErrorKind::*;
 
 #[derive(Debug)]
 /// Possible error types for library errors.
-pub enum ErrorType {
+pub enum ErrorKind {
     /// Unauthorized access. This is caused by either attempting to access a login-only endpoint without a token,
     /// attempting to access a login-only endpoint with an expired token, or providing incorrect login details to the
     /// login endpoint.
@@ -40,14 +40,11 @@ pub enum ErrorType {
 #[derive(Debug)]
 pub struct Error {
     /// The type specifying what kind of error, and a detailed description if available.
-    pub err: ErrorType,
+    err: ErrorKind,
     /// The whole URL which was being accessed when this error occurred (not included for URL parsing errors).
-    pub url: Option<url::Url>,
+    url: Option<url::Url>,
     /// The json data from the request which resulted in this error (not included for URL or JSON parsing errors).
-    pub json: Option<serde_json::Value>,
-    /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
-    pub _phantom: marker::PhantomData<()>,
+    json: Option<serde_json::Value>,
 }
 
 impl Error {
@@ -62,76 +59,89 @@ impl Error {
             err: err.err,
             url: url.or(err.url),
             json: json.or(err.json),
-            _phantom: marker::PhantomData,
         }
+    }
+
+    /// Retrieves the type specifying what kind of error, and a detailed description if available.
+    pub fn kind(&self) -> &ErrorKind {
+        &self.err
+    }
+
+    /// Retrieves the URL associated with this error, if any.
+    pub fn url(&self) -> Option<&url::Url> {
+        self.url.as_ref()
+    }
+
+    /// Retrieves the JSON data associated with this error, if any.
+    pub fn json(&self) -> Option<&serde_json::Value> {
+        self.json.as_ref()
     }
 }
 
 /// Result type for screeps API operations.
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-impl From<ErrorType> for Error {
-    fn from(err: ErrorType) -> Error {
+impl From<ErrorKind> for Error {
+    fn from(err: ErrorKind) -> Error {
         Error {
             err: err,
             url: None,
             json: None,
-            _phantom: marker::PhantomData,
         }
     }
 }
 
 impl From<serde_json::error::Error> for Error {
     fn from(err: serde_json::error::Error) -> Error {
-        ErrorType::SerdeJson(err).into()
+        ErrorKind::SerdeJson(err).into()
     }
 }
 
 impl From<hyper::error::Error> for Error {
     fn from(err: hyper::error::Error) -> Error {
-        ErrorType::Hyper(err).into()
+        ErrorKind::Hyper(err).into()
     }
 }
 
 impl From<url::ParseError> for Error {
     fn from(err: url::ParseError) -> Error {
-        ErrorType::Url(err).into()
+        ErrorKind::Url(err).into()
     }
 }
 
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Error {
-        ErrorType::Io(err).into()
+        ErrorKind::Io(err).into()
     }
 }
 
 impl From<hyper::status::StatusCode> for Error {
     fn from(code: hyper::status::StatusCode) -> Error {
         if code == hyper::status::StatusCode::Unauthorized {
-            ErrorType::Unauthorized.into()
+            ErrorKind::Unauthorized.into()
         } else {
-            ErrorType::StatusCode(code).into()
+            ErrorKind::StatusCode(code).into()
         }
     }
 }
 
 impl From<ApiError> for Error {
     fn from(err: ApiError) -> Error {
-        ErrorType::Api(err).into()
+        ErrorKind::Api(err).into()
     }
 }
 
 impl<'a> From<RoomNameParseError<'a>> for Error {
     fn from(err: RoomNameParseError<'a>) -> Error {
-        ErrorType::RoomNameParse(err.into_owned()).into()
+        ErrorKind::RoomNameParse(err.into_owned()).into()
     }
 }
 
 impl From<NoToken> for Error {
-    /// Creates an `Error` with `ErrorType::Unauthorized`.
+    /// Creates an `Error` with `ErrorKind::Unauthorized`.
     // NoToken is a no-value struct.
     fn from(_: NoToken) -> Error {
-        ErrorType::Unauthorized.into()
+        ErrorKind::Unauthorized.into()
     }
 }
 
@@ -150,7 +160,7 @@ impl fmt::Display for Error {
                        "access not authorized: token expired, username/password
                        incorrect or no login provided")?;
             }
-            ErrorType::__Nonexhaustive => unreachable!(),
+            ErrorKind::__Nonexhaustive => unreachable!(),
         }
         if let Some(ref url) = self.url {
             write!(f, " | at url '{}'", url)?;
