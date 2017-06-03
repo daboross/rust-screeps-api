@@ -68,10 +68,6 @@ pub fn interpret<T, R>(token_storage: T,
             new_result
         })
         .and_then(|(token_storage, used_token, url, mut response)| {
-            if !response.status().is_success() {
-                return Err(Error::with_url(response.status(), Some(url.clone())));
-            }
-
             let token_to_return = {
                 header! { (TokenHeader, "X-Token") => [String] }
 
@@ -96,13 +92,26 @@ pub fn interpret<T, R>(token_storage: T,
             Ok((url, response))
         })
         .and_then(|(url, response)| {
+            let status = response.status();
+
             response.body().concat2().then(move |result| match result {
-                Ok(v) => Ok((url, v)),
+                Ok(v) => Ok((status, url, v)),
                 Err(e) => Err(Error::with_url(e, Some(url))),
             })
         })
-        .and_then(|(url, data): (_, hyper::Chunk)| {
-            let parsed = match serde_json::from_slice(&data) {
+        .and_then(|(status, url, data): (hyper::status::StatusCode, _, hyper::Chunk)| {
+            let json_result = serde_json::from_slice(&data);
+
+            // insert this check here so we can include response body in status errors.
+            if !status.is_success() {
+                if let Ok(json) = json_result {
+                    return Err(Error::with_json(status, Some(url), Some(json)));
+                } else {
+                    return Err(Error::with_url(status, Some(url)));
+                }
+            }
+
+            let parsed = match json_result {
                 Ok(json) => deserialize_with_warnings::<R>(&json, &url)?,
                 Err(e) => return Err(Error::with_url(e, Some(url))),
             };
