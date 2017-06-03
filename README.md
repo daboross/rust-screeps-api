@@ -14,10 +14,11 @@ users.
 ## Usage
 
 ```rust
-let client = hyper::Client::with_connector(
-                HttpsConnector::new(hyper_rustls::TlsClient::new()));
+extern crate screeps_api;
 
-let mut api = screeps_api::API::new(&client);
+use screeps_api::SyncApi;
+
+let mut api = SyncApi::new().unwrap();
 
 api.login("username", "password").unwrap();
 
