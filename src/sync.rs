@@ -30,6 +30,7 @@ pub struct UseHttpsConnector;
 /// use [`Api`] instead.
 ///
 /// [`Api`]: ../struct.Api.html
+#[derive(Debug)]
 pub struct SyncApi<C: hyper::client::Connect = hyper_tls::HttpsConnector, T: TokenStorage = RcTokenStorage> {
     core: tokio_core::reactor::Core,
     client: Api<C, Client<C>, T>,

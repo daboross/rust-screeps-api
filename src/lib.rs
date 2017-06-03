@@ -206,7 +206,7 @@ impl TokenStorage for Arc<Mutex<VecDeque<Token>>> {
 }
 
 /// API Object, stores the current API token and allows access to making requests.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Api<C: hyper::client::Connect, H: HyperClient<C> = hyper::Client<C>, T = RcTokenStorage> {
     /// The base URL for this API instance.
     pub url: Url,
@@ -216,6 +216,17 @@ pub struct Api<C: hyper::client::Connect, H: HyperClient<C> = hyper::Client<C>, 
     client: H,
     /// Phantom data required in order to have C bound here.
     _phantom: PhantomData<C>,
+}
+
+impl<C: hyper::client::Connect, H: HyperClient<C> + Clone, T: Clone> Clone for Api<C, H, T> {
+    fn clone(&self) -> Self {
+        Api {
+            url: self.url.clone(),
+            tokens: self.tokens.clone(),
+            client: self.client.clone(),
+            _phantom: PhantomData,
+        }
+    }
 }
 
 static DEFAULT_URL_STR: &'static str = "https://screeps.com/api/";
