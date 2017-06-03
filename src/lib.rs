@@ -87,7 +87,7 @@ pub use connecting::FutureResponse;
 #[cfg(feature = "websockets")]
 pub use sockets::{Sender as SocketsSender, Handler as SocketsHandler};
 #[cfg(feature = "sync")]
-pub use sync::SyncApi;
+pub use sync::{SyncApi, Config as SyncConfig};
 
 use std::marker::PhantomData;
 use std::borrow::Cow;

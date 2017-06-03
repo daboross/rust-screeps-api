@@ -13,7 +13,7 @@ extern crate screeps_api;
 // json pretty printing
 extern crate serde_json;
 
-use screeps_api::SyncApi;
+use screeps_api::SyncConfig;
 
 use screeps_api::sockets::{ParsedMessage, Channel, ChannelUpdate};
 use screeps_api::sockets::ws::Result as WsResult;
@@ -233,9 +233,9 @@ fn main() {
 
     let config = Config::new(&cmd_arguments);
 
-    let mut client = SyncApi::new_shared_tokens().unwrap();
+    let token_storage = screeps_api::ArcTokenStorage::default();
 
-    let token_storage = client.tokens.clone();
+    let mut client = SyncConfig::new().unwrap().tokens(token_storage.clone()).build().unwrap();
 
     // Login using the API client - this will storage the auth token in token_storage.
     client.login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD")).expect("failed to login");

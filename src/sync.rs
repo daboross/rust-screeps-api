@@ -4,25 +4,25 @@ extern crate hyper_tls;
 
 use std::borrow::Cow;
 use std::ops::Deref;
-// use std::io;
+use std::io;
 
-// use url::{self, Url};
+use url;
 use hyper::{self, Client};
 
 use error::Error;
 
-use {TokenStorage, ArcTokenStorage, RcTokenStorage, Api}; // , DEFAULT_URL_STR};
+use {TokenStorage, RcTokenStorage, Api, DEFAULT_URL_STR};
 
 use {MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats, LeaderboardPage, LeaderboardType,
      FoundUserRank, RecentPvpDetails, LeaderboardSeason};
 
 /// Represents the configuration which will create a reasonable default HTTPS connector.
 #[derive(Copy, Clone, Debug, Default)]
-pub struct UseHttpConnector;
-
-/// Represents the configuration which will create a reasonable default HTTPS connector.
-#[derive(Copy, Clone, Debug, Default)]
 pub struct UseHttpsConnector;
+
+/// Represents the configuration which will create an non-Send token storage.
+#[derive(Copy, Clone, Debug, Default)]
+pub struct UseRcTokens;
 
 /// API structure mirroring [`Api`], but providing utilities for synchronous connection.
 ///
@@ -47,33 +47,7 @@ impl SyncApi<hyper_tls::HttpsConnector, RcTokenStorage> {
     ///
     /// [`Config`]: struct.Config.html
     pub fn new() -> Result<Self, Error> {
-        // When Config is implemented, this should delegate to that.
-        let core = tokio_core::reactor::Core::new()?;
-        let handle = core.handle();
-        let connector = hyper_tls::HttpsConnector::new(4, &handle);
-        let hyper = hyper::Client::configure().connector(connector).build(&handle);
-        Ok(SyncApi {
-            core: core,
-            client: Api::new(hyper),
-        })
-    }
-}
-
-impl SyncApi<hyper_tls::HttpsConnector, ArcTokenStorage> {
-    /// Opinionated method to construct a SyncApi with a Send token storage, with HTTPS support and
-    /// connecting to the default server.
-    ///
-    /// TODO: this should be completely removed once `Config` is added.
-    pub fn new_shared_tokens() -> Result<Self, Error> {
-        // When Config is implemented, this should delegate to that.
-        let core = tokio_core::reactor::Core::new()?;
-        let handle = core.handle();
-        let connector = hyper_tls::HttpsConnector::new(4, &handle);
-        let hyper = hyper::Client::configure().connector(connector).build(&handle);
-        Ok(SyncApi {
-            core: core,
-            client: Api::new(hyper),
-        })
+        Ok(Config::<UseHttpsConnector, UseRcTokens>::new()?.build()?)
     }
 }
 
@@ -85,106 +59,101 @@ impl<C: hyper::client::Connect, T: TokenStorage> Deref for SyncApi<C, T> {
     }
 }
 
-// waiting on https://github.com/hyperium/hyper/pull/1199:
+/// Configuration for construction a `SyncApi`.
+pub struct Config<'a, C = UseHttpsConnector, T = UseRcTokens> {
+    core: tokio_core::reactor::Core,
+    hyper: hyper::client::Config<C, hyper::Body>,
+    tokens: T,
+    url: &'a str,
+}
 
-// pub struct Config<'a, C, T = RcTokenStorage> {
-//     core: tokio_core::reactor::Core,
-//     hyper: hyper::client::Config<C, hyper::Body>,
-//     tokens: T,
-//     url: &'a str,
-// }
+impl Config<'static, UseHttpsConnector, UseRcTokens> {
+    /// Creates an initial config which will use an HTTPS connector and non-Send tokens.
+    pub fn new() -> io::Result<Self> {
+        let core = tokio_core::reactor::Core::new()?;
+        let hyper = hyper::Client::configure().connector(UseHttpsConnector);
+        let config = Config {
+            core: core,
+            hyper: hyper,
+            tokens: UseRcTokens,
+            url: DEFAULT_URL_STR,
+        };
 
-// impl<T: Default> Config<'static, UseHttpConnector, T> {
-//     pub fn new() -> io::Result<Self> {
-//         let core = tokio_core::reactor::Core::new()?;
-//         let hyper = hyper::Client::configure().connector(UseHttpConnector);
-//         let config = Config {
-//             core: core,
-//             hyper: hyper,
-//             tokens: T::default(),
-//             url: DEFAULT_URL_STR,
-//         };
+        Ok(config)
+    }
+}
 
-//         Ok(config)
-//     }
-// }
+impl<'a, C, T> Config<'a, C, T> {
+    /// Sets the Hyper connector to connect to to the given connector.
+    pub fn connector<F, CC>(self, connector: F) -> Config<'a, CC, T>
+        where F: FnOnce(&tokio_core::reactor::Handle) -> CC
+    {
+        let handle = self.core.handle();
+        Config {
+            core: self.core,
+            hyper: self.hyper.connector(connector(&handle)),
+            tokens: self.tokens,
+            url: self.url,
+        }
+    }
 
-// impl<T: Default> Config<'static, UseHttpsConnector, T> {
-//     pub fn new() -> io::Result<Self> {
-//         let core = tokio_core::reactor::Core::new()?;
-//         let connector = UseHttpsConnector;
-//         //let connector = hyper_tls::HttpsConnector::new(4, &core.handle());
-//         let hyper = hyper::Client::configure().connector(UseHttpsConnector);
-//         let config = Config {
-//             core: core,
-//             hyper: hyper,
-//             tokens: T::default(),
-//             url: DEFAULT_URL_STR,
-//         };
+    /// Sets the url to connect to to the given url.
+    pub fn url<'b>(self, url: &'b AsRef<str>) -> Config<'b, C, T> {
+        Config {
+            core: self.core,
+            hyper: self.hyper,
+            tokens: self.tokens,
+            url: url.as_ref(),
+        }
+    }
 
-//         Ok(config)
-//     }
-// }
+    /// Sets the token storage for the config to the given token storage.
+    pub fn tokens<TT>(self, tokens: TT) -> Config<'a, C, TT> {
+        Config {
+            core: self.core,
+            hyper: self.hyper,
+            url: self.url,
+            tokens: tokens,
+        }
+    }
+}
 
-// impl<'a, T: TokenStorage> Config<'a, UseHttpsConnector, T> {
-//     pub fn build(self) -> Result<SyncApi<hyper_tls::HttpsConnector, T>, url::ParseError> {
-//         self.connector(|handle| hyper_tls::HttpsConnector::new(4, &handle)).build()
-//     }
-// }
+impl<'a, T: TokenStorage> Config<'a, UseHttpsConnector, T> {
+    /// Builds the config into a SyncApi.
+    pub fn build(self) -> Result<SyncApi<hyper_tls::HttpsConnector, T>, url::ParseError> {
+        self.connector(|handle| hyper_tls::HttpsConnector::new(4, &handle)).build()
+    }
+}
 
-// impl<'a, T: TokenStorage> Config<'a, UseHttpConnector, T> {
-//     pub fn build(self) -> Result<SyncApi<hyper::client::HttpConnector, T>, url::ParseError> {
-//         self.connector(|handle| hyper::client::HttpConnector::new(4, handle)).build()
-//     }
-// }
+impl<'a, C: hyper::client::Connect> Config<'a, C, UseRcTokens> {
+    /// Builds the config into a SyncApi.
+    pub fn build(self) -> Result<SyncApi<C, RcTokenStorage>, url::ParseError> {
+        self.tokens(RcTokenStorage::default()).build()
+    }
+}
 
-// impl<'a, C, T> Config<'a, C, T> {
-//     pub fn connector<F, CC>(self, connector: F) -> Config<'a, CC, T>
-//         where CC: hyper::client::Connect,
-//               F: FnOnce(&tokio_core::reactor::Handle) -> CC
-//     {
-//         let handle = self.core.handle();
-//         Config {
-//             core: self.core,
-//             hyper: self.hyper.connector(connector(&handle)),
-//             tokens: self.tokens,
-//             url: self.url,
-//         }
-//     }
+impl<'a> Config<'a, UseHttpsConnector, UseRcTokens> {
+    /// Builds the config into a SyncApi.
+    pub fn build(self) -> Result<SyncApi<hyper_tls::HttpsConnector, RcTokenStorage>, url::ParseError> {
+        self.connector(|handle| hyper_tls::HttpsConnector::new(4, &handle)).tokens(RcTokenStorage::default()).build()
+    }
+}
 
-//     pub fn url<'b>(mut self, url: &'b AsRef<str>) -> Config<'b, C, T> {
-//         Config {
-//             core: self.core,
-//             hyper: self.hyper,
-//             tokens: self.tokens,
-//             url: url.as_ref(),
-//         }
-//     }
+impl<'a, C: hyper::client::Connect, T: TokenStorage> Config<'a, C, T> {
+    /// Builds the config into a SyncApi.
+    pub fn build(self) -> Result<SyncApi<C, T>, url::ParseError> {
+        let Config { core, hyper, tokens, url } = self;
+        let handle = core.handle();
+        let hyper = hyper.build(&handle);
 
-//     pub fn tokens<TT>(self, tokens: TT) -> Config<'a, C, TT> {
-//         Config {
-//             core: self.core,
-//             hyper: self.hyper,
-//             url: self.url,
-//             tokens: tokens,
-//         }
-//     }
-// }
+        let api = SyncApi {
+            core: core,
+            client: Api::with_url_and_tokens(hyper, url, tokens)?,
+        };
 
-// impl<'a, C: hyper::client::Connect, T: TokenStorage> Config<'a, C, T> {
-//     pub fn build(self) -> Result<SyncApi<C, T>, url::ParseError> {
-//         let Config { core, hyper, tokens, url } = self;
-//         let handle = core.handle();
-//         let hyper = hyper.build(&handle);
-
-//         let api = SyncApi {
-//             core: core,
-//             client: Api::with_url_and_tokens(hyper, url, tokens)?,
-//         };
-
-//         Ok(api)
-//     }
-// }
+        Ok(api)
+    }
+}
 
 impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     /// Logs in with the given username and password and gets an authentication token as the result.
