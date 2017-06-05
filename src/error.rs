@@ -210,13 +210,13 @@ impl From<NoToken> for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.err {
-            SerdeJson(ref err) => fmt::Display::fmt(err, f)?,
-            Hyper(ref err) => fmt::Display::fmt(err, f)?,
-            Url(ref err) => fmt::Display::fmt(err, f)?,
-            Io(ref err) => fmt::Display::fmt(err, f)?,
-            StatusCode(ref status) => fmt::Display::fmt(status, f)?,
-            Api(ref err) => fmt::Display::fmt(err, f)?,
-            RoomNameParse(ref err) => fmt::Display::fmt(err, f)?,
+            SerdeJson(ref err) => err.fmt(f)?,
+            Hyper(ref err) => err.fmt(f)?,
+            Url(ref err) => err.fmt(f)?,
+            Io(ref err) => err.fmt(f)?,
+            StatusCode(ref status) => status.fmt(f)?,
+            Api(ref err) => err.fmt(f)?,
+            RoomNameParse(ref err) => err.fmt(f)?,
             Unauthorized => {
                 write!(f,
                        "access not authorized: token expired, username/password
@@ -299,7 +299,7 @@ const NO_TOKEN: &'static str = "token storage empty when attempting to make auth
 
 impl fmt::Display for NoToken {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(NO_TOKEN, f)
+        NO_TOKEN.fmt(f)
     }
 }
 
