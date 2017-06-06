@@ -26,7 +26,7 @@ pub struct Response {
 }
 
 /// Result of a call to get the information for the logged in user.
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MyInfo {
     /// Unique user ID referring to this user.
     pub user_id: String,
@@ -41,6 +41,7 @@ pub struct MyInfo {
     /// This user's current credit balance.
     pub credits: f64,
     /// Phantom data in order to allow adding any additional fields in the future.
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 

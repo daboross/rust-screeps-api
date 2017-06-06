@@ -24,7 +24,7 @@ struct Season {
 ///
 /// A leaderboard season is a completed/past saved "season", which in the server marks a past ranking of all
 /// players based off of their earned points during that season.
-#[derive(Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct LeaderboardSeason {
     /// The display name of the season.
     pub name: String,

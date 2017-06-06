@@ -28,14 +28,15 @@ struct InnerRoom {
 }
 
 /// Struct describing the status of a room
-#[derive(Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct RoomStatus {
     /// The name of the room, or None if the room does not exist.
     pub room_name: Option<RoomName>,
     /// The state of the room, determined by comparing the API response timestamps with the current UTC time, as
     /// retrieved from the system.
     pub state: RoomState,
-    /// Phantom data in order to allow adding any additional fields in the future
+    /// Phantom data in order to allow adding any additional fields in the future.
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 

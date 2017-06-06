@@ -35,7 +35,7 @@ struct ExtendedUserInfo {
 }
 
 /// Single leaderboard page of users.
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct LeaderboardPage {
     /// The total number of users present in this leaderboard.
     pub total_count: u64,
@@ -52,7 +52,7 @@ pub struct LeaderboardPage {
 pub type RankedUser = find_rank::FoundUserRank;
 
 /// Details on any user in a given leaderboard page result.
-#[derive(Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct UserDetails {
     /// The user's id.
     pub user_id: String,

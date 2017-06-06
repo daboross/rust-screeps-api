@@ -3,7 +3,7 @@ use time;
 use error;
 
 /// String or number describing utc time.
-#[derive(Deserialize, Clone, Eq, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Eq, Hash, Debug)]
 #[serde(untagged)]
 pub enum StringNumberTimeSpec {
     /// String representation, a base 10 representation of a large unix time number.
@@ -54,7 +54,7 @@ impl PartialEq for StringNumberTimeSpec {
 ///
 /// Note that the API itself will return timestamps for "novice end" and "open time" even when the room is no longer
 /// novice, so the current system's knowledge of utc time is used to determine whether a room is novice or not.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum RoomState {
     /// Room name does not exist.
     Nonexistant,
@@ -65,14 +65,17 @@ pub enum RoomState {
     /// Room is part of a novice area.
     Novice {
         /// The time when the novice area will expire.
+        #[serde(with = "timespec_serialize_seconds")]
         end_time: time::Timespec,
     },
     /// Room is part of a "second tier" novice area, which is closed, but when opened will be part of a novice area
     /// which already has other open rooms.
     SecondTierNovice {
         /// The time this room will open and join the surrounding novice area rooms.
+        #[serde(with = "timespec_serialize_seconds")]
         room_open_time: time::Timespec,
         /// The time the novice area this room is a part of will expire.
+        #[serde(with = "timespec_serialize_seconds")]
         end_time: time::Timespec,
     },
 }
@@ -148,11 +151,12 @@ pub struct HardSignData {
 }
 
 /// Represents a room sign.
-#[derive(Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct RoomSign {
     /// The game time when the sign was set.
     pub game_time_set: u64,
     /// The real date/time when the sign was set.
+    #[serde(with = "timespec_serialize_seconds")]
     pub time_set: time::Timespec,
     /// The user ID of the user who set the sign.
     pub user_id: String,
@@ -175,13 +179,15 @@ impl RoomSignData {
 }
 
 /// Represents a "hard sign" on a room, where the server has overwritten any player-placed signs for a specific period.
-#[derive(Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct HardSign {
     /// The game time when the hard sign override was added.
     pub game_time_set: u64,
     /// The real date when the hard sign override was added.
+    #[serde(with = "timespec_serialize_seconds")]
     pub start: time::Timespec,
     /// The real date when the hard sign override ends.
+    #[serde(with = "timespec_serialize_seconds")]
     pub end: time::Timespec,
     /// The hard sign text.
     pub text: String,
@@ -198,6 +204,23 @@ impl HardSignData {
             text: text,
         };
         Ok(sign)
+    }
+}
+
+mod timespec_serialize_seconds {
+    use time::Timespec;
+    use serde::{Deserialize, Serializer, Deserializer};
+
+    pub fn serialize<S>(date: &Timespec, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        serializer.serialize_i64(date.sec)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Timespec, D::Error>
+        where D: Deserializer<'de>
+    {
+        Ok(Timespec::new(i64::deserialize(deserializer)?, 0))
     }
 }
 

@@ -4,7 +4,7 @@ use std::{error, fmt, ops};
 use std::borrow::Cow;
 
 /// A structure representing a room name.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct RoomName {
     /// Inner x coordinate representation.
     ///

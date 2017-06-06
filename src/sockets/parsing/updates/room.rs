@@ -44,7 +44,7 @@ pub struct RoomUpdate {
     pub visual: Option<String>,
     pub users: Option<HashMap<String, RoomUpdateUserInfo>>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 
@@ -57,7 +57,7 @@ pub struct RoomUpdateInfo {
     /// Usually "world" for regular rooms.
     pub mode: Option<String>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 
@@ -72,6 +72,6 @@ pub struct RoomUpdateUserInfo {
     /// Badge description
     pub badge: Option<Badge>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }

@@ -36,8 +36,8 @@ struct InnerAllSeasonsResponse {
     user: String,
 }
 
-/// Result from a lookup for a user's rank on the leaderboard
-#[derive(Clone, Hash, Debug)]
+/// Result from a lookup for a user's rank on the leaderboard.
+#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct FoundUserRank {
     /// The season ID which this rank is for
     pub season_id: String,
@@ -51,6 +51,7 @@ pub struct FoundUserRank {
     pub raw_score: u64,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[doc(hidden)]
+    #[serde(skip)]
     pub _phantom: PhantomData<()>,
 }
 

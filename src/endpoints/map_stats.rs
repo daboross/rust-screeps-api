@@ -8,7 +8,6 @@ use time;
 use serde::{Serialize, Serializer};
 
 use data::{self, RoomName};
-use tuple_vec_map;
 
 use EndpointResult;
 use error::ApiError;
@@ -90,9 +89,9 @@ impl<'a, T, I> Serialize for MapStatsArgsInner<'a, T, I>
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
-    #[serde(with = "tuple_vec_map")]
+    #[serde(with = "::tuple_vec_map")]
     stats: Vec<(String, RoomResponse)>,
-    #[serde(with = "tuple_vec_map")]
+    #[serde(with = "::tuple_vec_map")]
     users: Vec<(String, UserResponse)>,
 }
 
@@ -117,7 +116,7 @@ struct UserResponse {
 }
 
 /// Description of the owner of an owned room.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct RoomOwner {
     /// User ID of the room owner
     #[serde(rename = "user")]
@@ -126,7 +125,7 @@ pub struct RoomOwner {
     #[serde(rename = "level")]
     pub room_controller_level: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 
@@ -146,7 +145,7 @@ pub struct MapStats {
 }
 
 /// Information on a room.
-#[derive(Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct RoomInfo {
     /// The room name / id.
     pub name: RoomName,
@@ -159,11 +158,12 @@ pub struct RoomInfo {
     /// The room's system-set sign, if any.
     pub hard_sign: Option<data::HardSign>,
     /// Phantom data in order to allow adding any additional fields in the future.
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 
 /// Information on a user.
-#[derive(Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct UserInfo {
     /// The user's ID.
     pub user_id: String,
@@ -172,6 +172,7 @@ pub struct UserInfo {
     /// The user's badge.
     pub badge: data::Badge,
     /// Phantom data in order to allow adding any additional fields in the future.
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 

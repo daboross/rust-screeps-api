@@ -43,7 +43,7 @@ pub struct Message {
     #[serde(rename = "respondent")]
     pub respondent_id: String,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 
@@ -53,7 +53,7 @@ pub struct MessageUpdate {
     /// The message.
     pub message: Message,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 
@@ -67,7 +67,7 @@ pub struct MessageUnreadUpdate {
     /// as of this writing.
     pub unread: bool,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 

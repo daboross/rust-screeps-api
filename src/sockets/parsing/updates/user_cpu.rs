@@ -13,6 +13,6 @@ pub struct UserCpuUpdate {
     #[serde(rename = "memory")]
     pub memory_usage_bytes: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[serde(skip_deserializing)]
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }

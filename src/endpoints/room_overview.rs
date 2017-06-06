@@ -64,13 +64,14 @@ struct RoomTotalStatsResponse {
 }
 
 /// A single statistics point, representing a quantity for data over an interval of time.
-#[derive(Copy, Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Hash, Debug)]
 pub struct StatPoint {
     /// The amount of whatever quantity this stat point is for
     pub amount: u32,
     /// The end time that this stat point is for.
     pub end_time: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 
@@ -85,7 +86,7 @@ impl From<StatPointResponse> for StatPoint {
 }
 
 /// Total stats over a specific time period.
-#[derive(Copy, Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Hash, Debug)]
 pub struct TotalStats {
     /// Time period. Currently either "8" for hour long stats, "180" for day long stats, or "1440" for week-long stats.
     pub time_period: u32,
@@ -102,11 +103,12 @@ pub struct TotalStats {
     /// Creep parts lots during this time period
     creep_parts_lost: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 
 /// Various statistics about a single room, returned as a result from `room_overview` calls.
-#[derive(Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct RoomOverview {
     /// The username of the owner of the room.
     pub owner: Option<String>,
@@ -127,6 +129,7 @@ pub struct RoomOverview {
     /// A list of all total statistics provided (usually hour long, day long, and week long returned)
     pub total_stats: Vec<TotalStats>,
     /// Phantom data in order to allow adding any additional fields in the future.
+    #[serde(skip)]
     _phantom: PhantomData<()>,
 }
 
