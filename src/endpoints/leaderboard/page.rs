@@ -43,7 +43,8 @@ pub struct LeaderboardPage {
     /// thing, but that seems to be how it is.
     pub ranks: Vec<RankedUser>,
     /// Details about all users listed. This is a map from user_id to info struct containing username, gcl, and badge.
-    pub user_details: HashMap<String, UserDetails>,
+    #[serde(with = "::tuple_vec_map")]
+    pub user_details: Vec<(String, UserDetails)>,
     /// Phantom data in order to allow adding any additional fields in the future.
     _phantom: PhantomData<()>,
 }
