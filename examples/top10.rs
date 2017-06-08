@@ -20,8 +20,8 @@ fn env(var: &str) -> String {
 /// Prints to stdout information derived from the leaderboard page result.
 fn print_ranks(result: &LeaderboardPage) {
     for ranked_user in &result.ranks {
-        match result.user_details.get(&ranked_user.user_id) {
-            Some(details) => {
+        match result.user_details.iter().find(|x| x.0 == ranked_user.user_id) {
+            Some(&(_, ref details)) => {
                 println!("\t[{}] {} (GCL {})",
                          ranked_user.rank,
                          details.username,

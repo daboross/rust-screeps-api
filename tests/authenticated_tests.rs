@@ -150,7 +150,7 @@ fn test_auth_retrieve_leaderboard() {
         .unwrap();
 
     for ranked_user in result.ranks {
-        if !result.user_details.contains_key(&ranked_user.user_id) {
+        if result.user_details.iter().find(|t| t.0 == ranked_user.user_id).is_none() {
             panic!("expected user_details to contain ranked_user user_id, but found {:?} did not contain {:?}",
                    result.user_details,
                    ranked_user.user_id);
