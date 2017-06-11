@@ -1,3 +1,4 @@
+//! Parsing for user CPU/memory updates.
 use std::marker::PhantomData;
 
 /// Notification for Update for a user's last tick CPU usage and total memory usage.

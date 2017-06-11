@@ -10,6 +10,7 @@ use data::Badge;
 
 use {serde_json, tuple_vec_map};
 
+/// Update for detailed room information.
 #[derive(Deserialize, Clone, Debug)]
 #[serde(rename_all="camelCase")]
 pub struct RoomUpdate {
@@ -42,6 +43,7 @@ pub struct RoomUpdate {
     ///
     /// TODO: parse this further.
     pub visual: Option<String>,
+    /// Detailed information on all users that have things in this room.
     pub users: Option<HashMap<String, RoomUpdateUserInfo>>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]

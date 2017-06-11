@@ -8,15 +8,22 @@ extern crate log;
 // console logging output
 extern crate fern;
 extern crate chrono;
+// sockets
+extern crate tokio_core;
+extern crate futures;
+extern crate websocket;
 // Screeps API
 extern crate screeps_api;
 // json pretty printing
 extern crate serde_json;
 
-use screeps_api::SyncConfig;
+use futures::{Sink, Stream, Future, future, stream};
 
-use screeps_api::sockets::{ParsedMessage, Channel, ChannelUpdate};
-use screeps_api::sockets::ws::Result as WsResult;
+use websocket::OwnedMessage;
+
+use screeps_api::TokenStorage;
+use screeps_api::websocket::parsing::{ParsedResult, ParsedMessage, ChannelUpdate};
+use screeps_api::websocket::Channel;
 
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
 fn env(var: &str) -> String {
@@ -78,120 +85,46 @@ impl Config {
         }
     }
 
-    fn subscribe_with(&self, id: &str, sender: &mut screeps_api::sockets::Sender) -> WsResult<()> {
-        sender.subscribe(Channel::ServerMessages)?;
+    fn subscribe_with(&self, id: &str) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
+        use screeps_api::websocket::subscribe;
+
+        let mut messages = Vec::with_capacity(1 + self.cpu as usize + self.messages as usize + self.credits as usize +
+                                              self.console as usize +
+                                              self.rooms.len() +
+                                              self.map_view.len());
+
+        messages.push(subscribe(Channel::ServerMessages));
 
         if self.cpu {
-            sender.subscribe(Channel::user_cpu(id))?;
+            messages.push(subscribe(Channel::user_cpu(id)));
         }
 
         if self.messages {
-            sender.subscribe(Channel::user_messages(id))?;
-            sender.subscribe(Channel::user_conversation(id, "57fb16b6e4dd183b746435b0"))?;
+            messages.push(subscribe(Channel::user_messages(id)));
+            messages.push(subscribe(Channel::user_conversation(id, "57fb16b6e4dd183b746435b0")));
         }
 
         if self.credits {
-            sender.subscribe(Channel::user_credits(id))?;
+            messages.push(subscribe(Channel::user_credits(id)));
         }
 
         if self.console {
-            sender.subscribe(Channel::user_console(id))?;
+            messages.push(subscribe(Channel::user_console(id)));
         }
 
         for room_name in &self.rooms {
-            sender.subscribe(Channel::room_detail(&**room_name))?;
+            messages.push(subscribe(Channel::room_detail(&**room_name)));
         }
 
         for room_name in &self.map_view {
-            sender.subscribe(Channel::room_map_view(&**room_name))?;
+            messages.push(subscribe(Channel::room_map_view(&**room_name)));
         }
 
-        Ok(())
+        Box::new(stream::iter(messages.into_iter().map(|string| Ok(OwnedMessage::Text(string)))))
     }
 }
 
-struct Handler<T: screeps_api::TokenStorage> {
-    sender: screeps_api::sockets::Sender,
-    tokens: T,
-    info: screeps_api::MyInfo,
-    config: Config,
-}
-
-impl<T: screeps_api::TokenStorage> screeps_api::sockets::Handler for Handler<T> {
-    fn on_message(&mut self, message: ParsedMessage) -> WsResult<()> {
-        match message {
-            ParsedMessage::AuthFailed => panic!("authentication with stored token failed!"),
-            ParsedMessage::AuthOk { new_token } => {
-                info!("authentication succeeded, now authenticated as {}.",
-                      self.info.username);
-                // return the token to the token storage in case we need it again - we won't in this example
-                // program, but this is a good practice
-                //
-                // TODO: find an efficient way to do this automatically in the handler.
-                self.tokens.return_token(new_token);
-
-                self.config.subscribe_with(&self.info.user_id, &mut self.sender)?;
-
-                warn!("Subscribed.");
-            }
-            ParsedMessage::ChannelUpdate { update } => {
-                match update {
-                    ChannelUpdate::UserCpu { user_id, update } => info!("CPU: [{}] {:#?}", user_id, update),
-                    ChannelUpdate::RoomMapView { room_name, update } => {
-                        info!("Map View: [{}] {:?}", room_name, update);
-                    }
-                    ChannelUpdate::RoomDetail { room_name, update } => {
-                        info!("Room Detail: [{}] {:?}", room_name, update);
-                    }
-                    ChannelUpdate::NoRoomDetail { room_name } => {
-                        info!("Room Skipped: {}", room_name);
-                    }
-                    ChannelUpdate::UserConsole { user_id, update } => {
-                        info!("Console: [{}] {:#?}", user_id, update);
-                    }
-                    ChannelUpdate::UserCredits { user_id, update } => {
-                        info!("Credits: [{}] {}", user_id, update);
-                    }
-                    ChannelUpdate::UserMessage { user_id, update } => {
-                        info!("New message: [{}] {:#?}", user_id, update);
-                    }
-                    ChannelUpdate::UserConversation { user_id, target_user_id, update } => {
-                        info!("Conversation update: [{}->{}] {:#?}",
-                              user_id,
-                              target_user_id,
-                              update);
-                    }
-                    ChannelUpdate::Other { channel, update } => {
-                        warn!("ChannelUpdate::Other: {}\n{}",
-                              channel,
-                              serde_json::to_string_pretty(&update).expect("failed to serialize json string"));
-                    }
-                }
-            }
-            ParsedMessage::ServerProtocol { protocol } => {
-                info!("server protocol: {}", protocol);
-            }
-            ParsedMessage::ServerTime { time } => {
-                info!("server time: {}", time);
-            }
-            ParsedMessage::ServerPackage { package } => {
-                info!("server package: {}", package);
-            }
-            ParsedMessage::Other(other) => {
-                warn!("ParsedMessage::Other: {}", other);
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Run on any websocket error or message parsing error.
-    fn on_error(&mut self, err: screeps_api::sockets::Error) {
-        error!("{}", err);
-    }
-}
-
-fn main() {
+fn setup() -> Config {
     let cmd_arguments = clap::App::new("ws-debug")
         .arg(clap::Arg::with_name("verbose")
             .short("v")
@@ -229,13 +162,18 @@ fn main() {
             .takes_value(true)
             .multiple(true))
         .get_matches();
+
     setup_logging(cmd_arguments.occurrences_of("verbose"));
 
-    let config = Config::new(&cmd_arguments);
+    Config::new(&cmd_arguments)
+}
 
-    let token_storage = screeps_api::ArcTokenStorage::default();
+fn main() {
+    let config = setup();
 
-    let mut client = SyncConfig::new().unwrap().tokens(token_storage.clone()).build().unwrap();
+    let token_storage = screeps_api::RcTokenStorage::default();
+
+    let mut client = screeps_api::SyncConfig::new().unwrap().tokens(token_storage.clone()).build().unwrap();
 
     // Login using the API client - this will storage the auth token in token_storage.
     client.login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD")).expect("failed to login");
@@ -245,15 +183,164 @@ fn main() {
     info!("Logged in as {}, attempting to connect to stream.",
           my_info.username);
 
-    let factory_token = token_storage.clone();
-    let factory = move |sender| {
-        Handler {
-            sender: sender,
-            tokens: factory_token.clone(),
-            info: my_info.clone(),
-            config: config.clone(),
-        }
-    };
+    let mut core = tokio_core::reactor::Core::new().expect("expected IO core to start up without issue.");
 
-    screeps_api::sockets::connect(factory, token_storage).expect("failed to connect to socket");
+    let handle = core.handle();
+
+    let url = screeps_api::websocket::default_websocket_url();
+
+    let connection = websocket::ClientBuilder::from_url(&url).async_connect_secure(None, &handle);
+
+    core.run(connection.then(|result| {
+            let (client, _) = result.expect("expected successful connection to official server, found error");
+
+            let (sink, stream) = client.split();
+
+            sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(token_storage.take_token().unwrap())))
+                .and_then(|sink| {
+                    let handler = Handler::new(token_storage, my_info, config);
+
+                    sink.send_all((stream.and_then(move |data| future::ok(handler.handle_data(data)))
+                        .or_else(|err| {
+                            warn!("error occurred: {}", err);
+
+                            future::ok::<_, websocket::WebSocketError>(Box::new(stream::empty()) as
+                                                                       Box<Stream<Item = OwnedMessage,
+                                                                                  Error = websocket::WebSocketError>>)
+                        })
+                        .flatten()))
+                })
+
+        }))
+        .expect("expected websocket connection to complete successfully, but an error occurred");
+}
+
+struct Handler<T>
+    where T: screeps_api::TokenStorage
+{
+    tokens: T,
+    info: screeps_api::MyInfo,
+    config: Config,
+}
+
+impl<T> Handler<T>
+    where T: screeps_api::TokenStorage
+{
+    fn new(tokens: T, info: screeps_api::MyInfo, config: Config) -> Self {
+        Handler {
+            tokens: tokens,
+            info: info,
+            config: config,
+        }
+    }
+
+    fn handle_data(&self, data: OwnedMessage) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
+        match data {
+            OwnedMessage::Text(string) => {
+                let data = ParsedResult::parse(&string)
+                    .expect("expected a correct SockJS message, found a parse error.");
+
+                match data {
+                    ParsedResult::Open => debug!("SockJS connection opened"),
+                    ParsedResult::Heartbeat => debug!("SockJS heartbeat."),
+                    ParsedResult::Close { .. } => debug!("SockJS close"),
+                    ParsedResult::Message(message) => {
+                        return Box::new(self.handle_parsed_message(message));
+                    }
+                    ParsedResult::Messages(messages) => {
+                        let results = messages.into_iter()
+                            .map(|message| Ok(self.handle_parsed_message(message)))
+                            .collect::<Vec<_>>();
+
+                        return Box::new(stream::iter::<_, _, websocket::WebSocketError>(results).flatten());
+                    }
+
+                }
+            }
+            OwnedMessage::Binary(data) => warn!("ignoring binary data from websocket: {:?}", data),
+            OwnedMessage::Close(data) => warn!("connection closing: {:?}", data),
+            OwnedMessage::Ping(data) => return Box::new(stream::once(Ok(OwnedMessage::Pong(data)))),
+            OwnedMessage::Pong(_) => (),
+        }
+
+        Box::new(stream::empty())
+    }
+
+    fn handle_parsed_message(&self,
+                             message: screeps_api::websocket::parsing::ParsedMessage)
+                             -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
+        match message {
+            ParsedMessage::AuthFailed => panic!("authentication with stored token failed!"),
+            ParsedMessage::AuthOk { new_token } => {
+                info!("authentication succeeded, now authenticated as {}.",
+                      self.info.username);
+                // return the token to the token storage in case we need it again - we won't in this example
+                // program, but this is a good practice
+                //
+                // TODO: find an efficient way to do this automatically in the handler.
+                self.tokens.return_token(new_token);
+
+                return Box::new(self.config
+                    .subscribe_with(&self.info.user_id)
+                    .chain(stream::futures_unordered(vec![future::lazy(|| {
+                        warn!("subscribed!");
+                        future::ok::<_, websocket::WebSocketError>(stream::empty())
+                    })])
+                        .flatten())) as
+                       Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>;
+            }
+            ParsedMessage::ChannelUpdate { update } => {
+                self.handle_update(update);
+            }
+            ParsedMessage::ServerProtocol { protocol } => {
+                info!("server protocol: {}", protocol);
+            }
+            ParsedMessage::ServerTime { time } => {
+                info!("server time: {}", time);
+            }
+            ParsedMessage::ServerPackage { package } => {
+                info!("server package: {}", package);
+            }
+            ParsedMessage::Other(other) => {
+                warn!("ParsedMessage::Other: {}", other);
+            }
+        }
+
+        Box::new(stream::empty())
+    }
+
+    fn handle_update(&self, update: ChannelUpdate) {
+        match update {
+            ChannelUpdate::UserCpu { user_id, update } => info!("CPU: [{}] {:#?}", user_id, update),
+            ChannelUpdate::RoomMapView { room_name, update } => {
+                info!("Map View: [{}] {:?}", room_name, update);
+            }
+            ChannelUpdate::RoomDetail { room_name, update } => {
+                info!("Room Detail: [{}] {:?}", room_name, update);
+            }
+            ChannelUpdate::NoRoomDetail { room_name } => {
+                info!("Room Skipped: {}", room_name);
+            }
+            ChannelUpdate::UserConsole { user_id, update } => {
+                info!("Console: [{}] {:#?}", user_id, update);
+            }
+            ChannelUpdate::UserCredits { user_id, update } => {
+                info!("Credits: [{}] {}", user_id, update);
+            }
+            ChannelUpdate::UserMessage { user_id, update } => {
+                info!("New message: [{}] {:#?}", user_id, update);
+            }
+            ChannelUpdate::UserConversation { user_id, target_user_id, update } => {
+                info!("Conversation update: [{}->{}] {:#?}",
+                      user_id,
+                      target_user_id,
+                      update);
+            }
+            ChannelUpdate::Other { channel, update } => {
+                warn!("ChannelUpdate::Other: {}\n{}",
+                      channel,
+                      serde_json::to_string_pretty(&update).expect("failed to serialize json string"));
+            }
+        }
+    }
 }

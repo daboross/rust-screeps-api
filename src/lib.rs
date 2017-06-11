@@ -63,13 +63,14 @@ extern crate futures;
 extern crate url;
 #[macro_use]
 extern crate hyper;
+// Websockets
+extern crate rand;
 
 pub mod error;
 pub mod endpoints;
 pub mod data;
 pub mod connecting;
-#[cfg(feature = "websockets")]
-pub mod sockets;
+pub mod websocket;
 #[cfg(feature = "sync")]
 pub mod sync;
 
@@ -84,8 +85,6 @@ pub use endpoints::leaderboard::season_list::LeaderboardSeason;
 pub use endpoints::leaderboard::find_rank::FoundUserRank;
 pub use endpoints::leaderboard::page::LeaderboardPage;
 pub use connecting::FutureResponse;
-#[cfg(feature = "websockets")]
-pub use sockets::{Sender as SocketsSender, Handler as SocketsHandler};
 #[cfg(feature = "sync")]
 pub use sync::{SyncApi, Config as SyncConfig};
 

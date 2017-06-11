@@ -28,13 +28,12 @@ install:
 - cargo -V
 
 test_script:
-# Websockets not yet fully supported/tested on windows.
-- cargo build --verbose --target %TARGET% --no-default-features --features sync
+- cargo build --verbose --target %TARGET%
 # TODO: this doesn't test authenticated access, only parsing and non-auth calls.
 # We're probably OK not testing logging in on windows since it is tested on linux,
 # and we do test at least making HTTPS calls to the server with this, but it might
 # still be nice for completeness.
-- cargo test --verbose --target %TARGET% --no-default-features --features sync -- --skip auth
+- cargo test --verbose --target %TARGET% -- --skip auth
 
 cache:
 - C:\Users\appveyor\.cargo\registry

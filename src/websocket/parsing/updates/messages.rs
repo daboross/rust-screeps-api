@@ -78,7 +78,13 @@ pub struct MessageUnreadUpdate {
 #[serde(untagged)]
 pub enum ConversationUpdate {
     /// A new message has been sent.
-    NewMessage { message: Message },
+    NewMessage {
+        /// The update with more information.
+        message: Message,
+    },
     /// A message's `unread` status has changed.
-    MessageRead { message: MessageUnreadUpdate },
+    MessageRead {
+        /// The update with more information.
+        message: MessageUnreadUpdate,
+    },
 }

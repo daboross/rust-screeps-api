@@ -1,3 +1,4 @@
+//! Update parsing for console message updates.
 use serde::de::{Deserialize, Deserializer};
 
 /// Update for a user's log messages during the last tick.

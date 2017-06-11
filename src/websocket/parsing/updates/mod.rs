@@ -1,3 +1,4 @@
+//! Parsing inner Screeps websocket update messages.
 use std::borrow::Cow;
 use std::convert::AsRef;
 use std::marker::PhantomData;
@@ -7,19 +8,19 @@ use serde::{Deserializer, Deserialize};
 use serde::de::{self, Visitor, SeqAccess};
 
 use serde_json;
-use sockets::Channel;
+use websocket::Channel;
 
-pub use self::room_map_view::RoomMapViewUpdate;
-pub use self::user_cpu::UserCpuUpdate;
-pub use self::user_console::UserConsoleUpdate;
+use self::room_map_view::RoomMapViewUpdate;
+use self::user_cpu::UserCpuUpdate;
+use self::user_console::UserConsoleUpdate;
 use self::room::RoomUpdate;
 use self::messages::{MessageUpdate, ConversationUpdate};
 
 pub mod room;
 pub mod messages;
-mod room_map_view;
-mod user_cpu;
-mod user_console;
+pub mod room_map_view;
+pub mod user_cpu;
+pub mod user_console;
 
 /// An update to a Screeps server 'channel' that has been subscribed to.
 #[derive(Clone, Debug)]

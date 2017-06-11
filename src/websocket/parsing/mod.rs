@@ -1,3 +1,4 @@
+//! Parsing messages from Screeps websockets.
 use std::borrow::Cow;
 use std::convert::AsRef;
 use std::marker::PhantomData;
@@ -8,12 +9,18 @@ use serde::de::{Visitor, SeqAccess};
 
 use {serde_json, serde_ignored};
 
-use super::error::ParseError;
 use Token;
 
-pub use self::updates::{ChannelUpdate, RoomMapViewUpdate, UserCpuUpdate};
+pub use self::error::ParseError;
+pub use self::updates::ChannelUpdate;
+pub use self::updates::messages::{Message, ConversationUpdate, MessageUnreadUpdate, MessageUpdate};
+pub use self::updates::room::{RoomUpdateInfo, RoomUpdateUserInfo, RoomUpdate};
+pub use self::updates::room_map_view::RoomMapViewUpdate;
+pub use self::updates::user_console::UserConsoleUpdate;
+pub use self::updates::user_cpu::UserCpuUpdate;
 
-mod updates;
+pub mod updates;
+pub mod error;
 
 fn from_str_with_warning<'de, T>(input: &'de str, context: &str) -> Result<T, serde_json::Error>
     where T: Deserialize<'de>
@@ -29,7 +36,7 @@ fn from_str_with_warning<'de, T>(input: &'de str, context: &str) -> Result<T, se
     Ok(value)
 }
 
-/// Result of parsing a message
+/// Result of parsing a raw message.
 #[derive(Clone, Debug)]
 pub enum ParsedResult<'a> {
     /// "Open"?

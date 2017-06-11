@@ -1,3 +1,4 @@
+//! Update parsing for spare "map view" room updates
 use std::marker::PhantomData;
 use std::{cmp, fmt};
 
