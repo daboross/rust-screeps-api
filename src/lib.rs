@@ -46,7 +46,6 @@
 // Logging
 #[macro_use]
 extern crate log;
-extern crate time;
 // Parsing
 extern crate serde;
 #[macro_use]
@@ -58,6 +57,7 @@ extern crate tuple_vec_map;
 extern crate arrayvec;
 extern crate generic_array;
 extern crate typenum;
+extern crate time;
 // HTTP
 extern crate futures;
 extern crate url;
