@@ -99,7 +99,7 @@ pub fn interpret<T, R>(token_storage: T,
                 Err(e) => Err(Error::with_url(e, Some(url))),
             })
         })
-        .and_then(|(status, url, data): (hyper::status::StatusCode, _, hyper::Chunk)| {
+        .and_then(|(status, url, data): (hyper::StatusCode, _, hyper::Chunk)| {
             let json_result = serde_json::from_slice(&data);
 
             // insert this check here so we can include response body in status errors.

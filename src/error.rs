@@ -25,7 +25,7 @@ pub enum ErrorKind {
     /// IO error.
     Io(io::Error),
     /// Error for when the server responds with a non-success HTTP status code.
-    StatusCode(hyper::status::StatusCode),
+    StatusCode(hyper::StatusCode),
     /// API Error: when the server responds with a successful HTTP response, but the returned format is not what we
     /// expected.
     Api(ApiError),
@@ -177,9 +177,9 @@ impl From<io::Error> for Error {
     }
 }
 
-impl From<hyper::status::StatusCode> for Error {
-    fn from(code: hyper::status::StatusCode) -> Error {
-        if code == hyper::status::StatusCode::Unauthorized {
+impl From<hyper::StatusCode> for Error {
+    fn from(code: hyper::StatusCode) -> Error {
+        if code == hyper::StatusCode::Unauthorized {
             ErrorKind::Unauthorized.into()
         } else {
             ErrorKind::StatusCode(code).into()
