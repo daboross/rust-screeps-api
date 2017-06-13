@@ -22,8 +22,7 @@ use futures::{Sink, Stream, Future, future, stream};
 use websocket::OwnedMessage;
 
 use screeps_api::TokenStorage;
-use screeps_api::websocket::parsing::{ParsedResult, ParsedMessage, ChannelUpdate};
-use screeps_api::websocket::Channel;
+use screeps_api::websocket::{Channel, ChannelUpdate, SockjsMessage, ScreepsMessage};
 
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
 fn env(var: &str) -> String {
@@ -187,7 +186,7 @@ fn main() {
 
     let handle = core.handle();
 
-    let url = screeps_api::websocket::default_websocket_url();
+    let url = screeps_api::websocket::default_url();
 
     let connection = websocket::ClientBuilder::from_url(&url).async_connect_secure(None, &handle);
 
@@ -237,17 +236,17 @@ impl<T> Handler<T>
     fn handle_data(&self, data: OwnedMessage) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         match data {
             OwnedMessage::Text(string) => {
-                let data = ParsedResult::parse(&string)
+                let data = SockjsMessage::parse(&string)
                     .expect("expected a correct SockJS message, found a parse error.");
 
                 match data {
-                    ParsedResult::Open => debug!("SockJS connection opened"),
-                    ParsedResult::Heartbeat => debug!("SockJS heartbeat."),
-                    ParsedResult::Close { .. } => debug!("SockJS close"),
-                    ParsedResult::Message(message) => {
+                    SockjsMessage::Open => debug!("SockJS connection opened"),
+                    SockjsMessage::Heartbeat => debug!("SockJS heartbeat."),
+                    SockjsMessage::Close { .. } => debug!("SockJS close"),
+                    SockjsMessage::Message(message) => {
                         return Box::new(self.handle_parsed_message(message));
                     }
-                    ParsedResult::Messages(messages) => {
+                    SockjsMessage::Messages(messages) => {
                         let results = messages.into_iter()
                             .map(|message| Ok(self.handle_parsed_message(message)))
                             .collect::<Vec<_>>();
@@ -267,11 +266,11 @@ impl<T> Handler<T>
     }
 
     fn handle_parsed_message(&self,
-                             message: screeps_api::websocket::parsing::ParsedMessage)
+                             message: screeps_api::websocket::parsing::ScreepsMessage)
                              -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         match message {
-            ParsedMessage::AuthFailed => panic!("authentication with stored token failed!"),
-            ParsedMessage::AuthOk { new_token } => {
+            ScreepsMessage::AuthFailed => panic!("authentication with stored token failed!"),
+            ScreepsMessage::AuthOk { new_token } => {
                 info!("authentication succeeded, now authenticated as {}.",
                       self.info.username);
                 // return the token to the token storage in case we need it again - we won't in this example
@@ -289,20 +288,20 @@ impl<T> Handler<T>
                         .flatten())) as
                        Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>;
             }
-            ParsedMessage::ChannelUpdate { update } => {
+            ScreepsMessage::ChannelUpdate { update } => {
                 self.handle_update(update);
             }
-            ParsedMessage::ServerProtocol { protocol } => {
+            ScreepsMessage::ServerProtocol { protocol } => {
                 info!("server protocol: {}", protocol);
             }
-            ParsedMessage::ServerTime { time } => {
+            ScreepsMessage::ServerTime { time } => {
                 info!("server time: {}", time);
             }
-            ParsedMessage::ServerPackage { package } => {
+            ScreepsMessage::ServerPackage { package } => {
                 info!("server package: {}", package);
             }
-            ParsedMessage::Other(other) => {
-                warn!("ParsedMessage::Other: {}", other);
+            ScreepsMessage::Other(other) => {
+                warn!("ScreepsMessage::Other: {}", other);
             }
         }
 

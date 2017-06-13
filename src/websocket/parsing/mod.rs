@@ -11,16 +11,11 @@ use {serde_json, serde_ignored};
 
 use Token;
 
-pub use self::error::ParseError;
-pub use self::updates::ChannelUpdate;
-pub use self::updates::messages::{Message, ConversationUpdate, MessageUnreadUpdate, MessageUpdate};
-pub use self::updates::room::{RoomUpdateInfo, RoomUpdateUserInfo, RoomUpdate};
-pub use self::updates::room_map_view::RoomMapViewUpdate;
-pub use self::updates::user_console::UserConsoleUpdate;
-pub use self::updates::user_cpu::UserCpuUpdate;
+use websocket::types::ChannelUpdate;
 
-pub mod updates;
-pub mod error;
+mod error;
+
+pub use self::error::ParseError;
 
 fn from_str_with_warning<'de, T>(input: &'de str, context: &str) -> Result<T, serde_json::Error>
     where T: Deserialize<'de>
@@ -38,7 +33,7 @@ fn from_str_with_warning<'de, T>(input: &'de str, context: &str) -> Result<T, se
 
 /// Result of parsing a raw message.
 #[derive(Clone, Debug)]
-pub enum ParsedResult<'a> {
+pub enum SockjsMessage<'a> {
     /// "Open"?
     Open,
     /// Heartbeat
@@ -51,31 +46,31 @@ pub enum ParsedResult<'a> {
         reason: Cow<'a, str>,
     },
     /// Single message
-    Message(ParsedMessage<'a>),
+    Message(ScreepsMessage<'a>),
     /// Multiple messages
-    Messages(Vec<ParsedMessage<'a>>),
+    Messages(Vec<ScreepsMessage<'a>>),
 }
 
-impl<'a> ParsedResult<'a> {
+impl<'a> SockjsMessage<'a> {
     /// Parses an incoming raw websockets messages on a Screeps SockJS socket into some result.
     pub fn parse<T: AsRef<str> + ?Sized>(message_generic: &'a T) -> Result<Self, ParseError> {
         let message = message_generic.as_ref();
 
         let first = match message.chars().next() {
             // empty string
-            None => return Ok(ParsedResult::Messages(Vec::new())),
+            None => return Ok(SockjsMessage::Messages(Vec::new())),
             Some(c) => c,
         };
 
         let parsed = match first {
             // TODO: should we check length for Open and Heartbeat messages?
-            'o' => ParsedResult::Open,
-            'h' => ParsedResult::Heartbeat,
+            'o' => SockjsMessage::Open,
+            'h' => SockjsMessage::Heartbeat,
             'c' => {
                 let rest = &message[1..];
                 match serde_json::from_str::<(i64, &str)>(rest) {
                     Ok((code, reason)) => {
-                        ParsedResult::Close {
+                        SockjsMessage::Close {
                             code: code,
                             reason: reason.into(),
                         }
@@ -90,7 +85,7 @@ impl<'a> ParsedResult<'a> {
 
                 // We have to parse into `String` since it contains json escapes.
                 match serde_json::from_str::<String>(rest) {
-                    Ok(message) => ParsedResult::Message(ParsedMessage::parse(&message)),
+                    Ok(message) => SockjsMessage::Message(ScreepsMessage::parse(&message)),
                     Err(e) => return Err(ParseError::serde("error parsing single message", rest.to_owned(), e)),
                 }
             }
@@ -98,7 +93,7 @@ impl<'a> ParsedResult<'a> {
                 let rest = &message[1..];
 
                 match from_str_with_warning::<MultipleMessagesIntermediate>(rest, "set of screeps update messages") {
-                    Ok(messages) => ParsedResult::Messages(messages.0),
+                    Ok(messages) => SockjsMessage::Messages(messages.0),
                     Err(e) => return Err(ParseError::serde("error parsing array of messages", rest.to_owned(), e)),
                 }
             }
@@ -114,7 +109,7 @@ impl<'a> ParsedResult<'a> {
     }
 }
 
-struct MultipleMessagesIntermediate(Vec<ParsedMessage<'static>>);
+struct MultipleMessagesIntermediate(Vec<ScreepsMessage<'static>>);
 
 struct MultipleMessagesVisitor {
     marker: PhantomData<MultipleMessagesIntermediate>,
@@ -140,7 +135,7 @@ impl<'de> Visitor<'de> for MultipleMessagesVisitor {
         let mut values = Vec::with_capacity(cmp::min(seq.size_hint().unwrap_or(0), 4069));
 
         while let Some(string) = seq.next_element::<String>()? {
-            values.push(ParsedMessage::parse(&string));
+            values.push(ScreepsMessage::parse(&string));
         }
 
         Ok(MultipleMessagesIntermediate(values))
@@ -157,7 +152,7 @@ impl<'de> Deserialize<'de> for MultipleMessagesIntermediate {
 
 /// A parsed message.
 #[derive(Clone, Debug)]
-pub enum ParsedMessage<'a> {
+pub enum ScreepsMessage<'a> {
     /// Authentication failed.
     AuthFailed,
     /// Authentication successful!
@@ -198,7 +193,7 @@ const AUTH_OK: &'static str = "ok ";
 const AUTH_FAILED: &'static str = "failed";
 
 
-impl ParsedMessage<'static> {
+impl ScreepsMessage<'static> {
     /// Parses the internal message from a SockJS message into a meaningful type.
     pub fn parse<T: AsRef<str> + ?Sized>(message: &T) -> Self {
         // TODO: deflate with base64 then zlib if the message starts with "gz:".
@@ -211,20 +206,20 @@ impl ParsedMessage<'static> {
 
                 return {
                     if rest.starts_with(AUTH_OK) {
-                        ParsedMessage::AuthOk { new_token: rest[AUTH_OK.len()..].to_owned() }
+                        ScreepsMessage::AuthOk { new_token: rest[AUTH_OK.len()..].to_owned() }
                     } else if rest == AUTH_FAILED {
-                        ParsedMessage::AuthFailed
+                        ScreepsMessage::AuthFailed
                     } else {
                         warn!("expected \"auth failed\", found \"{}\" (occurred when parsing authentication failure)",
                               message);
-                        ParsedMessage::AuthFailed
+                        ScreepsMessage::AuthFailed
                     }
                 };
             } else if message.starts_with(TIME_PREFIX) {
                 let rest = &message[TIME_PREFIX.len()..];
 
                 match rest.parse::<u64>() {
-                    Ok(v) => return ParsedMessage::ServerTime { time: v },
+                    Ok(v) => return ScreepsMessage::ServerTime { time: v },
                     Err(_) => {
                         warn!("expected \"time <integer>\", found \"{}\". Ignoring inconsistent message!",
                               rest);
@@ -234,7 +229,7 @@ impl ParsedMessage<'static> {
                 let rest = &message[PROTOCOL_PREFIX.len()..];
 
                 match rest.parse::<u32>() {
-                    Ok(v) => return ParsedMessage::ServerProtocol { protocol: v },
+                    Ok(v) => return ScreepsMessage::ServerProtocol { protocol: v },
                     Err(_) => {
                         warn!("expected \"protocol <integer>\", found \"{}\". Ignoring inconsistent message!",
                               rest);
@@ -244,7 +239,7 @@ impl ParsedMessage<'static> {
                 let rest = &message[PACKAGE_PREFIX.len()..];
 
                 match rest.parse::<u32>() {
-                    Ok(v) => return ParsedMessage::ServerPackage { package: v },
+                    Ok(v) => return ScreepsMessage::ServerPackage { package: v },
                     Err(_) => {
                         warn!("expected \"package <integer>\", found \"{}\". Ignoring inconsistent message!",
                               rest);
@@ -253,7 +248,7 @@ impl ParsedMessage<'static> {
             }
 
             match from_str_with_warning(message, "screeps typed channel update") {
-                Ok(update) => return ParsedMessage::ChannelUpdate { update: update },
+                Ok(update) => return ScreepsMessage::ChannelUpdate { update: update },
                 // let failures just result in an 'other' message.
                 Err(e) => warn!("error parsing update message: {}", e),
             }
@@ -261,6 +256,6 @@ impl ParsedMessage<'static> {
 
         // If it isn't in the exact format we expect, treat it as "other"
         // (TODO: error there instead once we are confident in this)
-        ParsedMessage::Other(message.as_ref().to_owned().into())
+        ScreepsMessage::Other(message.as_ref().to_owned().into())
     }
 }
