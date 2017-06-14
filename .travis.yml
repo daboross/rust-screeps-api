@@ -8,6 +8,9 @@ rust:
 env:
 - COMPILE_ARGS=("--no-default-features")
 - COMPILE_ARGS=()
+os:
+- linux
+- osx
 before_script:
 - export PATH="$PATH:$HOME/.cargo/bin"
 - which rustfmt || cargo install rustfmt --vers 0.7.1
