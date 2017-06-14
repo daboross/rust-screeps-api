@@ -36,12 +36,13 @@ url = "1.0"
 hyper = "0.11"
 # Sync HTTP wrapper
 tokio-core = { version = "0.1", optional = true }
-hyper-tls = { git = "https://github.com/hyperium/hyper-tls.git", optional = true }
+hyper-tls = { version = "0.1", optional = true }
+native-tls = { version = "0.1", optional = true }
 # Websockets
 rand = "0.3"
 
 [features]
-sync = ["tokio-core", "hyper-tls"]
+sync = ["tokio-core", "hyper-tls", "native-tls"]
 default = ["sync"]
 
 [dev-dependencies]

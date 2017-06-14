@@ -1,13 +1,16 @@
 //! Small wrapper around the asynchronous Api struct providing synchronous access methods.
 extern crate tokio_core;
 extern crate hyper_tls;
+extern crate native_tls;
 
 use std::borrow::Cow;
 use std::ops::Deref;
 use std::io;
 
-use url;
 use hyper::{self, Client};
+
+use hyper::client::HttpConnector;
+use self::hyper_tls::HttpsConnector;
 
 use error::Error;
 
@@ -15,6 +18,71 @@ use {TokenStorage, RcTokenStorage, Api, DEFAULT_URL_STR};
 
 use {MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats, LeaderboardPage, LeaderboardType,
      FoundUserRank, RecentPvpDetails, LeaderboardSeason};
+
+mod error {
+    use std::{io, fmt};
+    use url;
+    use super::native_tls;
+
+    /// Error that can occur from building a SyncApi.
+    #[derive(Debug)]
+    pub enum SyncError {
+        /// The tokio core failed to start.
+        Io(io::Error),
+        /// The URL failed to parse.
+        Url(url::ParseError),
+        /// The TLS connector failed.
+        Tls(native_tls::Error),
+    }
+
+    impl From<io::Error> for SyncError {
+        fn from(e: io::Error) -> Self {
+            SyncError::Io(e)
+        }
+    }
+
+    impl From<url::ParseError> for SyncError {
+        fn from(e: url::ParseError) -> Self {
+            SyncError::Url(e)
+        }
+    }
+
+    impl From<native_tls::Error> for SyncError {
+        fn from(e: native_tls::Error) -> Self {
+            SyncError::Tls(e)
+        }
+    }
+
+    impl fmt::Display for SyncError {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            match *self {
+                SyncError::Io(ref e) => e.fmt(f),
+                SyncError::Url(ref e) => e.fmt(f),
+                SyncError::Tls(ref e) => e.fmt(f),
+            }
+        }
+    }
+
+    impl ::std::error::Error for SyncError {
+        fn description(&self) -> &str {
+            match *self {
+                SyncError::Io(ref e) => e.description(),
+                SyncError::Url(ref e) => e.description(),
+                SyncError::Tls(ref e) => e.description(),
+            }
+        }
+
+        fn cause(&self) -> Option<&::std::error::Error> {
+            match *self {
+                SyncError::Io(ref e) => Some(e),
+                SyncError::Url(ref e) => Some(e),
+                SyncError::Tls(ref e) => Some(e),
+            }
+        }
+    }
+}
+
+pub use self::error::SyncError;
 
 /// Represents the configuration which will create a reasonable default HTTPS connector.
 #[derive(Copy, Clone, Debug, Default)]
@@ -31,12 +99,12 @@ pub struct UseRcTokens;
 ///
 /// [`Api`]: ../struct.Api.html
 #[derive(Debug)]
-pub struct SyncApi<C: hyper::client::Connect = hyper_tls::HttpsConnector, T: TokenStorage = RcTokenStorage> {
+pub struct SyncApi<C: hyper::client::Connect = HttpsConnector<HttpConnector>, T: TokenStorage = RcTokenStorage> {
     core: tokio_core::reactor::Core,
     client: Api<C, Client<C>, T>,
 }
 
-impl SyncApi<hyper_tls::HttpsConnector, RcTokenStorage> {
+impl SyncApi<HttpsConnector<HttpConnector>, RcTokenStorage> {
     /// Opinionated method to construct a SyncApi with non-Send token storage, with HTTPS support and
     /// connecting to the default server.
     ///
@@ -46,7 +114,7 @@ impl SyncApi<hyper_tls::HttpsConnector, RcTokenStorage> {
     /// setting the url to something other than `https://screep.com/api/`.
     ///
     /// [`Config`]: struct.Config.html
-    pub fn new() -> Result<Self, Error> {
+    pub fn new() -> Result<Self, SyncError> {
         Ok(Config::<UseHttpsConnector, UseRcTokens>::new()?.build()?)
     }
 }
@@ -97,6 +165,19 @@ impl<'a, C, T> Config<'a, C, T> {
         }
     }
 
+    /// Sets the Hyper connector to connect to to the given connector.
+    pub fn try_connector<F, E, CC>(self, connector: F) -> Result<Config<'a, CC, T>, E>
+        where F: FnOnce(&tokio_core::reactor::Handle) -> Result<CC, E>
+    {
+        let handle = self.core.handle();
+        Ok(Config {
+            core: self.core,
+            hyper: self.hyper.connector(connector(&handle)?),
+            tokens: self.tokens,
+            url: self.url,
+        })
+    }
+
     /// Sets the url to connect to to the given url.
     pub fn url<'b>(self, url: &'b AsRef<str>) -> Config<'b, C, T> {
         Config {
@@ -120,28 +201,33 @@ impl<'a, C, T> Config<'a, C, T> {
 
 impl<'a, T: TokenStorage> Config<'a, UseHttpsConnector, T> {
     /// Builds the config into a SyncApi.
-    pub fn build(self) -> Result<SyncApi<hyper_tls::HttpsConnector, T>, url::ParseError> {
-        self.connector(|handle| hyper_tls::HttpsConnector::new(4, &handle)).build()
+    pub fn build(self) -> Result<SyncApi<HttpsConnector<HttpConnector>, T>, SyncError> {
+        self.try_connector(|handle| HttpsConnector::new(4, &handle))?
+            .build()
+            .map_err(Into::into)
     }
 }
 
 impl<'a, C: hyper::client::Connect> Config<'a, C, UseRcTokens> {
     /// Builds the config into a SyncApi.
-    pub fn build(self) -> Result<SyncApi<C, RcTokenStorage>, url::ParseError> {
+    pub fn build(self) -> Result<SyncApi<C, RcTokenStorage>, SyncError> {
         self.tokens(RcTokenStorage::default()).build()
     }
 }
 
 impl<'a> Config<'a, UseHttpsConnector, UseRcTokens> {
     /// Builds the config into a SyncApi.
-    pub fn build(self) -> Result<SyncApi<hyper_tls::HttpsConnector, RcTokenStorage>, url::ParseError> {
-        self.connector(|handle| hyper_tls::HttpsConnector::new(4, &handle)).tokens(RcTokenStorage::default()).build()
+    pub fn build(self) -> Result<SyncApi<HttpsConnector<HttpConnector>, RcTokenStorage>, SyncError> {
+        self.try_connector(|handle| HttpsConnector::new(4, &handle))?
+            .tokens(RcTokenStorage::default())
+            .build()
+            .map_err(Into::into)
     }
 }
 
 impl<'a, C: hyper::client::Connect, T: TokenStorage> Config<'a, C, T> {
     /// Builds the config into a SyncApi.
-    pub fn build(self) -> Result<SyncApi<C, T>, url::ParseError> {
+    pub fn build(self) -> Result<SyncApi<C, T>, SyncError> {
         let Config { core, hyper, tokens, url } = self;
         let handle = core.handle();
         let hyper = hyper.build(&handle);
