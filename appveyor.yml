@@ -36,7 +36,6 @@ test_script:
 - cargo test --verbose --target %TARGET% -- --skip auth
 
 cache:
-- C:\Users\appveyor\.cargo\registry
 - target
 
 # Disable the appveyor build step so we can just build the rust project instead.
