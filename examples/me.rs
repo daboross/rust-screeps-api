@@ -24,11 +24,11 @@ fn main() {
     let my_info = client.my_info().unwrap();
 
     println!("User {}:\
-\n\tID: {}\
-\n\tPassword: {}\
-\n\tCPU: {}\
-\n\tGCL points: {}\
-\n\tCredits: {}",
+            \n\tID: {}\
+            \n\tPassword: {}\
+            \n\tCPU: {}\
+            \n\tGCL points: {}\
+            \n\tCredits: {}",
              &my_info.username,
              &my_info.user_id,
              if my_info.has_password {
