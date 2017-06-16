@@ -19,7 +19,7 @@ use super::Channel;
 /// is tracked by the server, but is not tracked by `screeps-api`, and cannot be queried from the
 /// server.
 pub fn subscribe(channel: Channel) -> String {
-    let message = channel.chain_and_complete_message("subscribe ".chars());
+    let message = format!("subscribe {}", channel);
 
     sockjs_send_from_internal(&message)
 }
@@ -32,7 +32,7 @@ pub fn subscribe(channel: Channel) -> String {
 /// is tracked by the server, but is not tracked by `screeps-api`, and cannot be queried from the
 /// server.
 pub fn unsubscribe(channel: Channel) -> String {
-    let message = channel.chain_and_complete_message("unsubscribe ".chars());
+    let message = format!("unsubscribe {}", channel);
 
     sockjs_send_from_internal(&message)
 }

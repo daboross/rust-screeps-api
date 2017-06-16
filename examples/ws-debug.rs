@@ -21,7 +21,7 @@ use futures::{Sink, Stream, Future, future, stream};
 
 use websocket::OwnedMessage;
 
-use screeps_api::TokenStorage;
+use screeps_api::{TokenStorage, RoomName};
 use screeps_api::websocket::{Channel, ChannelUpdate, SockjsMessage, ScreepsMessage};
 
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
@@ -64,24 +64,24 @@ struct Config {
     messages: bool,
     credits: bool,
     console: bool,
-    rooms: Vec<String>,
-    map_view: Vec<String>,
+    rooms: Vec<RoomName>,
+    map_view: Vec<RoomName>,
 }
 
 impl Config {
-    fn new(args: &clap::ArgMatches) -> Self {
-        Config {
+    fn new<'a>(args: &'a clap::ArgMatches) -> Result<Self, screeps_api::data::room_name::RoomNameParseError<'a>> {
+        Ok(Config {
             cpu: args.is_present("cpu"),
             messages: args.is_present("messages"),
             credits: args.is_present("credits"),
             console: args.is_present("console"),
             rooms: args.values_of("room")
-                .map(|it| it.map(|v| v.to_uppercase()).collect())
-                .unwrap_or_else(|| Vec::new()),
+                .map(|it| it.map(|v| RoomName::new(v)).collect::<Result<_, _>>())
+                .unwrap_or_else(|| Ok(Vec::new()))?,
             map_view: args.values_of("map-view")
-                .map(|it| it.map(|v| v.to_uppercase()).collect())
-                .unwrap_or_else(|| Vec::new()),
-        }
+                .map(|it| it.map(|v| RoomName::new(v)).collect::<Result<_, _>>())
+                .unwrap_or_else(|| Ok(Vec::new()))?,
+        })
     }
 
     fn subscribe_with(&self, id: &str) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
@@ -112,11 +112,11 @@ impl Config {
         }
 
         for room_name in &self.rooms {
-            messages.push(subscribe(Channel::room_detail(&**room_name)));
+            messages.push(subscribe(Channel::room_detail(*room_name)));
         }
 
         for room_name in &self.map_view {
-            messages.push(subscribe(Channel::room_map_view(&**room_name)));
+            messages.push(subscribe(Channel::room_map_view(*room_name)));
         }
 
         Box::new(stream::iter(messages.into_iter().map(|string| Ok(OwnedMessage::Text(string)))))
@@ -164,7 +164,17 @@ fn setup() -> Config {
 
     setup_logging(cmd_arguments.occurrences_of("verbose"));
 
-    Config::new(&cmd_arguments)
+    match Config::new(&cmd_arguments) {
+        Ok(v) => v,
+        Err(e) => {
+            clap::Error {
+                    message: e.to_string(),
+                    kind: clap::ErrorKind::InvalidValue,
+                    info: None,
+                }
+                .exit()
+        }
+    }
 }
 
 fn main() {

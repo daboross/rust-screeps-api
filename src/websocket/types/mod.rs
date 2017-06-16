@@ -5,10 +5,12 @@ use std::marker::PhantomData;
 use std::fmt;
 
 use serde::{Deserializer, Deserialize};
-use serde::de::{self, Visitor, SeqAccess};
+use serde::de::{self, Visitor, SeqAccess, Unexpected};
 
 use serde_json;
 use websocket::Channel;
+
+use RoomName;
 
 use self::room_map_view::RoomMapViewUpdate;
 use self::user_cpu::UserCpuUpdate;
@@ -28,7 +30,7 @@ pub enum ChannelUpdate<'a> {
     /// A 'map view' update of a room. Sent once per tick.
     RoomMapView {
         /// The name of the room this is an update for.
-        room_name: Cow<'a, str>,
+        room_name: RoomName,
         /// The data: the positions and nondescript types of entities in this room.
         update: RoomMapViewUpdate,
     },
@@ -36,7 +38,7 @@ pub enum ChannelUpdate<'a> {
     /// Other subscribed rooms receive `ChannelUpdate::NoRoomDetail` instead.
     RoomDetail {
         /// The name of the room this is an update for.
-        room_name: Cow<'a, str>,
+        room_name: RoomName,
         /// The data: all properties of all objects in this room that have changed since the last tick.
         update: RoomUpdate,
     },
@@ -48,7 +50,7 @@ pub enum ChannelUpdate<'a> {
     /// TODO: This should have a better name, and possibly be incorporated into `ChannelUpdate::RoomDetail`.
     NoRoomDetail {
         /// The name of the room this is a notification for.
-        room_name: Cow<'a, str>,
+        room_name: RoomName,
     },
     /// An update on the last tick's CPU and memory usage. Sent once per tick.
     UserCpu {
@@ -108,11 +110,11 @@ pub enum ChannelUpdate<'a> {
 
 impl<'a> ChannelUpdate<'a> {
     /// If this update is directly associated with a room, gets the room name.
-    pub fn room_name(&self) -> Option<&str> {
+    pub fn room_name(&self) -> Option<&RoomName> {
         match *self {
             ChannelUpdate::RoomMapView { ref room_name, .. } |
             ChannelUpdate::RoomDetail { ref room_name, .. } |
-            ChannelUpdate::NoRoomDetail { ref room_name, .. } => Some(room_name.as_ref()),
+            ChannelUpdate::NoRoomDetail { ref room_name, .. } => Some(room_name),
             _ => None,
         }
     }
@@ -139,9 +141,9 @@ impl<'a> ChannelUpdate<'a> {
     /// This channel specification can be used to subscribe or unsubscribe from this channel if needed.
     pub fn channel(&self) -> Channel {
         match *self {
-            ChannelUpdate::RoomMapView { ref room_name, .. } => Channel::room_map_view(room_name.as_ref()),
-            ChannelUpdate::RoomDetail { ref room_name, .. } |
-            ChannelUpdate::NoRoomDetail { ref room_name, .. } => Channel::room_detail(room_name.as_ref()),
+            ChannelUpdate::RoomMapView { room_name, .. } => Channel::room_map_view(room_name),
+            ChannelUpdate::RoomDetail { room_name, .. } |
+            ChannelUpdate::NoRoomDetail { room_name, .. } => Channel::room_detail(room_name),
             ChannelUpdate::UserCpu { ref user_id, .. } => Channel::user_cpu(user_id.as_ref()),
             ChannelUpdate::UserConsole { ref user_id, .. } => Channel::user_console(user_id.as_ref()),
             ChannelUpdate::UserCredits { ref user_id, .. } => Channel::user_credits(user_id.as_ref()),
@@ -198,19 +200,34 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
         if channel.starts_with(ROOM_MAP_VIEW_PREFIX) {
             let room_name = &channel[ROOM_MAP_VIEW_PREFIX.len()..];
 
+            let room_name = RoomName::new(room_name).map_err(|_| {
+                    de::Error::invalid_value(Unexpected::Str(room_name),
+                                             &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
+                })?;
+
             return Ok(ChannelUpdate::RoomMapView {
-                room_name: room_name.to_owned().into(),
+                room_name: room_name,
                 update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
         } else if channel.starts_with(ROOM_PREFIX) {
             let room_name = &channel[ROOM_PREFIX.len()..];
 
+            let room_name = RoomName::new(room_name).map_err(|_| {
+                    de::Error::invalid_value(Unexpected::Str(room_name),
+                                             &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
+                })?;
+
             return Ok(ChannelUpdate::RoomDetail {
-                room_name: room_name.to_owned().into(),
+                room_name: room_name,
                 update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
         } else if channel.starts_with(ROOM_ERR_PREFIX) {
             let room_name = &channel[ROOM_ERR_PREFIX.len()..];
+
+            let room_name = RoomName::new(room_name).map_err(|_| {
+                    de::Error::invalid_value(Unexpected::Str(room_name),
+                                             &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
+                })?;
 
             let err_message = seq.next_element::<&str>()?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
@@ -223,7 +240,7 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             // B. add handling of all err@ messages into a variant which can then just parse the channel name into
             //    a `Channel`.
             if err_message == "subscribe limit reached" {
-                return Ok(ChannelUpdate::NoRoomDetail { room_name: room_name.to_owned().into() });
+                return Ok(ChannelUpdate::NoRoomDetail { room_name: room_name });
             }
         } else if channel.starts_with(USER_PREFIX) {
             let user_id_and_part = &channel[USER_PREFIX.len()..];

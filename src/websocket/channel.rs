@@ -1,6 +1,8 @@
 //! Websocket subscribable channel data structure.
 use std::borrow::Cow;
-use std::str;
+use std::fmt;
+
+use RoomName;
 
 /// Different channels one can subscribe to.
 pub enum Channel<'a> {
@@ -49,7 +51,7 @@ pub enum Channel<'a> {
     /// type of structure (road, wall, energy, or player owned).
     RoomMapView {
         /// The room name of the subscription.
-        room_name: Cow<'a, str>,
+        room_name: RoomName,
     },
     /// Detailed room updates. Updates at the end of every tick with all room object properties which have
     /// changed since the last tick.
@@ -59,7 +61,7 @@ pub enum Channel<'a> {
     /// message on "off" ticks.
     RoomDetail {
         /// The room name of the subscription.
-        room_name: Cow<'a, str>,
+        room_name: RoomName,
     },
     /// A channel specified by the exact channel id.
     Other {
@@ -68,12 +70,28 @@ pub enum Channel<'a> {
     },
 }
 
-impl<'a> Channel<'a> {
+impl Channel<'static> {
     /// Creates a channel subscribing to server messages.
     pub fn server_messages() -> Self {
         Channel::ServerMessages
     }
 
+    /// Creates a channel subscribing to map-view updates of a room.
+    pub fn room_map_view(room_name: RoomName) -> Self {
+        Channel::RoomMapView { room_name: room_name }
+    }
+
+    /// Creates a channel subscribing to detailed updates of a room's contents.
+    ///
+    /// Note: this is limited to 2 per user account at a time, and if there are more than 2 room subscriptions active,
+    /// it is random which 2 will received updates on any given ticks. Rooms which are not updated do receive an error
+    /// message on "off" ticks.
+    pub fn room_detail(room_name: RoomName) -> Self {
+        Channel::RoomDetail { room_name: room_name }
+    }
+}
+
+impl<'a> Channel<'a> {
     /// Creates a channel subscribing to a user's CPU and memory.
     pub fn user_cpu<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
         Channel::UserCpu { user_id: user_id.into() }
@@ -121,75 +139,28 @@ impl<'a> Channel<'a> {
         Channel::UserActiveBranch { user_id: user_id.into() }
     }
 
-    /// Creates a channel subscribing to map-view updates of a room.
-    pub fn room_map_view<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
-        Channel::RoomMapView { room_name: room_name.into() }
-    }
-
-    /// Creates a channel subscribing to detailed updates of a room's contents.
-    ///
-    /// Note: this is limited to 2 per user account at a time, and if there are more than 2 room subscriptions active,
-    /// it is random which 2 will received updates on any given ticks. Rooms which are not updated do receive an error
-    /// message on "off" ticks.
-    pub fn room_detail<T: Into<Cow<'a, str>>>(room_name: T) -> Self {
-        Channel::RoomDetail { room_name: room_name.into() }
-    }
-
     /// Creates a channel using the fully specified channel name.
     pub fn other<T: Into<Cow<'a, str>>>(channel: T) -> Self {
         Channel::Other { channel: channel.into() }
     }
+}
 
-    /// This is a really wonky scheme, but it is probably the best one right now.
-    ///
-    /// Adds the channel description to the message (does not add preceding space) and collects to a vec.
-    pub fn chain_and_complete_message<T: Iterator<Item = char>>(&self, start: T) -> String {
+impl<'a> fmt::Display for Channel<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Channel::ServerMessages => start.chain("server-message".chars()).collect(),
-            Channel::UserCpu { ref user_id } => {
-                start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/cpu".chars()).collect()
-            }
-            Channel::UserMessages { ref user_id } => {
-                start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/newMessage".chars()).collect()
-            }
+            Channel::ServerMessages => write!(f, "server-message"),
+            Channel::UserCpu { ref user_id } => write!(f, "user:{}/cpu", user_id),
+            Channel::UserMessages { ref user_id } => write!(f, "user:{}/newMessage", user_id),
             Channel::UserConversation { ref user_id, ref target_user_id } => {
-                start.chain("user:".chars())
-                    .chain(user_id.as_ref().chars())
-                    .chain("/message:".chars())
-                    .chain(target_user_id.as_ref().chars())
-                    .collect()
+                write!(f, "user:{}/message:{}", user_id, target_user_id)
             }
-            Channel::UserCredits { ref user_id } => {
-                start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/money".chars()).collect()
-            }
-            Channel::UserMemoryPath { ref user_id, ref path } => {
-                start.chain("user:".chars())
-                    .chain(user_id.as_ref().chars())
-                    .chain("/memory/".chars())
-                    .chain(path.as_ref().chars())
-                    .collect()
-            }
-            Channel::UserConsole { ref user_id } => {
-                start.chain("user:".chars()).chain(user_id.as_ref().chars()).chain("/console".chars()).collect()
-            }
-            Channel::UserActiveBranch { ref user_id } => {
-                start.chain("user:".chars())
-                    .chain(user_id.as_ref().chars())
-                    .chain("/set-active-branch".chars())
-                    .collect()
-            }
-            Channel::RoomMapView { ref room_name } => {
-                start.chain("roomMap2:".chars()).chain(room_name.as_ref().chars()).collect()
-            }
-            Channel::RoomDetail { ref room_name } => {
-                start.chain("room:".chars()).chain(room_name.as_ref().chars()).collect()
-            }
-            Channel::Other { ref channel } => start.chain(channel.as_ref().chars()).collect(),
+            Channel::UserCredits { ref user_id } => write!(f, "user:{}/money", user_id),
+            Channel::UserMemoryPath { ref user_id, ref path } => write!(f, "user:{}/memory/{}", user_id, path),
+            Channel::UserConsole { ref user_id } => write!(f, "user:{}/console", user_id),
+            Channel::UserActiveBranch { ref user_id } => write!(f, "user:{}/set-active-branch", user_id),
+            Channel::RoomMapView { ref room_name } => write!(f, "roomMap2:{}", room_name),
+            Channel::RoomDetail { ref room_name } => write!(f, "room:{}", room_name),
+            Channel::Other { ref channel } => write!(f, "{}", channel),
         }
-    }
-
-    /// Allocates a vec with the byte representation of this channel.
-    pub fn to_string(&self) -> String {
-        self.chain_and_complete_message("".chars())
     }
 }
