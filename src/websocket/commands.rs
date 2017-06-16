@@ -18,7 +18,7 @@ use super::Channel;
 /// It's recommended that you keep track of what channels you are subscribed to separately: this
 /// is tracked by the server, but is not tracked by `screeps-api`, and cannot be queried from the
 /// server.
-pub fn subscribe(channel: Channel) -> String {
+pub fn subscribe(channel: &Channel) -> String {
     let message = format!("subscribe {}", channel);
 
     sockjs_send_from_internal(&message)
@@ -31,7 +31,7 @@ pub fn subscribe(channel: Channel) -> String {
 /// Recommended that you keep track of what channels you are subscribed to separately: this
 /// is tracked by the server, but is not tracked by `screeps-api`, and cannot be queried from the
 /// server.
-pub fn unsubscribe(channel: Channel) -> String {
+pub fn unsubscribe(channel: &Channel) -> String {
     let message = format!("unsubscribe {}", channel);
 
     sockjs_send_from_internal(&message)
@@ -41,7 +41,7 @@ pub fn unsubscribe(channel: Channel) -> String {
 ///
 /// After doing this, you'll be able to subscribe and unsubscribe to messages. A "auth success" message
 /// will happen as a response which returns either this token or a new one.
-pub fn authenticate(token: Token) -> String {
+pub fn authenticate(token: &Token) -> String {
     let message = "auth "
         .chars()
         .chain(token.chars())

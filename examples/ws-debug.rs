@@ -92,31 +92,31 @@ impl Config {
                                               self.rooms.len() +
                                               self.map_view.len());
 
-        messages.push(subscribe(Channel::ServerMessages));
+        messages.push(subscribe(&Channel::ServerMessages));
 
         if self.cpu {
-            messages.push(subscribe(Channel::user_cpu(id)));
+            messages.push(subscribe(&Channel::user_cpu(id)));
         }
 
         if self.messages {
-            messages.push(subscribe(Channel::user_messages(id)));
-            messages.push(subscribe(Channel::user_conversation(id, "57fb16b6e4dd183b746435b0")));
+            messages.push(subscribe(&Channel::user_messages(id)));
+            messages.push(subscribe(&Channel::user_conversation(id, "57fb16b6e4dd183b746435b0")));
         }
 
         if self.credits {
-            messages.push(subscribe(Channel::user_credits(id)));
+            messages.push(subscribe(&Channel::user_credits(id)));
         }
 
         if self.console {
-            messages.push(subscribe(Channel::user_console(id)));
+            messages.push(subscribe(&Channel::user_console(id)));
         }
 
         for room_name in &self.rooms {
-            messages.push(subscribe(Channel::room_detail(*room_name)));
+            messages.push(subscribe(&Channel::room_detail(*room_name)));
         }
 
         for room_name in &self.map_view {
-            messages.push(subscribe(Channel::room_map_view(*room_name)));
+            messages.push(subscribe(&Channel::room_map_view(*room_name)));
         }
 
         Box::new(stream::iter(messages.into_iter().map(|string| Ok(OwnedMessage::Text(string)))))
@@ -205,7 +205,7 @@ fn main() {
 
             let (sink, stream) = client.split();
 
-            sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(token_storage.take_token().unwrap())))
+            sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(&token_storage.take_token().unwrap())))
                 .and_then(|sink| {
                     let handler = Handler::new(token_storage, my_info, config);
 
