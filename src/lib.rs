@@ -15,7 +15,7 @@
 //! use screeps_api::SyncApi;
 //!
 //! # fn main() {
-//! let mut api = SyncApi::new().expect("starting screeps Api failed");
+//! let mut api = SyncApi::new().expect("expected starting screeps http client to suceed");
 //! # }
 //! ```
 //!
@@ -28,14 +28,13 @@
 //! # use screeps_api::SyncApi;
 //! #
 //! # fn main() {
-//! let mut api = SyncApi::new().unwrap();
-//!
+//! # let mut api = SyncApi::new().unwrap();
+//! #
 //! api.login("username", "password").unwrap();
 //!
 //! let my_info = api.my_info().unwrap();
 //!
 //! println!("Logged in with user ID {}!", my_info.user_id);
-//!
 //! # }
 //! ```
 //!
@@ -128,7 +127,7 @@ impl<T> EndpointType for T where T: sealed::Sealed {}
 /// will cause the API to return a new token which should be stored in its place.
 pub type Token = String;
 
-/// A generic trait over hyper's Client which allows for references, owned clients, and Arc<hyper::Client>
+/// A generic trait over hyper's Client which allows for references, owned clients, and `Arc<hyper::Client>`
 /// to be used.
 pub trait HyperClient<C>
     where C: hyper::client::Connect
