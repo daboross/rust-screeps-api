@@ -50,7 +50,7 @@ default = ["sync"]
 dotenv = "0.10"
 # logging in examples
 fern = "0.4"
-chrono = "0.3"
+chrono = "0.4"
 # cli options in examples
 clap = "2.22"
 # socket connections in ws-debug example
