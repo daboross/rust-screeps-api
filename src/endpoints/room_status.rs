@@ -21,10 +21,14 @@ struct InnerRoom {
     /// The "status" string, usually "normal"? Unknown what else it could be.
     status: String,
     /// The end time for the novice area this room is or was last in.
-    novice: Option<data::StringNumberTimeSpec>,
+    #[serde(with = "data::optional_timespec_seconds")]
+    #[serde(default)]
+    novice: Option<time::Timespec>,
     /// The time this room will open or did open into the novice area as a second tier novice room.
     #[serde(rename = "openTime")]
-    open_time: Option<data::StringNumberTimeSpec>,
+    #[serde(with = "data::optional_timespec_seconds")]
+    #[serde(default)]
+    open_time: Option<time::Timespec>,
 }
 
 /// Struct describing the status of a room

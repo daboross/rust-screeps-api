@@ -7,7 +7,7 @@ use std::convert::AsRef;
 use time;
 use serde::{Serialize, Serializer};
 
-use data::{self, RoomName};
+use data::{self, RoomName, optional_timespec_seconds};
 
 use EndpointResult;
 use error::ApiError;
@@ -101,11 +101,15 @@ struct RoomResponse {
     status: String,
     own: Option<RoomOwner>,
     /// The end time for the novice area this room is or was last in.
-    novice: Option<data::StringNumberTimeSpec>,
+    #[serde(with="optional_timespec_seconds")]
+    #[serde(default)]
+    novice: Option<time::Timespec>,
     /// The time this room will open or did open into the novice area as a second tier novice room.
-    open_time: Option<data::StringNumberTimeSpec>,
-    sign: Option<data::RoomSignData>,
-    hard_sign: Option<data::HardSignData>,
+    #[serde(with="optional_timespec_seconds")]
+    #[serde(default)]
+    open_time: Option<time::Timespec>,
+    sign: Option<data::RoomSign>,
+    hard_sign: Option<data::HardSign>,
 }
 
 #[derive(Deserialize, Clone, Hash, Debug)]
@@ -204,8 +208,8 @@ impl EndpointResult for MapStats {
                         state: data::RoomState::from_data(time::get_time(), novice, open_time)?,
                         owner: owner,
                         // turn Option<Result<A, B>> into Result<Option<A>, B>
-                        sign: sign.map_or(Ok(None), |s| s.into_sign().map(Some))?,
-                        hard_sign: hard_sign.map_or(Ok(None), |s| s.into_sign().map(Some))?,
+                        sign: sign,
+                        hard_sign: hard_sign,
                         _phantom: PhantomData,
                     };
 

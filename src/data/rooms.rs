@@ -2,53 +2,6 @@
 use time;
 use error;
 
-/// String or number describing utc time.
-#[derive(Serialize, Deserialize, Clone, Eq, Hash, Debug)]
-#[serde(untagged)]
-pub enum StringNumberTimeSpec {
-    /// String representation, a base 10 representation of a large unix time number.
-    String(String),
-    /// A unix time number.
-    Number(i64),
-}
-
-impl StringNumberTimeSpec {
-    /// Creates a timespec from this
-    pub fn to_timespec(&self) -> Result<time::Timespec, error::ApiError> {
-        let time = match *self {
-            StringNumberTimeSpec::String(ref s) => {
-                match s.parse() {
-                    Ok(v) => v,
-                    Err(e) => {
-                        return Err(error::ApiError::MalformedResponse(format!("expected \
-                            timestamp string to be a valid integer, found {}: {:?}",
-                                                                              s,
-                                                                              e)))
-                    }
-                }
-            }
-            StringNumberTimeSpec::Number(v) => v,
-        };
-
-        Ok(time::Timespec::new(time, 0))
-    }
-}
-
-impl PartialEq for StringNumberTimeSpec {
-    fn eq(&self, other: &StringNumberTimeSpec) -> bool {
-        match (self, other) {
-            (&StringNumberTimeSpec::String(ref s), &StringNumberTimeSpec::String(ref s2)) => {
-                match (s.parse::<i64>(), s2.parse::<i64>()) {
-                    (Ok(i), Ok(i2)) => i == i2,
-                    (..) => s == s2,
-                }
-            }
-            (&StringNumberTimeSpec::String(ref s), &StringNumberTimeSpec::Number(i)) |
-            (&StringNumberTimeSpec::Number(i), &StringNumberTimeSpec::String(ref s)) => s.parse() == Ok(i),
-            (&StringNumberTimeSpec::Number(i), &StringNumberTimeSpec::Number(i2)) => i == i2,
-        }
-    }
-}
 
 /// A room state, returned by room status.
 ///
@@ -65,17 +18,17 @@ pub enum RoomState {
     /// Room is part of a novice area.
     Novice {
         /// The time when the novice area will expire.
-        #[serde(with = "timespec_serialize_seconds")]
+        #[serde(with = "timespec_seconds")]
         end_time: time::Timespec,
     },
     /// Room is part of a "second tier" novice area, which is closed, but when opened will be part of a novice area
     /// which already has other open rooms.
     SecondTierNovice {
         /// The time this room will open and join the surrounding novice area rooms.
-        #[serde(with = "timespec_serialize_seconds")]
+        #[serde(with = "timespec_seconds")]
         room_open_time: time::Timespec,
         /// The time the novice area this room is a part of will expire.
-        #[serde(with = "timespec_serialize_seconds")]
+        #[serde(with = "timespec_seconds")]
         end_time: time::Timespec,
     },
 }
@@ -93,16 +46,12 @@ impl RoomState {
     /// time at which the novice area at this room ends/ended, and the time at which this room opens/opened into a
     /// larger novice area from being completely inaccessible.
     pub fn from_data(current_time: time::Timespec,
-                     novice_end: Option<StringNumberTimeSpec>,
-                     open_time: Option<StringNumberTimeSpec>)
+                     novice_end: Option<time::Timespec>,
+                     open_time: Option<time::Timespec>)
                      -> Result<Self, error::ApiError> {
-        // This turns Option<Result<A, B>> into Result<Option<A>, B>
-        let novice_time_spec = novice_end.map_or(Ok(None), |t| t.to_timespec().map(Some))?;
-        let open_time_spec = open_time.map_or(Ok(None), |t| t.to_timespec().map(Some))?;
-
-        let state = match novice_time_spec {
+        let state = match novice_end {
             Some(n) if n > current_time => {
-                match open_time_spec {
+                match open_time {
                     Some(o) if o > current_time => {
                         RoomState::SecondTierNovice {
                             room_open_time: o,
@@ -131,119 +80,189 @@ impl RoomState {
     }
 }
 
-/// Raw sign data from the server.
-#[derive(Deserialize, Clone, Hash, Debug)]
-pub struct RoomSignData {
-    time: u64,
-    datetime: StringNumberTimeSpec,
-    user: String,
-    text: String,
-}
-
-/// Raw "hard sign" data from the server.
-#[derive(Deserialize, Clone, Hash, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct HardSignData {
-    time: u64,
-    datetime: StringNumberTimeSpec,
-    end_datetime: StringNumberTimeSpec,
-    text: String,
-}
-
 /// Represents a room sign.
 #[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct RoomSign {
     /// The game time when the sign was set.
+    #[serde(rename = "time")]
     pub game_time_set: u64,
     /// The real date/time when the sign was set.
-    #[serde(with = "timespec_serialize_seconds")]
+    #[serde(with = "timespec_seconds")]
+    #[serde(rename = "datetime")]
     pub time_set: time::Timespec,
     /// The user ID of the user who set the sign.
+    #[serde(rename = "user")]
     pub user_id: String,
     /// The text of the sign.
     pub text: String,
-}
-
-impl RoomSignData {
-    /// Transform the raw result with the possibility of failing due to invalid data.
-    pub fn into_sign(self) -> Result<RoomSign, error::ApiError> {
-        let RoomSignData { time, datetime, user, text } = self;
-        let sign = RoomSign {
-            game_time_set: time,
-            time_set: datetime.to_timespec()?,
-            user_id: user,
-            text: text,
-        };
-        Ok(sign)
-    }
 }
 
 /// Represents a "hard sign" on a room, where the server has overwritten any player-placed signs for a specific period.
 #[derive(Serialize, Deserialize, Clone, Hash, Debug)]
 pub struct HardSign {
     /// The game time when the hard sign override was added.
+    #[serde(rename = "time")]
     pub game_time_set: u64,
     /// The real date when the hard sign override was added.
-    #[serde(with = "timespec_serialize_seconds")]
+    #[serde(with = "timespec_seconds")]
+    #[serde(rename = "datetime")]
     pub start: time::Timespec,
     /// The real date when the hard sign override ends.
-    #[serde(with = "timespec_serialize_seconds")]
+    #[serde(with = "timespec_seconds")]
+    #[serde(rename = "endDatetime")]
     pub end: time::Timespec,
     /// The hard sign text.
     pub text: String,
 }
 
-impl HardSignData {
-    /// Transform the raw result with the possibility of failing due to invalid data.
-    pub fn into_sign(self) -> Result<HardSign, error::ApiError> {
-        let HardSignData { time, datetime, end_datetime, text } = self;
-        let sign = HardSign {
-            game_time_set: time,
-            start: datetime.to_timespec()?,
-            end: end_datetime.to_timespec()?,
-            text: text,
-        };
-        Ok(sign)
-    }
-}
 
-mod timespec_serialize_seconds {
+/// Serialization / deserialization of `time::Timespec`.
+pub mod timespec_seconds {
     use time::Timespec;
-    use serde::{Deserialize, Serializer, Deserializer};
+    use serde::{Serializer, Deserializer};
 
+    /// Serializes a Timespec by just serializing the seconds as a number.
     pub fn serialize<S>(date: &Timespec, serializer: S) -> Result<S::Ok, S::Error>
         where S: Serializer
     {
         serializer.serialize_i64(date.sec)
     }
 
+    /// Deserializes either a number or a string into a Timespec, interpreting both as the timespec's seconds.
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Timespec, D::Error>
         where D: Deserializer<'de>
     {
-        Ok(Timespec::new(i64::deserialize(deserializer)?, 0))
+        use std::fmt;
+        use serde::de::{Visitor, Error, Unexpected};
+
+        struct TimeVisitor;
+
+        impl<'de> Visitor<'de> for TimeVisitor {
+            type Value = Timespec;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("an integer or string containing an integer")
+            }
+
+            #[inline]
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where E: Error
+            {
+                let seconds = value.parse().map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
+
+                Ok(Timespec::new(seconds, 0))
+
+            }
+            #[inline]
+            fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+                where E: Error
+            {
+                Ok(Timespec::new(value, 0))
+            }
+
+            #[inline]
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+                where E: Error
+            {
+                Ok(Timespec::new(value as i64, 0))
+            }
+        }
+
+        deserializer.deserialize_i64(TimeVisitor)
+    }
+}
+
+/// Serialization / deserialization of `Option<time::Timespec>`.
+pub mod optional_timespec_seconds {
+    use time::Timespec;
+    use serde::{Serializer, Deserializer};
+
+    /// Serializes an Option<Timespec> as the timespec's seconds as a number.
+    ///
+    /// A unit / nothing will be serialized if the Option is None.
+    pub fn serialize<S>(date: &Option<Timespec>, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        match *date {
+            Some(ref d) => serializer.serialize_i64(d.sec),
+            None => serializer.serialize_unit(),
+        }
+    }
+
+    /// Deserializes either a string or a number into a time::Timespec.
+    ///
+    /// Strings must be parsable as numbers.
+    ///
+    /// Nothing / a unit will be parsed as None.
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Timespec>, D::Error>
+        where D: Deserializer<'de>
+    {
+        use std::fmt;
+        use serde::de::{Visitor, Error, Unexpected};
+
+        struct TimeVisitor;
+
+        impl<'de> Visitor<'de> for TimeVisitor {
+            type Value = Option<Timespec>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("an integer or string containing an integer")
+            }
+
+            #[inline]
+            fn visit_unit<E>(self) -> Result<Self::Value, E>
+                where E: Error
+            {
+                Ok(None)
+            }
+
+            #[inline]
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where E: Error
+            {
+                let seconds = value.parse().map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
+
+                Ok(Some(Timespec::new(seconds, 0)))
+
+            }
+
+            #[inline]
+            fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+                where E: Error
+            {
+                Ok(Some(Timespec::new(value, 0)))
+            }
+
+            #[inline]
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+                where E: Error
+            {
+                Ok(Some(Timespec::new(value as i64, 0)))
+            }
+        }
+
+        deserializer.deserialize_i64(TimeVisitor)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{StringNumberTimeSpec, RoomState, RoomSignData, HardSignData};
+    use super::{timespec_seconds, RoomState, RoomSign, HardSign};
     use serde_json;
     use time;
 
     #[test]
     fn parse_string_timespec() {
-        let snts: StringNumberTimeSpec = serde_json::from_value(json!("1474674699273")).unwrap();
+        let spec = timespec_seconds::deserialize(&json!("1474674699273")).unwrap();
 
-        assert_eq!(snts.to_timespec().unwrap(),
-                   time::Timespec::new(1474674699273i64, 0));
+        assert_eq!(spec, time::Timespec::new(1474674699273i64, 0));
     }
 
     #[test]
     fn parse_number_timespec() {
-        let snts: StringNumberTimeSpec = serde_json::from_value(json!(1475538699273i64)).unwrap();
+        let spec = timespec_seconds::deserialize(&json!(1475538699273i64)).unwrap();
 
-        assert_eq!(snts.to_timespec().unwrap(),
-                   time::Timespec::new(1475538699273i64, 0));
+        assert_eq!(spec, time::Timespec::new(1475538699273i64, 0));
     }
 
     #[test]
@@ -257,8 +276,8 @@ mod tests {
     fn parse_room_state_open_previously_novice() {
         // Current time is 4, room opened at 2, novice area ended at 3.
         let state = RoomState::from_data(time::Timespec::new(4, 0),
-                                         Some(StringNumberTimeSpec::Number(3)),
-                                         Some(StringNumberTimeSpec::Number(2)))
+                                         Some(time::Timespec::new(3, 0)),
+                                         Some(time::Timespec::new(2, 0)))
             .unwrap();
         assert_eq!(state, RoomState::Open);
     }
@@ -267,7 +286,7 @@ mod tests {
     fn parse_room_state_novice_never_closed() {
         // Current time is 4, novice area ends at 10.
         let state = RoomState::from_data(time::Timespec::new(4, 0),
-                                         Some(StringNumberTimeSpec::Number(10)),
+                                         Some(time::Timespec::new(10, 0)),
                                          None)
             .unwrap();
         assert_eq!(state,
@@ -278,8 +297,8 @@ mod tests {
     fn parse_room_state_novice_previously_second_tier() {
         // Current time is 4, room opened at 2, novice area ends at 10.
         let state = RoomState::from_data(time::Timespec::new(4, 0),
-                                         Some(StringNumberTimeSpec::Number(10)),
-                                         Some(StringNumberTimeSpec::Number(2)))
+                                         Some(time::Timespec::new(10, 0)),
+                                         Some(time::Timespec::new(2, 0)))
             .unwrap();
         assert_eq!(state,
                    RoomState::Novice { end_time: time::Timespec::new(10, 0) });
@@ -289,8 +308,8 @@ mod tests {
     fn parse_room_state_second_tier_novice() {
         // Current time is 10, room opens to novice at 15, novice area ends at 20.
         let state = RoomState::from_data(time::Timespec::new(10, 0),
-                                         Some(StringNumberTimeSpec::Number(20)),
-                                         Some(StringNumberTimeSpec::Number(15)))
+                                         Some(time::Timespec::new(20, 0)),
+                                         Some(time::Timespec::new(15, 0)))
             .unwrap();
 
         assert_eq!(state,
@@ -302,20 +321,18 @@ mod tests {
 
     #[test]
     fn parse_room_sign() {
-        let data: RoomSignData = serde_json::from_value(json!({
+        let _: RoomSign = serde_json::from_value(json!({
             "time": 16656131,
             "text": "I have plans for this block",
             "datetime": 1484071532985i64,
             "user": "57c7df771d90a0c561977377"
         }))
             .unwrap();
-
-        let _ = data.into_sign().unwrap();
     }
 
     #[test]
     fn parse_hard_sign() {
-        let data: HardSignData = serde_json::from_value(json!({
+        let _: HardSign = serde_json::from_value(json!({
             "time": 18297994,
             "datetime": 1490632558393i64,
             "text": "A new Novice Area is being planned somewhere in this sector. \
@@ -323,7 +340,5 @@ mod tests {
             "endDatetime": 1490978122587i64
         }))
             .unwrap();
-
-        let _ = data.into_sign().unwrap();
     }
 }
