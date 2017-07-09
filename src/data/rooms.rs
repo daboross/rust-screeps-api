@@ -81,7 +81,7 @@ impl RoomState {
 }
 
 /// Represents a room sign.
-#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Hash, Debug)]
 pub struct RoomSign {
     /// The game time when the sign was set.
     #[serde(rename = "time")]
@@ -98,7 +98,7 @@ pub struct RoomSign {
 }
 
 /// Represents a "hard sign" on a room, where the server has overwritten any player-placed signs for a specific period.
-#[derive(Serialize, Deserialize, Clone, Hash, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Hash, Debug)]
 pub struct HardSign {
     /// The game time when the hard sign override was added.
     #[serde(rename = "time")]

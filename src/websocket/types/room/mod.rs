@@ -10,6 +10,11 @@ use data::Badge;
 
 use {serde_json, tuple_vec_map};
 
+pub mod flags;
+pub mod objects;
+
+use self::flags::{Flag, deserialize_flags};
+
 /// Update for detailed room information.
 #[derive(Deserialize, Clone, Debug)]
 #[serde(rename_all="camelCase")]
@@ -24,19 +29,16 @@ pub struct RoomUpdate {
     /// updates by their nature are incremental - and this includes the "type"
     /// field.
     ///
-    /// See [`ConcreteRoomObject`] for what you can do with the values.
-    ///
-    /// [`ConcreteRoomObject`]: enum.ConcreteRoomObject.html
+    /// These values can be applied as updates to the `RoomObject` type.
     #[serde(with = "tuple_vec_map")]
     pub objects: Vec<(String, serde_json::Value)>,
     /// All of the subscribed user's flags in this room.
     ///
     /// This will always be present when there are flags, even if
-    /// no flags have changed. A `None` value means the user has
-    /// no flags in this room.
-    ///
-    /// TODO: parse this further.
-    pub flags: Option<String>,
+    /// no flags have changed.
+    #[serde(deserialize_with = "deserialize_flags")]
+    #[serde(default)]
+    pub flags: Vec<Flag>,
     /// The logged in user's visuals for this room.
     ///
     /// Represented by a series of json objects separated by `\n`.
