@@ -4,7 +4,7 @@ use std::{error, fmt, ops};
 use std::borrow::Cow;
 
 /// A structure representing a room name.
-#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct RoomName {
     /// Inner x coordinate representation.
     ///
@@ -105,54 +105,57 @@ impl IntoRoomName for RoomName {
     }
 }
 
+fn parse_or_cheap_failure(s: &str) -> Result<RoomName, ()> {
+    let mut chars = s.char_indices();
+
+    let east = match chars.next() {
+        Some((_, 'E')) | Some((_, 'e')) => true,
+        Some((_, 'W')) | Some((_, 'w')) => false,
+        _ => return Err(()),
+    };
+
+    let (x_coord, north) = {
+        // we assume there's at least one number character. If there isn't,
+        // we'll catch it when we try to parse this substr.
+        let (start_index, _) = chars.next().ok_or(())?;
+        let end_index;
+        let north;
+        loop {
+            match chars.next().ok_or(())? {
+                (i, 'N') | (i, 'n') => {
+                    end_index = i;
+                    north = true;
+                    break;
+                }
+                (i, 'S') | (i, 's') => {
+                    end_index = i;
+                    north = false;
+                    break;
+                }
+                _ => continue,
+            }
+        }
+
+        let x_coord = s[start_index..end_index].parse().map_err(|_| ())?;
+
+        (x_coord, north)
+    };
+
+    let y_coord = {
+        let (start_index, _) = chars.next().ok_or(())?;
+
+        s[start_index..s.len()].parse().map_err(|_| ())?
+    };
+
+    Ok(RoomName::from_pos(east, north, x_coord, y_coord))
+}
+
 impl<T> IntoRoomName for T
     where T: AsRef<str> + ?Sized
 {
     fn into_room_name(&self) -> Result<RoomName, RoomNameParseError> {
         let s = self.as_ref();
-
-        let mut chars = s.char_indices();
-
-        let east = match chars.next() {
-            Some((_, 'E')) | Some((_, 'e')) => true,
-            Some((_, 'W')) | Some((_, 'w')) => false,
-            _ => return Err(RoomNameParseError::new(s)),
-        };
-
-        let (x_coord, north) = {
-            // we assume there's at least one number character. If there isn't,
-            // we'll catch it when we try to parse this substr.
-            let (start_index, _) = chars.next().ok_or_else(|| RoomNameParseError::new(s))?;
-            let end_index;
-            let north;
-            loop {
-                match chars.next().ok_or_else(|| RoomNameParseError::new(s))? {
-                    (i, 'N') | (i, 'n') => {
-                        end_index = i;
-                        north = true;
-                        break;
-                    }
-                    (i, 'S') | (i, 's') => {
-                        end_index = i;
-                        north = false;
-                        break;
-                    }
-                    _ => continue,
-                }
-            }
-
-            let x_coord = s[start_index..end_index].parse().map_err(|_| RoomNameParseError::new(s))?;
-
-            (x_coord, north)
-        };
-
-        let y_coord = {
-            let (start_index, _) = chars.next().ok_or_else(|| RoomNameParseError::new(s))?;
-
-            s[start_index..s.len()].parse().map_err(|_| RoomNameParseError::new(s))?
-        };
-
-        Ok(RoomName::from_pos(east, north, x_coord, y_coord))
+        parse_or_cheap_failure(self.as_ref()).map_err(|()| RoomNameParseError::new(s))
     }
 }
 
@@ -194,6 +197,47 @@ impl<'a> fmt::Display for RoomNameParseError<'a> {
         write!(f,
                "expected room name formatted `(E|W)[0-9]+(N|S)[0-9]+`, found `{}`",
                self.0.as_ref())
+    }
+}
+
+mod serde {
+    use super::{RoomName, parse_or_cheap_failure};
+
+    use std::fmt;
+
+    use serde::de::{Deserialize, Deserializer, Visitor, Error, Unexpected};
+    use serde::ser::{Serialize, Serializer};
+
+    impl Serialize for RoomName {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: Serializer
+        {
+            serializer.collect_str(self)
+        }
+    }
+
+    struct RoomNameVisitor;
+
+    impl<'de> Visitor<'de> for RoomNameVisitor {
+        type Value = RoomName;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+            where E: Error
+        {
+            parse_or_cheap_failure(v).map_err(|()| E::invalid_value(Unexpected::Str(v), &self))
+        }
+    }
+
+    impl<'de> Deserialize<'de> for RoomName {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where D: Deserializer<'de>
+        {
+            deserializer.deserialize_str(RoomNameVisitor)
+        }
     }
 }
 
