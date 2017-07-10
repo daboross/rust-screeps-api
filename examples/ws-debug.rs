@@ -325,7 +325,14 @@ impl<T> Handler<T>
                 info!("Map View: [{}] {:?}", room_name, update);
             }
             ChannelUpdate::RoomDetail { room_name, update } => {
-                info!("Room Detail: [{}] {:?}", room_name, update);
+                debug!("Room Detail: [{}] {:?}", room_name, update);
+                info!("Room {}: {}",
+                      room_name,
+                      serde_json::to_string_pretty(&serde_json::Value::Object(update.objects
+                              .iter()
+                              .cloned()
+                              .collect()))
+                          .expect("expected to_string to succeed on plain map."));
             }
             ChannelUpdate::NoRoomDetail { room_name } => {
                 info!("Room Skipped: {}", room_name);
