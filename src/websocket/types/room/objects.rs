@@ -1,7 +1,147 @@
 //! Room object parsing.
-use data::{RoomName, RoomSign};
+use data::{RoomName, RoomSign, optional_timespec_seconds};
 
-use serde_json;
+use time::Timespec;
+
+use {serde_json, time};
+
+/// Helper trait for the below macros, to help reduce boilerplate further.
+///
+/// This is implemented trivially for basic types, then specifically for
+/// any 'sub-updates' we have, like a spawn's inner spawn, or a room sign.
+
+trait Updatable: Sized {
+    type Update;
+
+    /// Updates all fields of this struct with all present fields in the update.
+    fn apply_update(&mut self, update: Self::Update);
+
+    /// If all fields are present, creates this structure from the update. Otherwise,
+    /// returns None.
+    fn create_from_update(update: Self::Update) -> Option<Self>;
+}
+
+macro_rules! basic_updatable {
+    ($name: ident) => (
+        impl Updatable for $name {
+            type Update = $name;
+
+            fn apply_update(&mut self, update: Self::Update) {
+                *self = update;
+            }
+
+            fn create_from_update(update: Self::Update) -> Option<Self> {
+                Some(update)
+            }
+        }
+    );
+    ($name: ident, $($extra_name:ident),*) => (
+        // nice recursive syntax.
+        basic_updatable!($name);
+        basic_updatable!($($extra_name),*);
+    )
+}
+
+basic_updatable!(bool, u8, u16, u32, u64, i8, i16, i32, i64, String, Timespec);
+basic_updatable!(RoomName);
+
+impl Updatable for serde_json::Value {
+    type Update = serde_json::Value;
+
+    fn apply_update(&mut self, update: Self::Update) {
+        use serde_json::Value::*;
+        match update {
+            Object(map) => {
+                match *self {
+                    Object(ref mut here_map) => here_map.extend(map.into_iter()),
+                    _ => *self = Object(map),
+                }
+            }
+            other => *self = other,
+        }
+    }
+
+    fn create_from_update(update: Self::Update) -> Option<Self> {
+        Some(update)
+    }
+}
+
+impl<T> Updatable for Option<T>
+    where T: Updatable
+{
+    type Update = Option<T::Update>;
+
+    fn apply_update(&mut self, update: Self::Update) {
+        match update {
+            Some(value_update) => {
+                match *self {
+                    Some(ref mut existing) => existing.apply_update(value_update),
+                    None => *self = T::create_from_update(value_update),
+                }
+            }
+            None => *self = None,
+        }
+    }
+
+    fn create_from_update(update: Self::Update) -> Option<Self> {
+        Some(update.and_then(T::create_from_update))
+    }
+}
+
+/// Mostly an implementation detail of `with_update_struct`, but can be used independently to
+/// implement Updatable on external structures.
+macro_rules! implement_update_for {
+    (
+        $name:ident;
+
+        $(
+            #[$struct_attr:meta]
+        )*
+        pub struct $update_name:ident {
+            $(
+                $(#[$field_attr:meta])*
+                priv $field:ident : $type:ty,
+            )*
+        }
+    ) => (
+        $(
+            #[$struct_attr]
+        )*
+        pub struct $update_name {
+            $(
+                $(
+                    #[$field_attr]
+                )*
+                $field: $type,
+            )*
+        }
+
+        impl Updatable for $name {
+            type Update = $update_name;
+
+            fn apply_update(&mut self, update: Self::Update) {
+                $(
+                    if let Some(value_update) = update.$field {
+                        Updatable::apply_update(&mut self.$field, value_update);
+                    }
+                )*
+            }
+
+            fn create_from_update(update: Self::Update) -> Option<Self> {
+                let finished = $name {
+                    $(
+                        $field: match update.$field.and_then(Updatable::create_from_update) {
+                            Some(v) => v,
+                            None => return None
+                        },
+                    )*
+                };
+
+                Some(finished)
+            }
+        }
+    )
+}
 
 /// This creates the structure described within the macro invocation, and then creates another "update"
 /// structure with the same fields, but with all fields as Options.
@@ -37,30 +177,32 @@ macro_rules! with_update_struct {
             )*
         }
 
-        $(
-            #[$update_attr]
-        )*
-        pub struct $update_name {
+        implement_update_for! {
+            $name;
+
             $(
-                $(
-                    #[$field_attr]
-                )*
-                $field: Option<$type>,
+                #[$update_attr]
             )*
+            pub struct $update_name {
+                $(
+                    $(
+                        #[$field_attr]
+                    )*
+                    priv $field: Option<<$type as Updatable>::Update>,
+                )*
+            }
         }
 
         impl $name {
             /// Updates this structure with all values present in the given update.
             pub fn update(&mut self, update: $update_name) {
-                $(
-                    if let Some(updated_value) = update.$field {
-                        self.$field = updated_value;
-                    }
-                )*
+                <Self as Updatable>::apply_update(self, update);
             }
         }
     )
 }
+
+// *:
 
 /// This macro creates the struct described within the invocation, but with an additional 4 fields common to all
 /// RoomObjects, and with `#[derive(Deserialize)]`. The structure definition is then passed on to `with_update_struct`.
@@ -109,8 +251,71 @@ macro_rules! with_base_fields_and_update_struct {
     )
 }
 
-// a comment
-// .asdf
+// Structure*:
+
+/// This macro creates the struct described within the invocation, but with an additional 2 fields common to all
+/// Structures, and with everything provided by `with_base_fields_and_update_struct!`.
+macro_rules! with_structure_fields_and_update_struct {
+    (
+        $(#[$struct_attr:meta])*
+        pub struct $name:ident {
+            $(
+                $(#[$field_attr:meta])*
+                pub $field:ident : $type:ty,
+            )*
+        }
+
+        $(#[$update_attr:meta])*
+        pub struct $update_name:ident { ... }
+    ) => (
+        with_base_fields_and_update_struct! {
+            $(
+                #[$struct_attr]
+            )*
+            pub struct $name {
+                /// The current number of hit-points this structure has.
+                pub hits: i32,
+                /// The maximum number of hit-points this structure has.
+                #[serde(rename = "hitsMax")]
+                pub hits_max: i32,
+                $(
+                    $(
+                        #[$field_attr]
+                    )*
+                    pub $field: $type,
+                )*
+            }
+
+            $(
+                #[$update_attr]
+            )*
+            pub struct $update_name { ... }
+        }
+    )
+}
+
+// External things to be updatable.
+
+implement_update_for! {
+    RoomSign;
+
+    /// Update for room signs
+    #[derive(Deserialize, Clone, Debug)]
+    pub struct RoomSignUpdate {
+        /// The game time when the sign was set.
+        #[serde(rename = "time")]
+        priv game_time_set: Option<u64>,
+        /// The real date/time when the sign was set.
+        #[serde(with = "optional_timespec_seconds")]
+        #[serde(rename = "datetime")]
+        priv time_set: Option<time::Timespec>,
+        /// The user ID of the user who set the sign.
+        #[serde(rename = "user")]
+        priv user_id: Option<String>,
+        /// The text of the sign.
+        priv text: Option<String>,
+    }
+}
 
 with_base_fields_and_update_struct! {
     /// A source object, which creeps can gain energy by mining from.
@@ -137,46 +342,6 @@ with_base_fields_and_update_struct! {
 }
 
 with_base_fields_and_update_struct! {
-    /// A controller, an object creeps can upgrade in order to increase room level.
-    #[derive(Clone, Debug, PartialEq)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Controller {
-        /// TODO: what is this?
-        pub hits: u32,
-        /// TODO: what is this?
-        pub hits_max: u32,
-        /// The number of upgrade points the controller has.
-        pub progress: u64,
-        /// The number of upgrade points needed before the next level is reached.
-        pub progress_total: u64,
-        /// The current controller level (1-8 inclusive).
-        pub level: u16,
-        /// Controller reservation. TODO: parse this.
-        pub reservation: Option<serde_json::Value>,
-        /// Safe mode. TODO: parse this
-        pub safe_mode: Option<serde_json::Value>,
-        /// How many more safemodes are available.
-        pub safe_mode_available: u32,
-        /// How many ticks until safemode can be used again.
-        pub safe_mode_cooldown: u32,
-        /// The number of game ticks without an upgrade needed before the controller downgrades.
-        pub downgrade_time: u64,
-        /// The room sign.
-        pub sign: Option<RoomSign>,
-        /// The number of ticks until upgrading is no longer blocked.
-        pub upgrade_blocked: Option<u32>,
-        /// TODO: what is this? user ID who owns the room?
-        pub user: String,
-    }
-
-    /// The update structure for a controller object.
-    #[derive(Clone, Debug)]
-    #[serde(rename_all = "camelCase")]
-    pub struct ControllerUpdate { ... }
-}
-
-
-with_base_fields_and_update_struct! {
     /// A mineral, an object creeps can mine for a non-energy resource.
     #[derive(Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
@@ -200,7 +365,114 @@ with_base_fields_and_update_struct! {
     pub struct MineralUpdate { ... }
 }
 
+with_update_struct! {
+    /// A struct describing a room's reservation.
+    #[derive(Deserialize, Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ControllerReservation {
+        /// The user ID of the user reserving this controller.
+        pub user: String,
+        /// The game time when this reservation will end if not extended.
+        pub end_time: u32,
+    }
 
+    /// The update structure for a controller reservation.
+    #[derive(Deserialize, Clone, Debug)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ControllerReservationUpdate { ... }
+}
+
+with_structure_fields_and_update_struct! {
+    /// A controller, an object creeps can upgrade in order to increase room level.
+    #[derive(Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Controller {
+        /// The number of upgrade points the controller has.
+        pub progress: u64,
+        /// The number of upgrade points needed before the next level is reached.
+        pub progress_total: u64,
+        /// The current controller level (1-8 inclusive).
+        pub level: u16,
+        /// Controller reservation. TODO: parse this.
+        pub reservation: Option<ControllerReservation>,
+        /// Safe mode. TODO: parse this
+        pub safe_mode: Option<serde_json::Value>,
+        /// How many more safemodes are available.
+        pub safe_mode_available: u32,
+        /// The game time that must be reached before safe mode can be used on the controller.
+        ///
+        /// May be in the past, in which safe mode may be used immediately.
+        #[serde(default)]
+        pub safe_mode_cooldown: u32,
+        /// The number of game ticks without an upgrade needed before the controller downgrades.
+        ///
+        /// None if unowned.
+        pub downgrade_time: Option<u64>,
+        /// The room sign.
+        pub sign: Option<RoomSign>,
+        /// The number of ticks until upgrading is no longer blocked.
+        pub upgrade_blocked: Option<u32>,
+        /// ID of the user who owns the controller, and thus the room.
+        pub user: Option<String>,
+    }
+
+    /// The update structure for a controller object.
+    #[derive(Clone, Debug)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ControllerUpdate { ... }
+}
+
+with_update_struct! {
+    /// A struct describing a creep currently spawning (used as part of the update for a StructureSpawn).
+    #[derive(Deserialize, Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SpawningCreep {
+        /// The name of this creep, unique per player.
+        pub name: String,
+        /// The total number of game ticks needed to spawn this creep.
+        #[serde(rename = "needTime")]
+        pub total_time: u32,
+        /// The number of game ticks left before this creep is spawned.
+        pub remaining_time: u32,
+    }
+
+    /// The update structure for a spawning creep.
+    #[derive(Deserialize, Clone, Debug)]
+    #[serde(rename_all = "camelCase")]
+    pub struct SpawningCreepUpdate { ... }
+}
+
+
+with_structure_fields_and_update_struct! {
+    /// A spawn structure - a structure which can create creeps.
+    #[derive(Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StructureSpawn {
+        /// The name of this spawn, unique per player.
+        pub name: String,
+        /// The current amount of energy held in this spawn.
+        pub energy: i32,
+        /// The maximum amount of energy that can be held in this spawn.
+        pub energy_capacity: i32,
+        /// Whether or not an attack on this spawn will send an email to the owner automatically.
+        pub notify_when_attacked: bool,
+        /// Whether or not this structure is non-functional due to a degraded controller.
+        #[serde(default)]
+        #[serde(rename = "off")]
+        pub disabled: bool,
+        /// The creep that's currently spawning, if any.
+        pub spawning: SpawningCreep,
+        /// The user ID of the owner of this spawn.
+        pub user: String,
+    }
+
+    /// The update structure for a mineral object.
+    #[derive(Clone, Debug)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StructureSpawnUpdate { ... }
+}
+
+//
 
 // #[derive(Clone, Debug, Hash)]
 // pub enum RoomObject {
@@ -226,7 +498,7 @@ mod test {
 
     use data::{RoomName, RoomSign};
 
-    use super::{Source, Controller, Mineral};
+    use super::{Source, Controller, ControllerReservation, Mineral, StructureSpawn, SpawningCreep};
 
     #[test]
     fn parse_source_and_update() {
@@ -320,7 +592,7 @@ mod test {
             safe_mode: None,
             safe_mode_available: 7,
             safe_mode_cooldown: 17083195,
-            downgrade_time: 20020430,
+            downgrade_time: Some(20020430),
             sign: Some(RoomSign {
                 text: "◯".to_owned(),
                 game_time_set: 19869070,
@@ -328,7 +600,7 @@ mod test {
                 user_id: "57874d42d0ae911e3bd15bbc".to_owned(),
             }),
             upgrade_blocked: None,
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
         });
 
         obj.update(serde_json::from_value(json!({
@@ -350,7 +622,7 @@ mod test {
             safe_mode: None,
             safe_mode_available: 8,
             safe_mode_cooldown: 17083195,
-            downgrade_time: 20020430,
+            downgrade_time: Some(20020430),
             sign: Some(RoomSign {
                 text: "◯".to_owned(),
                 game_time_set: 19869070,
@@ -358,8 +630,90 @@ mod test {
                 user_id: "57874d42d0ae911e3bd15bbc".to_owned(),
             }),
             upgrade_blocked: None,
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
         });
+    }
+
+    #[test]
+    fn parse_controller_and_update_reserved() {
+        let json = json!({
+            "_id": "579fa94c0700be0674d2f15a",
+            "downgradeTime": null,
+            "hits": 0,
+            "hitsMax": 0,
+            "level": 0,
+            "progress": 0,
+            "progressTotal": 0,
+            "reservation": {
+                "endTime": 20158024,
+                "user": "57874d42d0ae911e3bd15bbc"
+            },
+            "room": "W12S55",
+            "safeMode": null,
+            "safeModeAvailable": 0,
+            "safeModeCooldown": 16611615,
+            "type": "controller",
+            "upgradeBlocked": null,
+            "user": null,
+            "x": 22,
+            "y": 37,
+        });
+
+        let mut obj = Controller::deserialize(&json).unwrap();
+
+        assert_eq!(obj, Controller {
+            id: "579fa94c0700be0674d2f15a".to_owned(),
+            room: RoomName::new("W12S55").unwrap(),
+            x: 22,
+            y: 37,
+            downgrade_time: None,
+            hits: 0,
+            hits_max: 0,
+            level: 0,
+            progress: 0,
+            progress_total: 0,
+            reservation: Some(ControllerReservation {
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+                end_time: 20158024,
+            }),
+            safe_mode: None,
+            safe_mode_available: 0,
+            safe_mode_cooldown: 16611615,
+            upgrade_blocked: None,
+            user: None,
+            sign: None,
+        });
+
+        obj.update(serde_json::from_value(json!({
+            "reservation": {
+                "endTime": 20158029,
+            },
+        }))
+            .unwrap());
+
+        assert_eq!(obj, Controller {
+            id: "579fa94c0700be0674d2f15a".to_owned(),
+            room: RoomName::new("W12S55").unwrap(),
+            x: 22,
+            y: 37,
+            downgrade_time: None,
+            hits: 0,
+            hits_max: 0,
+            level: 0,
+            progress: 0,
+            progress_total: 0,
+            reservation: Some(ControllerReservation {
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+                end_time: 20158029,
+            }),
+            safe_mode: None,
+            safe_mode_available: 0,
+            safe_mode_cooldown: 16611615,
+            upgrade_blocked: None,
+            user: None,
+            sign: None,
+        });
+
     }
 
     // TODO: Fix this behavior. This test should _not_ panic if we write things correctly.
@@ -382,7 +736,7 @@ mod test {
             safe_mode: None,
             safe_mode_available: 7,
             safe_mode_cooldown: 17083195,
-            downgrade_time: 20020430,
+            downgrade_time: Some(20020430),
             sign: Some(RoomSign {
                 text: "◯".to_owned(),
                 game_time_set: 19869070,
@@ -390,7 +744,7 @@ mod test {
                 user_id: "57874d42d0ae911e3bd15bbc".to_owned(),
             }),
             upgrade_blocked: None,
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
         };
 
         obj.update(serde_json::from_value(json!({
@@ -412,10 +766,10 @@ mod test {
             safe_mode: None,
             safe_mode_available: 7,
             safe_mode_cooldown: 17083195,
-            downgrade_time: 20020430,
+            downgrade_time: Some(20020430),
             sign: None,
             upgrade_blocked: None,
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
         }, "signal failure text");
     }
 
@@ -430,7 +784,7 @@ mod test {
             "room": "E4S61",
             "type": "mineral",
             "x": 14,
-            "y": 21
+            "y": 21,
         });
 
         let obj = Mineral::deserialize(json).unwrap();
@@ -444,6 +798,52 @@ mod test {
             mineral_amount: 65590,
             mineral_type: "H".to_owned(),
             next_regeneration_time: None,
+        });
+    }
+
+    #[test]
+    fn parse_spawn() {
+        let json = json!({
+            "_id": "58a23b6c4370e6302d758099",
+            "energy": 300,
+            "energyCapacity": 300,
+            "hits": 5000,
+            "hitsMax": 5000,
+            "name": "Spawn36",
+            "notifyWhenAttacked": true,
+            "off": false,
+            "room": "E4S61",
+            "spawning": {
+                "name": "5599",
+                "needTime": 126,
+                "remainingTime": 5,
+            },
+            "type": "spawn",
+            "user": "57874d42d0ae911e3bd15bbc",
+            "x": 24,
+            "y": 6,
+        });
+
+        let obj = StructureSpawn::deserialize(json).unwrap();
+
+        assert_eq!(obj, StructureSpawn {
+            id: "58a23b6c4370e6302d758099".to_owned(),
+            room: RoomName::new("E4S61").unwrap(),
+            x: 24,
+            y: 6,
+            energy: 300,
+            energy_capacity: 300,
+            hits: 5000,
+            hits_max: 5000,
+            name: "Spawn36".to_owned(),
+            notify_when_attacked: true,
+            disabled: false,
+            spawning: SpawningCreep {
+                name: "5599".to_owned(),
+                total_time: 126,
+                remaining_time: 5,
+            },
+            user: "57874d42d0ae911e3bd15bbc".to_owned(),
         });
     }
 }
