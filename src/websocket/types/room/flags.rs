@@ -98,6 +98,13 @@ impl<'de> Visitor<'de> for FlagStringVisitor {
     }
 
     #[inline]
+    fn visit_unit<E>(self) -> Result<Self::Value, E>
+        where E: Error
+    {
+        Ok(Vec::new())
+    }
+
+    #[inline]
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
         where E: Error
     {
