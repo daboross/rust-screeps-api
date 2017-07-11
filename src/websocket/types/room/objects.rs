@@ -600,43 +600,140 @@ with_update_struct! {
     pub struct SpawningCreepUpdate { ... }
 }
 
-
 with_structure_fields_and_update_struct! {
     /// A spawn structure - a structure which can create creeps.
     #[derive(Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureSpawn {
-        /// The name of this spawn, unique per player.
-        pub name: String,
-        /// The current amount of energy held in this spawn.
-        pub energy: i32,
-        /// The maximum amount of energy that can be held in this spawn.
-        pub energy_capacity: i32,
-        /// Whether or not an attack on this spawn will send an email to the owner automatically.
-        pub notify_when_attacked: bool,
+        /// The user ID of the owner of this structure.
+        pub user: String,
         /// Whether or not this structure is non-functional due to a degraded controller.
         #[serde(default, rename = "off")]
         pub disabled: bool,
+        /// The current amount of energy held in this structure.
+        pub energy: i32,
+        /// The maximum amount of energy that can be held in this structure.
+        pub energy_capacity: i32,
+        /// Whether or not an attack on this structure will send an email to the owner automatically.
+        pub notify_when_attacked: bool,
+        /// The name of this spawn, unique per player.
+        pub name: String,
         /// The creep that's currently spawning, if any.
         pub spawning: SpawningCreep,
-        /// The user ID of the owner of this spawn.
-        pub user: String,
     }
 
     /// The update structure for a mineral object.
     #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureSpawnUpdate {
-        - name: String,
+        - user: String,
+        #[serde(rename = "off")]
+        - disabled: bool,
         - energy: i32,
         - energy_capacity: i32,
         - notify_when_attacked: bool,
-        #[serde(rename = "off")]
-        - disabled: bool,
+        - name: String,
         - spawning: SpawningCreep,
-        - user: String,
     }
 }
+
+with_structure_fields_and_update_struct! {
+    /// An extension structure - a structure that can be filled with extra energy spawns can use.
+    #[derive(Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StructureExtension {
+        /// The user ID of the owner of this structure.
+        pub user: String,
+        /// Whether or not this structure is non-functional due to a degraded controller.
+        #[serde(default, rename = "off")]
+        pub disabled: bool,
+        /// The current amount of energy held in this structure.
+        pub energy: i32,
+        /// The maximum amount of energy that can be held in this structure.
+        pub energy_capacity: i32,
+        /// Whether or not an attack on this structure will send an email to the owner automatically.
+        pub notify_when_attacked: bool,
+    }
+
+    /// The update structure for an extension structure.
+    #[derive(Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StructureExtensionUpdate {
+        - user: String,
+        #[serde(rename = "off")]
+        - disabled: bool,
+        - energy: i32,
+        - energy_capacity: i32,
+        - notify_when_attacked: bool,
+    }
+}
+
+with_structure_fields_and_update_struct! {
+    /// A road structure - a structure that speeds up creeps without sufficient move parts.
+    #[derive(Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StructureRoad {
+        /// The next game tick when this roads hits will decrease naturally.
+        pub next_decay_time: u32,
+        /// Whether or not an attack on this structure will send an email to the owner automatically.
+        pub notify_when_attacked: bool,
+    }
+
+    /// The update structure for a road structure.
+    #[derive(Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StructureRoadUpdate {
+        - next_decay_time: u32,
+        - notify_when_attacked: bool,
+    }
+}
+
+with_structure_fields_and_update_struct! {
+    /// A wall structure - a structure that has a large amount of possible hit points.
+    #[derive(Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StructureWall {
+        /// Whether or not an attack on this structure will send an email to the owner automatically.
+        pub notify_when_attacked: bool,
+    }
+
+    /// The update structure for a wall structure.
+    #[derive(Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StructureWallUpdate {
+        - notify_when_attacked: bool,
+    }
+}
+
+with_structure_fields_and_update_struct! {
+    /// A rampart structure - a structure that has a large amount of possible hit points, and is uniquely
+    /// walkable only for the owner.
+    #[derive(Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StructureRampart {
+        /// The user ID of the owner of this structure.
+        pub user: String,
+        /// The next game tick when this roads hits will decrease naturally.
+        pub next_decay_time: u32,
+        /// Whether or not an attack on this structure will send an email to the owner automatically.
+        pub notify_when_attacked: bool,
+        /// If true, creeps not owned by the owner of this structure can also walk on it.
+        #[serde(default, rename = "isPublic")]
+        pub public: bool,
+    }
+
+    /// The update structure for a rampart structure.
+    #[derive(Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct StructureRampartUpdate {
+        - user: String,
+        - next_decay_time: u32,
+        - notify_when_attacked: bool,
+        #[serde(rename = "isPublic")]
+        - public: bool,
+    }
+}
+
 
 //
 
@@ -664,7 +761,8 @@ mod test {
 
     use data::{RoomName, RoomSign};
 
-    use super::{Source, Controller, ControllerReservation, Mineral, StructureSpawn, SpawningCreep};
+    use super::{Source, Controller, ControllerReservation, Mineral, StructureSpawn, SpawningCreep, StructureExtension,
+                StructureRoad, StructureWall, StructureRampart};
 
     #[test]
     fn parse_source_and_update() {
@@ -714,6 +812,7 @@ mod test {
             ticks_to_regeneration: 300,
         });
     }
+
     #[test]
     fn parse_controller_and_update() {
         let json = json!({
@@ -879,7 +978,6 @@ mod test {
             user: None,
             sign: None,
         });
-
     }
 
     #[test]
@@ -1005,6 +1103,195 @@ mod test {
                 total_time: 126,
                 remaining_time: 5,
             },
+            user: "57874d42d0ae911e3bd15bbc".to_owned(),
+        });
+    }
+
+    #[test]
+    fn parse_extension_and_update() {
+        let json = json!({
+            "_id": "594cac66e1dd5c8d2eb7df9d",
+            "energy": 200,
+            "energyCapacity": 200,
+            "hits": 1000,
+            "hitsMax": 1000,
+            "notifyWhenAttacked": true,
+            "off": false,
+            "room": "E4S61",
+            "type": "extension",
+            "user": "57874d42d0ae911e3bd15bbc",
+            "x": 27,
+            "y": 3,
+        });
+
+        let mut obj = StructureExtension::deserialize(json).unwrap();
+
+        assert_eq!(obj, StructureExtension {
+            room: RoomName::new("E4S61").unwrap(),
+            x: 27,
+            y: 3,
+            id: "594cac66e1dd5c8d2eb7df9d".to_owned(),
+            energy: 200,
+            energy_capacity: 200,
+            hits: 1000,
+            hits_max: 1000,
+            notify_when_attacked: true,
+            disabled: false,
+            user: "57874d42d0ae911e3bd15bbc".to_owned(),
+        });
+
+        obj.update(serde_json::from_value(json!({
+            "energy": 0,
+            "notifyWhenAttacked": false,
+        }))
+            .unwrap());
+
+        assert_eq!(obj, StructureExtension {
+            room: RoomName::new("E4S61").unwrap(),
+            x: 27,
+            y: 3,
+            id: "594cac66e1dd5c8d2eb7df9d".to_owned(),
+            energy: 0,
+            energy_capacity: 200,
+            hits: 1000,
+            hits_max: 1000,
+            notify_when_attacked: false,
+            disabled: false,
+            user: "57874d42d0ae911e3bd15bbc".to_owned(),
+        });
+    }
+
+    #[test]
+    fn parse_road_and_update() {
+        let json = json!({
+            "_id": "58a1ec36947c6c2d324a2d39",
+            "hits": 2600,
+            "hitsMax": 5000,
+            "nextDecayTime": 19894066,
+            "notifyWhenAttacked": true,
+            "room": "E4S61",
+            "type": "road",
+            "x": 14,
+            "y": 20
+        });
+
+        let mut obj = StructureRoad::deserialize(json).unwrap();
+
+        assert_eq!(obj, StructureRoad {
+            room: RoomName::new("E4S61").unwrap(),
+            x: 14,
+            y: 20,
+            id: "58a1ec36947c6c2d324a2d39".to_owned(),
+            hits: 2600,
+            hits_max: 5000,
+            next_decay_time: 19894066,
+            notify_when_attacked: true,
+        });
+
+        obj.update(serde_json::from_value(json!({
+            // note: these are fake values, not a real update.
+            "hits": 2000,
+            "nextDecayTime": 20000000,
+        }))
+            .unwrap());
+
+        assert_eq!(obj, StructureRoad {
+            room: RoomName::new("E4S61").unwrap(),
+            x: 14,
+            y: 20,
+            id: "58a1ec36947c6c2d324a2d39".to_owned(),
+            hits: 2000,
+            hits_max: 5000,
+            next_decay_time: 20000000,
+            notify_when_attacked: true,
+        });
+    }
+
+    #[test]
+    fn parse_wall() {
+        let json = json!({
+            "_id": "584a5d89cbe27a302e4ba889",
+            "hits": 7222461,
+            "hitsMax": 300000000,
+            "notifyWhenAttacked": true,
+            "room": "W73N43",
+            "type": "constructedWall",
+            "x": 47,
+            "y": 24
+        });
+
+        let mut obj = StructureWall::deserialize(json).unwrap();
+
+        assert_eq!(obj, StructureWall {
+            room: RoomName::new("W73N43").unwrap(),
+            x: 47,
+            y: 24,
+            id: "584a5d89cbe27a302e4ba889".to_owned(),
+            hits: 7222461,
+            hits_max: 300000000,
+            notify_when_attacked: true,
+        });
+    }
+
+    #[test]
+    fn parse_rampart() {
+        let json = json!({
+            "_id": "58e5ae786dace5c319d5b7ee",
+            "hits": 7181701,
+            "hitsMax": 10000000,
+            "nextDecayTime": 20179250,
+            "notifyWhenAttacked": true,
+            "room": "W73N43",
+            "type": "rampart",
+            "user": "576b572e366187105908ad57",
+            "x": 29,
+            "y": 35,
+        });
+
+        let obj = StructureRampart::deserialize(json).unwrap();
+
+        assert_eq!(obj, StructureRampart {
+            room: RoomName::new("W73N43").unwrap(),
+            x: 29,
+            y: 35,
+            id: "58e5ae786dace5c319d5b7ee".to_owned(),
+            hits: 7181701,
+            hits_max: 10000000,
+            next_decay_time: 20179250,
+            notify_when_attacked: true,
+            user: "576b572e366187105908ad57".to_owned(),
+            public: false,
+        });
+    }
+
+    #[test]
+    fn parse_friendly_rampart() {
+        let json = json!({
+            "_id": "58a2895a578de3836ea89fbb",
+            "hits": 97490601,
+            "hitsMax": 300000000,
+            "isPublic": true,
+            "nextDecayTime": 19894001,
+            "notifyWhenAttacked": true,
+            "room": "E4S61",
+            "type": "rampart",
+            "user": "57874d42d0ae911e3bd15bbc",
+            "x": 20,
+            "y": 14,
+        });
+
+        let obj = StructureRampart::deserialize(json).unwrap();
+
+        assert_eq!(obj, StructureRampart {
+            room: RoomName::new("E4S61").unwrap(),
+            x: 20,
+            y: 14,
+            id: "58a2895a578de3836ea89fbb".to_owned(),
+            hits: 97490601,
+            hits_max: 300000000,
+            public: true,
+            next_decay_time: 19894001,
+            notify_when_attacked: true,
             user: "57874d42d0ae911e3bd15bbc".to_owned(),
         });
     }
