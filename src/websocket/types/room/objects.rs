@@ -451,7 +451,7 @@ implement_update_for_no_extra_meta! {
     pub struct RoomSignUpdate {
         /// The game time when the sign was set.
         #[serde(rename = "time")]
-        priv game_time_set: Option<u64>,
+        priv game_time_set: Option<u32>,
         /// The real date/time when the sign was set.
         #[serde(default, rename = "datetime", with = "optional_timespec_seconds")]
         priv time_set: Option<time::Timespec>,

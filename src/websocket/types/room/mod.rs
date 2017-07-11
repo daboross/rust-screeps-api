@@ -20,7 +20,7 @@ use self::flags::{Flag, deserialize_flags};
 #[serde(rename_all="camelCase")]
 pub struct RoomUpdate {
     /// The game time when this update was created.
-    pub game_time: Option<u64>,
+    pub game_time: Option<u32>,
     /// Information on the room "mode".
     pub info: RoomUpdateInfo,
     /// All room objects in the room, represented as serde_json::Value.

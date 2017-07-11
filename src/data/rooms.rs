@@ -85,7 +85,7 @@ impl RoomState {
 pub struct RoomSign {
     /// The game time when the sign was set.
     #[serde(rename = "time")]
-    pub game_time_set: u64,
+    pub game_time_set: u32,
     /// The real date/time when the sign was set.
     #[serde(with = "timespec_seconds")]
     #[serde(rename = "datetime")]
@@ -102,7 +102,7 @@ pub struct RoomSign {
 pub struct HardSign {
     /// The game time when the hard sign override was added.
     #[serde(rename = "time")]
-    pub game_time_set: u64,
+    pub game_time_set: u32,
     /// The real date when the hard sign override was added.
     #[serde(with = "timespec_seconds")]
     #[serde(rename = "datetime")]
