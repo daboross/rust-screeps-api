@@ -1,4 +1,10 @@
 //! Room object parsing.
+//!
+//! If you just want to use the module, reading the rustdocs documentation is very recommended.
+//! All types generated with macros will also have documentation for them available.
+//!
+//! Reading the source code is definitely possible. But there may be some investment in reading
+//! each of the macros defined and used here, and it will be much easier to just read the documentation.
 use data::{RoomName, RoomSign, optional_timespec_seconds};
 
 use time::Timespec;
@@ -9,7 +15,6 @@ use {serde_json, time};
 ///
 /// This is implemented trivially for basic types, then specifically for
 /// any 'sub-updates' we have, like a spawn's inner spawn, or a room sign.
-
 trait Updatable: Sized {
     type Update;
 
@@ -90,28 +95,22 @@ impl<T> Updatable for Option<T>
 
 /// Mostly an implementation detail of `with_update_struct`, but can be used independently to
 /// implement Updatable on external structures.
-macro_rules! implement_update_for {
+macro_rules! implement_update_for_no_extra_meta {
     (
         $name:ident;
 
-        $(
-            #[$struct_attr:meta]
-        )*
+        $( #[$struct_attr:meta] )*
         pub struct $update_name:ident {
             $(
-                $(#[$field_attr:meta])*
+                $( #[$field_attr:meta] )*
                 priv $field:ident : $type:ty,
             )*
         }
     ) => (
-        $(
-            #[$struct_attr]
-        )*
+        $( #[$struct_attr] )*
         pub struct $update_name {
             $(
-                $(
-                    #[$field_attr]
-                )*
+                $( #[$field_attr] )*
                 $field: $type,
             )*
         }
@@ -143,6 +142,55 @@ macro_rules! implement_update_for {
     )
 }
 
+/// Any value that is present is considered Some value, including null.
+///
+/// Implementation detail of `implement_update_for!()`.
+///
+/// Thanks to @dtolnay, see https://github.com/serde-rs/serde/issues/984.
+mod always_some {
+    use serde::{Deserialize, Deserializer};
+
+    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
+        where T: Deserialize<'de>,
+              D: Deserializer<'de>
+    {
+        Deserialize::deserialize(deserializer).map(Some)
+    }
+}
+
+/// Mostly an implementation detail of `with_update_struct`, but can be used independently to
+/// implement Updatable on external structures.
+///
+/// Adds a few extra meta attributes for serde deserialization to make "null" correctly erase values in an update.
+macro_rules! implement_update_for {
+    (
+        $name:ident;
+
+        $(
+            #[$struct_attr:meta]
+        )*
+        pub struct $update_name:ident {
+            $(
+                $(#[$field_attr:meta])*
+                priv $field:ident : $type:ty,
+            )*
+        }
+    ) => (
+        implement_update_for_no_extra_meta! {
+            $name;
+
+            $( #[$struct_attr] )*
+            pub struct $update_name {
+                $(
+                    #[serde(default, with = "always_some")]
+                    $( #[$field_attr] )*
+                    priv $field: $type,
+                )*
+            }
+        }
+    )
+}
+
 /// This creates the structure described within the macro invocation, and then creates another "update"
 /// structure with the same fields, but with all fields as Options.
 ///
@@ -150,29 +198,56 @@ macro_rules! implement_update_for {
 /// structure and apply all changes to the base structure's fields.
 macro_rules! with_update_struct {
     (
-        $(
-            #[$struct_attr:meta]
-        )*
+        $( #[$struct_attr:meta] )*
         pub struct $name:ident {
             $(
-                $(#[$field_attr:meta])*
+                $( #[$field_attr:meta] )*
                 pub $field:ident : $type:ty,
             )*
         }
-        $(
-            #[$update_attr:meta]
-        )*
+
+        $( #[$update_struct_attr:meta] )*
         pub struct $update_name:ident { ... }
     ) => (
+        with_update_struct! {
+            $( #[$struct_attr] )*
+            pub struct $name {
+                $(
+                    $( #[$field_attr] )*
+                    pub $field : $type,
+                )*
+            }
 
-        $(
-            #[$struct_attr]
-        )*
+            $( #[$update_struct_attr] )*
+            pub struct $update_name {
+                $(
+                    $( #[$field_attr] )*
+                    - $field : $type,
+                )*
+            }
+        }
+    );
+    (
+        $( #[$struct_attr:meta] )*
+        pub struct $name:ident {
+            $(
+                $( #[$field_attr:meta] )*
+                pub $field:ident : $type:ty,
+            )*
+        }
+
+        $( #[$update_struct_attr:meta] )*
+        pub struct $update_name:ident {
+            $(
+                $( #[$update_field_attr:meta] )*
+                - $update_field:ident : $update_type:ty,
+            )*
+        }
+    ) => (
+        $( #[$struct_attr] )*
         pub struct $name {
             $(
-                $(
-                    #[$field_attr]
-                )*
+                $( #[$field_attr] )*
                 pub $field: $type,
             )*
         }
@@ -180,15 +255,11 @@ macro_rules! with_update_struct {
         implement_update_for! {
             $name;
 
-            $(
-                #[$update_attr]
-            )*
+            $( #[$update_struct_attr] )*
             pub struct $update_name {
                 $(
-                    $(
-                        #[$field_attr]
-                    )*
-                    priv $field: Option<<$type as Updatable>::Update>,
+                    $( #[$update_field_attr] )*
+                    priv $update_field: Option<<$update_type as Updatable>::Update>,
                 )*
             }
         }
@@ -208,7 +279,7 @@ macro_rules! with_update_struct {
 /// RoomObjects, and with `#[derive(Deserialize)]`. The structure definition is then passed on to `with_update_struct`.
 macro_rules! with_base_fields_and_update_struct {
     (
-        $(#[$struct_attr:meta])*
+        $( #[$struct_attr:meta] )*
         pub struct $name:ident {
             $(
                 $(#[$field_attr:meta])*
@@ -216,13 +287,46 @@ macro_rules! with_base_fields_and_update_struct {
             )*
         }
 
-        $(#[$update_attr:meta])*
+        $( #[$update_struct_attr:meta] )*
         pub struct $update_name:ident { ... }
     ) => (
-        with_update_struct! {
+        with_base_fields_and_update_struct! {
+            $( #[$struct_attr] )*
+            pub struct $name {
+                $(
+                    $( #[$field_attr] )*
+                    pub $field : $type,
+                )*
+            }
+
+            $( #[$update_struct_attr] )*
+            pub struct $update_name {
+                $(
+                    $( #[$field_attr] )*
+                    - $field : $type,
+                )*
+            }
+        }
+    );
+    (
+        $( #[$struct_attr:meta] )*
+        pub struct $name:ident {
             $(
-                #[$struct_attr]
+                $( #[$field_attr:meta] )*
+                pub $field:ident : $type:ty,
             )*
+        }
+
+        $( #[$update_struct_attr:meta] )*
+        pub struct $update_name:ident {
+            $(
+                $( #[$update_field_attr:meta] )*
+                - $update_field:ident : $update_type:ty,
+            )*
+        }
+    ) => (
+        with_update_struct! {
+            $( #[$struct_attr] )*
             #[derive(Deserialize)]
             pub struct $name {
                 /// Unique 'id' identifier for all game objects on a server.
@@ -235,18 +339,24 @@ macro_rules! with_base_fields_and_update_struct {
                 /// Y position within the room (0-50).
                 pub y: u16,
                 $(
-                    $(
-                        #[$field_attr]
-                    )*
+                    $( #[$field_attr] )*
                     pub $field: $type,
                 )*
             }
 
-            $(
-                #[$update_attr]
-            )*
+            $( #[$update_struct_attr] )*
             #[derive(Deserialize)]
-            pub struct $update_name { ... }
+            pub struct $update_name {
+                #[serde(rename = "_id")]
+                - id: String,
+                - room: RoomName,
+                - x: u16,
+                - y: u16,
+                $(
+                    $( #[$update_field_attr] )*
+                    - $update_field : $update_type,
+                )*
+            }
         }
     )
 }
@@ -257,21 +367,19 @@ macro_rules! with_base_fields_and_update_struct {
 /// Structures, and with everything provided by `with_base_fields_and_update_struct!`.
 macro_rules! with_structure_fields_and_update_struct {
     (
-        $(#[$struct_attr:meta])*
+        $( #[$struct_attr:meta] )*
         pub struct $name:ident {
             $(
-                $(#[$field_attr:meta])*
+                $( #[$field_attr:meta] )*
                 pub $field:ident : $type:ty,
             )*
         }
 
-        $(#[$update_attr:meta])*
+        $( #[$update_struct_attr:meta] )*
         pub struct $update_name:ident { ... }
     ) => (
         with_base_fields_and_update_struct! {
-            $(
-                #[$struct_attr]
-            )*
+            $( #[$struct_attr] )*
             pub struct $name {
                 /// The current number of hit-points this structure has.
                 pub hits: i32,
@@ -279,24 +387,63 @@ macro_rules! with_structure_fields_and_update_struct {
                 #[serde(rename = "hitsMax")]
                 pub hits_max: i32,
                 $(
-                    $(
-                        #[$field_attr]
-                    )*
+                    $( #[$field_attr] )*
                     pub $field: $type,
                 )*
             }
 
-            $(
-                #[$update_attr]
-            )*
+            $( #[$update_struct_attr] )*
             pub struct $update_name { ... }
+        }
+    );
+    (
+        $( #[$struct_attr:meta] )*
+        pub struct $name:ident {
+            $(
+                $( #[$field_attr:meta] )*
+                pub $field:ident : $type:ty,
+            )*
+        }
+
+        $( #[$update_struct_attr:meta] )*
+        pub struct $update_name:ident {
+            $(
+                $( #[$update_field_attr:meta] )*
+                - $update_field:ident : $update_type:ty,
+            )*
+        }
+    ) => (
+        with_base_fields_and_update_struct! {
+            $( #[$struct_attr] )*
+            pub struct $name {
+                /// The current number of hit-points this structure has.
+                pub hits: i32,
+                /// The maximum number of hit-points this structure has.
+                #[serde(rename = "hitsMax")]
+                pub hits_max: i32,
+                $(
+                    $( #[$field_attr] )*
+                    pub $field: $type,
+                )*
+            }
+
+            $( #[$update_struct_attr] )*
+            pub struct $update_name {
+                - hits: i32,
+                #[serde(rename = "hitsMax")]
+                - hits_max: i32,
+                $(
+                    $( #[$update_field_attr] )*
+                    - $update_field : $update_type,
+                )*
+            }
         }
     )
 }
 
 // External things to be updatable.
 
-implement_update_for! {
+implement_update_for_no_extra_meta! {
     RoomSign;
 
     /// Update for room signs
@@ -306,8 +453,7 @@ implement_update_for! {
         #[serde(rename = "time")]
         priv game_time_set: Option<u64>,
         /// The real date/time when the sign was set.
-        #[serde(with = "optional_timespec_seconds")]
-        #[serde(rename = "datetime")]
+        #[serde(default, rename = "datetime", with = "optional_timespec_seconds")]
         priv time_set: Option<time::Timespec>,
         /// The user ID of the user who set the sign.
         #[serde(rename = "user")]
@@ -393,7 +539,7 @@ with_structure_fields_and_update_struct! {
         pub progress_total: u64,
         /// The current controller level (1-8 inclusive).
         pub level: u16,
-        /// Controller reservation. TODO: parse this.
+        /// Controller reservation.
         pub reservation: Option<ControllerReservation>,
         /// Safe mode. TODO: parse this
         pub safe_mode: Option<serde_json::Value>,
@@ -419,7 +565,19 @@ with_structure_fields_and_update_struct! {
     /// The update structure for a controller object.
     #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
-    pub struct ControllerUpdate { ... }
+    pub struct ControllerUpdate {
+        - progress: u64,
+        - progress_total: u64,
+        - level: u16,
+        - reservation: Option<ControllerReservation>,
+        - safe_mode: Option<serde_json::Value>,
+        - safe_mode_available: u32,
+        - safe_mode_cooldown: u32,
+        - downgrade_time: Option<u64>,
+        - sign: Option<RoomSign>,
+        - upgrade_blocked: Option<u32>,
+        - user: Option<String>,
+    }
 }
 
 with_update_struct! {
@@ -457,8 +615,7 @@ with_structure_fields_and_update_struct! {
         /// Whether or not an attack on this spawn will send an email to the owner automatically.
         pub notify_when_attacked: bool,
         /// Whether or not this structure is non-functional due to a degraded controller.
-        #[serde(default)]
-        #[serde(rename = "off")]
+        #[serde(default, rename = "off")]
         pub disabled: bool,
         /// The creep that's currently spawning, if any.
         pub spawning: SpawningCreep,
@@ -469,7 +626,16 @@ with_structure_fields_and_update_struct! {
     /// The update structure for a mineral object.
     #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
-    pub struct StructureSpawnUpdate { ... }
+    pub struct StructureSpawnUpdate {
+        - name: String,
+        - energy: i32,
+        - energy_capacity: i32,
+        - notify_when_attacked: bool,
+        #[serde(rename = "off")]
+        - disabled: bool,
+        - spawning: SpawningCreep,
+        - user: String,
+    }
 }
 
 //
@@ -716,12 +882,8 @@ mod test {
 
     }
 
-    // TODO: Fix this behavior. This test should _not_ panic if we write things correctly.
-    //
-    // This can/will cause bugs like room signs not ever being able to disappear.
     #[test]
-    #[should_panic(expected = "signal failure text")]
-    fn parse_controller_update_should_remove_be_able_to_remove_room_sign() {
+    fn parse_controller_updates_can_remove_optional_properties() {
         let mut obj = Controller {
             id: "57ef9dba86f108ae6e60e2fd".to_owned(),
             room: RoomName::new("E4S61").unwrap(),
