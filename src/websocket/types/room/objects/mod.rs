@@ -16,6 +16,7 @@ pub mod rampart;
 pub mod keeper_lair;
 pub mod controller;
 pub mod portal;
+pub mod link;
 
 pub use self::source::{Source, SourceUpdate};
 pub use self::mineral::{Mineral, MineralUpdate};
@@ -27,6 +28,7 @@ pub use self::rampart::{StructureRampart, StructureRampartUpdate};
 pub use self::keeper_lair::{StructureKeeperLair, StructureKeeperLairUpdate};
 pub use self::controller::{StructureController, StructureControllerUpdate};
 pub use self::portal::{StructurePortal, StructurePortalUpdate};
+pub use self::link::{StructureLink, StructureLinkUpdate};
 
 // #[derive(Clone, Debug, Hash)]
 // pub enum RoomObject {
