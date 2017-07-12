@@ -6,16 +6,16 @@
 //! Reading the source code is definitely possible. But there may be some investment in reading
 //! each of the macros defined and used here, and it will be much easier to just read the documentation.
 
-mod source;
-mod mineral;
-mod spawn;
-mod extension;
-mod wall;
-mod road;
-mod rampart;
-mod keeper_lair;
-mod controller;
-mod portal;
+pub mod source;
+pub mod mineral;
+pub mod spawn;
+pub mod extension;
+pub mod wall;
+pub mod road;
+pub mod rampart;
+pub mod keeper_lair;
+pub mod controller;
+pub mod portal;
 
 pub use self::source::{Source, SourceUpdate};
 pub use self::mineral::{Mineral, MineralUpdate};

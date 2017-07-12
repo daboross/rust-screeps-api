@@ -1,3 +1,4 @@
+//! `StructurePortal` data description.
 use time;
 
 use data::{RoomName, optional_timespec_seconds, double_optional_timespec_seconds};

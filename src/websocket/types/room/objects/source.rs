@@ -1,3 +1,4 @@
+//! `Source` data description.
 use data::RoomName;
 
 with_base_fields_and_update_struct! {

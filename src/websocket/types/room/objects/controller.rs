@@ -1,3 +1,4 @@
+//! `StructureController` data description.
 use time;
 
 use data::{RoomName, RoomSign, optional_timespec_seconds};

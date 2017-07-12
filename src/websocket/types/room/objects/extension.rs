@@ -1,3 +1,4 @@
+//! `StructureExtension` data description.
 use data::RoomName;
 
 with_structure_fields_and_update_struct! {
@@ -19,7 +20,7 @@ with_structure_fields_and_update_struct! {
     }
 
     /// The update structure for an extension structure.
-    #[derive(Clone, Debug, PartialEq)]
+    #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureExtensionUpdate {
         - user: String,

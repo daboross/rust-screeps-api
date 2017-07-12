@@ -1,3 +1,4 @@
+//! `StructureSpawn` data description.
 use data::RoomName;
 
 with_update_struct! {
