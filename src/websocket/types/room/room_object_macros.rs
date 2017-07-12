@@ -184,6 +184,32 @@ macro_rules! implement_update_for {
                 )*
             }
         }
+    );
+    (
+        $name:ident;
+
+        $(
+            #[$struct_attr:meta]
+        )*
+        (no_extra_meta)
+        pub struct $update_name:ident {
+            $(
+                $(#[$field_attr:meta])*
+                priv $field:ident : $type:ty,
+            )*
+        }
+    ) => (
+        implement_update_for_no_extra_meta! {
+            $name;
+
+            $( #[$struct_attr] )*
+            pub struct $update_name {
+                $(
+                    $( #[$field_attr] )*
+                    priv $field: $type,
+                )*
+            }
+        }
     )
 }
 
@@ -203,6 +229,7 @@ macro_rules! with_update_struct {
         }
 
         $( #[$update_struct_attr:meta] )*
+        $( ($update_extra:tt) )*
         pub struct $update_name:ident { ... }
     ) => (
         with_update_struct! {
@@ -215,6 +242,7 @@ macro_rules! with_update_struct {
             }
 
             $( #[$update_struct_attr] )*
+            $( ($update_extra) )*
             pub struct $update_name {
                 $(
                     $( #[$field_attr] )*
@@ -233,6 +261,7 @@ macro_rules! with_update_struct {
         }
 
         $( #[$update_struct_attr:meta] )*
+        $( ($update_extra:tt) )*
         pub struct $update_name:ident {
             $(
                 $( #[$update_field_attr:meta] )*
@@ -252,6 +281,7 @@ macro_rules! with_update_struct {
             $name;
 
             $( #[$update_struct_attr] )*
+            $( ($update_extra) )*
             pub struct $update_name {
                 $(
                     $( #[$update_field_attr] )*
@@ -283,6 +313,7 @@ macro_rules! with_base_fields_and_update_struct {
         }
 
         $( #[$update_struct_attr:meta] )*
+        $( ($update_extra:tt) )*
         pub struct $update_name:ident { ... }
     ) => (
         with_base_fields_and_update_struct! {
@@ -295,6 +326,7 @@ macro_rules! with_base_fields_and_update_struct {
             }
 
             $( #[$update_struct_attr] )*
+            $( ($update_extra) )*
             pub struct $update_name {
                 $(
                     $( #[$field_attr] )*
@@ -306,18 +338,13 @@ macro_rules! with_base_fields_and_update_struct {
     (
         $( #[$struct_attr:meta] )*
         pub struct $name:ident {
-            $(
-                $( #[$field_attr:meta] )*
-                pub $field:ident : $type:ty,
-            )*
+            $( $struct_field:tt )*
         }
 
         $( #[$update_struct_attr:meta] )*
+        $( ($update_extra:tt) )*
         pub struct $update_name:ident {
-            $(
-                $( #[$update_field_attr:meta] )*
-                - $update_field:ident : $update_type:ty,
-            )*
+            $( $update_field:tt )*
         }
     ) => (
         with_update_struct! {
@@ -333,24 +360,19 @@ macro_rules! with_base_fields_and_update_struct {
                 pub x: u16,
                 /// Y position within the room (0-50).
                 pub y: u16,
-                $(
-                    $( #[$field_attr] )*
-                    pub $field: $type,
-                )*
+                $( $struct_field )*
             }
 
             $( #[$update_struct_attr] )*
             #[derive(Deserialize)]
+            $( ($update_extra) )*
             pub struct $update_name {
                 #[serde(rename = "_id")]
                 - id: String,
                 - room: RoomName,
                 - x: u16,
                 - y: u16,
-                $(
-                    $( #[$update_field_attr] )*
-                    - $update_field : $update_type,
-                )*
+                $( $update_field )*
             }
         }
     )
@@ -362,13 +384,11 @@ macro_rules! with_structure_fields_and_update_struct {
     (
         $( #[$struct_attr:meta] )*
         pub struct $name:ident {
-            $(
-                $( #[$field_attr:meta] )*
-                pub $field:ident : $type:ty,
-            )*
+            $( $struct_field:tt )*
         }
 
         $( #[$update_struct_attr:meta] )*
+        $( ($update_extra:tt) )*
         pub struct $update_name:ident { ... }
     ) => (
         with_base_fields_and_update_struct! {
@@ -379,31 +399,24 @@ macro_rules! with_structure_fields_and_update_struct {
                 /// The maximum number of hit-points this structure has.
                 #[serde(rename = "hitsMax")]
                 pub hits_max: i32,
-                $(
-                    $( #[$field_attr] )*
-                    pub $field: $type,
-                )*
+                $( $struct_field )*
             }
 
             $( #[$update_struct_attr] )*
+            $( ($update_extra) )*
             pub struct $update_name { ... }
         }
     );
     (
         $( #[$struct_attr:meta] )*
         pub struct $name:ident {
-            $(
-                $( #[$field_attr:meta] )*
-                pub $field:ident : $type:ty,
-            )*
+            $( $struct_field:tt )*
         }
 
         $( #[$update_struct_attr:meta] )*
+        $( ($update_extra:tt) )*
         pub struct $update_name:ident {
-            $(
-                $( #[$update_field_attr:meta] )*
-                - $update_field:ident : $update_type:ty,
-            )*
+            $( $update_field:tt )*
         }
     ) => (
         with_base_fields_and_update_struct! {
@@ -414,21 +427,16 @@ macro_rules! with_structure_fields_and_update_struct {
                 /// The maximum number of hit-points this structure has.
                 #[serde(rename = "hitsMax")]
                 pub hits_max: i32,
-                $(
-                    $( #[$field_attr] )*
-                    pub $field: $type,
-                )*
+                $( $struct_field )*
             }
 
             $( #[$update_struct_attr] )*
+            $( ($update_extra) )*
             pub struct $update_name {
                 - hits: i32,
                 #[serde(rename = "hitsMax")]
                 - hits_max: i32,
-                $(
-                    $( #[$update_field_attr] )*
-                    - $update_field : $update_type,
-                )*
+                $( $update_field )*
             }
         }
     )

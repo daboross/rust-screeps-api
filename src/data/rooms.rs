@@ -177,7 +177,7 @@ pub mod optional_timespec_seconds {
     use time::Timespec;
     use serde::{Serializer, Deserializer};
 
-    /// Serializes an Option<Timespec> as the timespec's seconds as a number.
+    /// Serializes an `Option<Timespec>` as the timespec's seconds as a number.
     ///
     /// A unit / nothing will be serialized if the Option is None.
     pub fn serialize<S>(date: &Option<Timespec>, serializer: S) -> Result<S::Ok, S::Error>
@@ -238,6 +238,83 @@ pub mod optional_timespec_seconds {
                 where E: Error
             {
                 Ok(Some(Timespec::new(value as i64, 0)))
+            }
+        }
+
+        deserializer.deserialize_i64(TimeVisitor)
+    }
+}
+
+/// Serialization / deserialization of `Option<time::Timespec>`.
+///
+/// A non-existent value will be None, but a JSON null will always deserialize into `Some(None)`.
+///
+/// Useful for updating structs.
+pub mod double_optional_timespec_seconds {
+    use time::Timespec;
+    use serde::{Serializer, Deserializer};
+
+    /// Serializes an `Option<Option<Timespec>>` as the timespec's seconds as a number.
+    ///
+    /// A unit / nothing will be serialized if the Option is None.
+    pub fn serialize<S>(date: &Option<Option<Timespec>>, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        match *date {
+            Some(Some(ref d)) => serializer.serialize_i64(d.sec),
+            _ => serializer.serialize_unit(),
+        }
+    }
+
+    /// Deserializes either a string or a number into a time::Timespec.
+    ///
+    /// Strings must be parsable as numbers.
+    ///
+    /// Nothing / a unit will be parsed as None.
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Option<Timespec>>, D::Error>
+        where D: Deserializer<'de>
+    {
+        use std::fmt;
+        use serde::de::{Visitor, Error, Unexpected};
+
+        struct TimeVisitor;
+
+        impl<'de> Visitor<'de> for TimeVisitor {
+            type Value = Option<Option<Timespec>>;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("an integer or string containing an integer")
+            }
+
+            #[inline]
+            fn visit_unit<E>(self) -> Result<Self::Value, E>
+                where E: Error
+            {
+                Ok(Some(None))
+            }
+
+            #[inline]
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where E: Error
+            {
+                let seconds = value.parse().map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
+
+                Ok(Some(Some(Timespec::new(seconds, 0))))
+
+            }
+
+            #[inline]
+            fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
+                where E: Error
+            {
+                Ok(Some(Some(Timespec::new(value, 0))))
+            }
+
+            #[inline]
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+                where E: Error
+            {
+                Ok(Some(Some(Timespec::new(value as i64, 0))))
             }
         }
 
