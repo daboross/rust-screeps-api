@@ -5,9 +5,9 @@
 //!
 //! Reading the source code is definitely possible. But there may be some investment in reading
 //! each of the macros defined and used here, and it will be much easier to just read the documentation.
-use data::{RoomName, RoomSign, optional_timespec_seconds};
+use time;
 
-use {serde_json, time};
+use data::{RoomName, RoomSign, optional_timespec_seconds};
 
 // External things to be updatable.
 
@@ -109,8 +109,8 @@ with_structure_fields_and_update_struct! {
         pub level: u16,
         /// Controller reservation.
         pub reservation: Option<ControllerReservation>,
-        /// Safe mode. TODO: parse this
-        pub safe_mode: Option<serde_json::Value>,
+        /// Game time at which the current safemode will end, if any.
+        pub safe_mode: Option<u32>,
         /// How many more safemodes are available.
         pub safe_mode_available: u32,
         /// The game time that must be reached before safe mode can be used on the controller.
@@ -138,7 +138,7 @@ with_structure_fields_and_update_struct! {
         - progress_total: u64,
         - level: u16,
         - reservation: Option<ControllerReservation>,
-        - safe_mode: Option<serde_json::Value>,
+        - safe_mode: Option<u32>,
         - safe_mode_available: u32,
         - safe_mode_cooldown: u32,
         - downgrade_time: Option<u64>,
