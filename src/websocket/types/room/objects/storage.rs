@@ -243,16 +243,13 @@ impl StructureStorage {
 
 #[cfg(test)]
 mod test {
-    use serde_json;
     use serde::Deserialize;
-
-    use data::RoomName;
 
     use super::StructureStorage;
     use websocket::types::room::resources::ResourceType;
 
     #[test]
-    fn parse_extension_and_update() {
+    fn parse_storage() {
         let json = json!({
             "GO": 0,
             "KO": 0,

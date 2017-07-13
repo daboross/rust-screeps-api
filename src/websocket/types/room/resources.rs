@@ -103,7 +103,7 @@ impl ResourceType {
     ///
     /// ```
     /// # use screeps_api::websocket::types::room::resources::ResourceType;
-    /// assert_eq!(ResourceType::Utrium, "U")
+    /// assert_eq!(ResourceType::Utrium.to_resource_string(), "U")
     /// ```
     pub fn to_resource_string(&self) -> &'static str {
         match *self {
