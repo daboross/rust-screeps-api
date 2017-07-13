@@ -12,6 +12,8 @@ use {serde_json, tuple_vec_map};
 
 pub mod flags;
 #[macro_use]
+pub mod resources;
+#[macro_use]
 mod room_object_macros;
 pub mod objects;
 

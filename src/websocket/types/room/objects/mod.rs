@@ -17,6 +17,7 @@ pub mod keeper_lair;
 pub mod controller;
 pub mod portal;
 pub mod link;
+pub mod storage;
 
 pub use self::source::{Source, SourceUpdate};
 pub use self::mineral::{Mineral, MineralUpdate};
@@ -29,6 +30,7 @@ pub use self::keeper_lair::{StructureKeeperLair, StructureKeeperLairUpdate};
 pub use self::controller::{StructureController, StructureControllerUpdate};
 pub use self::portal::{StructurePortal, StructurePortalUpdate};
 pub use self::link::{StructureLink, StructureLinkUpdate};
+pub use self::storage::{StructureStorage, StructureStorageUpdate};
 
 // #[derive(Clone, Debug, Hash)]
 // pub enum RoomObject {
