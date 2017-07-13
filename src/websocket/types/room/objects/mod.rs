@@ -6,6 +6,7 @@
 //! Reading the source code is definitely possible. But there may be some investment in reading
 //! each of the macros defined and used here, and it will be much easier to just read the documentation.
 
+pub mod shared;
 pub mod source;
 pub mod mineral;
 pub mod spawn;
@@ -18,7 +19,9 @@ pub mod controller;
 pub mod portal;
 pub mod link;
 pub mod storage;
+pub mod tower;
 
+use self::shared::ActionLogTarget;
 pub use self::source::{Source, SourceUpdate};
 pub use self::mineral::{Mineral, MineralUpdate};
 pub use self::spawn::{StructureSpawn, StructureSpawnUpdate};
@@ -31,6 +34,7 @@ pub use self::controller::{StructureController, StructureControllerUpdate};
 pub use self::portal::{StructurePortal, StructurePortalUpdate};
 pub use self::link::{StructureLink, StructureLinkUpdate};
 pub use self::storage::{StructureStorage, StructureStorageUpdate};
+pub use self::tower::{StructureTower, StructureTowerUpdate};
 
 // #[derive(Clone, Debug, Hash)]
 // pub enum RoomObject {

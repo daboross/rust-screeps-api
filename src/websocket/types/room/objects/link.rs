@@ -1,5 +1,6 @@
 //! `StructureLink` data description.
 use data::RoomName;
+use super::ActionLogTarget;
 
 with_structure_fields_and_update_struct! {
     /// A link structure - a structure that can be filled with energy, then instantly send energy to other links
@@ -24,7 +25,7 @@ with_structure_fields_and_update_struct! {
         pub notify_when_attacked: bool,
     }
 
-    /// The update structure for an extension structure.
+    /// The update structure for a `StructureLink`.
     #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureLinkUpdate {
@@ -45,30 +46,13 @@ with_update_struct! {
     #[serde(rename_all = "camelCase")]
     pub struct StructureLinkActions {
         /// The x,y position the link last transfered energy to.
-        pub transfer_energy: Option<EnergyTransferTarget>,
+        pub transfer_energy: Option<ActionLogTarget>,
     }
 
     /// The update structure for StructureLinkActions.
     #[derive(Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureLinkActionsUpdate { ... }
-}
-
-with_update_struct! {
-    /// A struct describing the destination of a link's energy transfer.
-    ///
-    /// TODO: share this structure as a more generic thing when creep actionLog is implemented.
-    #[derive(Deserialize, Clone, Debug, PartialEq)]
-    pub struct EnergyTransferTarget {
-        /// The in-room x position of this target.
-        pub x: u16,
-        /// The in-room x position of this target.
-        pub y: u16,
-    }
-
-    /// The update structure for `EnergyTransferTarget`.
-    #[derive(Deserialize, Clone, Debug)]
-    pub struct EnergyTransferTargetUpdate { ... }
 }
 
 #[cfg(test)]
@@ -78,7 +62,7 @@ mod test {
 
     use data::RoomName;
 
-    use super::{StructureLink, StructureLinkActions, EnergyTransferTarget};
+    use super::{StructureLink, StructureLinkActions, ActionLogTarget};
 
     #[test]
     fn parse_link_and_updates() {
@@ -150,7 +134,7 @@ mod test {
             .unwrap());
 
         assert_eq!(obj.action_log, StructureLinkActions {
-            transfer_energy: Some(EnergyTransferTarget {
+            transfer_energy: Some(ActionLogTarget {
                 x: 9,
                 y: 18,
             })
