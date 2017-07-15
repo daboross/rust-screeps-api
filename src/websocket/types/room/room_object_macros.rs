@@ -23,7 +23,7 @@ pub(super) trait Updatable: Sized {
 
 macro_rules! basic_updatable {
     ($name: ident) => (
-        impl Updatable for $name {
+        impl ::websocket::types::room::room_object_macros::Updatable for $name {
             type Update = $name;
 
             fn apply_update(&mut self, update: Self::Update) {
