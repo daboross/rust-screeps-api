@@ -21,6 +21,8 @@ pub mod link;
 pub mod storage;
 pub mod tower;
 pub mod observer;
+pub mod power_bank;
+pub mod power_spawn;
 
 use self::shared::ActionLogTarget;
 pub use self::source::{Source, SourceUpdate};
@@ -37,6 +39,8 @@ pub use self::link::{StructureLink, StructureLinkUpdate};
 pub use self::storage::{StructureStorage, StructureStorageUpdate};
 pub use self::tower::{StructureTower, StructureTowerUpdate};
 pub use self::observer::{StructureObserver, StructureObserverUpdate};
+pub use self::power_bank::{StructurePowerBank, StructurePowerBankUpdate};
+pub use self::power_spawn::{StructurePowerSpawn, StructurePowerSpawnUpdate};
 
 // #[derive(Clone, Debug, Hash)]
 // pub enum RoomObject {
