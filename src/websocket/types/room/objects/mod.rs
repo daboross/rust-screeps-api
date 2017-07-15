@@ -20,6 +20,7 @@ pub mod portal;
 pub mod link;
 pub mod storage;
 pub mod tower;
+pub mod observer;
 
 use self::shared::ActionLogTarget;
 pub use self::source::{Source, SourceUpdate};
@@ -35,6 +36,7 @@ pub use self::portal::{StructurePortal, StructurePortalUpdate};
 pub use self::link::{StructureLink, StructureLinkUpdate};
 pub use self::storage::{StructureStorage, StructureStorageUpdate};
 pub use self::tower::{StructureTower, StructureTowerUpdate};
+pub use self::observer::{StructureObserver, StructureObserverUpdate};
 
 // #[derive(Clone, Debug, Hash)]
 // pub enum RoomObject {

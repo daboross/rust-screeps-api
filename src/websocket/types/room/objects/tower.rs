@@ -66,7 +66,7 @@ mod test {
     use super::{StructureTower, StructureTowerActions, ActionLogTarget};
 
     #[test]
-    fn parse_tower() {
+    fn parse_tower_and_update() {
         let json = json!({
             "_id": "57f1cc9d27e2c0520e93ba95",
             "actionLog": {
