@@ -253,7 +253,7 @@ macro_rules! with_resource_fields_and_update_struct {
                 #[serde(rename = "hitsMax")]
                 - hits_max: i32,
                 $(
-                    #[serde(rename = "$serde_ident")]
+                    #[serde(rename = $serde_ident)]
                     - $field_ident: i32,
                 )*
                 $( $update_field )*
