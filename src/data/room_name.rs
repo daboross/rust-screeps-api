@@ -20,6 +20,24 @@ pub struct RoomName {
     pub y_coord: i32,
 }
 
+/// A mirror of `RoomName` which implements `serde::Serialize` and `serde::Deserialize` into two numbers
+/// rather than a string.
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
+pub struct RoomNameAbsoluteCoordinates {
+    /// Inner x coordinate representation.
+    ///
+    /// 0 represents E0, positive numbers represent E(x)
+    ///
+    /// -1 represents W0, negative numbers represent W((-x) - 1)
+    pub x_coord: i32,
+    /// Inner y coordinate representation.
+    ///
+    /// 0 represents N0, positive numbers represent N(y)
+    ///
+    /// -1 represents S0, negative numbers represent S((-y) - 1)
+    pub y_coord: i32,
+}
+
 impl fmt::Display for RoomName {
     /// Formats this room name into the format the game expects.
     ///
@@ -41,6 +59,24 @@ impl fmt::Display for RoomName {
         }
 
         Ok(())
+    }
+}
+
+impl From<RoomName> for RoomNameAbsoluteCoordinates {
+    fn from(other: RoomName) -> RoomNameAbsoluteCoordinates {
+        RoomNameAbsoluteCoordinates {
+            x_coord: other.x_coord,
+            y_coord: other.y_coord,
+        }
+    }
+}
+
+impl From<RoomNameAbsoluteCoordinates> for RoomName {
+    fn from(other: RoomNameAbsoluteCoordinates) -> RoomName {
+        RoomName {
+            x_coord: other.x_coord,
+            y_coord: other.y_coord,
+        }
     }
 }
 
