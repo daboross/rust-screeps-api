@@ -38,7 +38,7 @@ with_structure_fields_and_update_struct! {
 }
 
 with_update_struct! {
-    /// A struct describing a room's reservation.
+    /// A struct describing a tower's actions.
     #[derive(Deserialize, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureTowerActions {

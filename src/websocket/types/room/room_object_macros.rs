@@ -1,5 +1,4 @@
 //! Module containing macros which simplify making "updateable" structures.
-
 use data::RoomName;
 
 use time::Timespec;
@@ -42,8 +41,175 @@ macro_rules! basic_updatable {
     )
 }
 
-basic_updatable!(bool, u8, u16, u32, u64, i8, i16, i32, i64, String, Timespec);
-basic_updatable!(RoomName);
+basic_updatable!(bool, u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
+basic_updatable!(String, Timespec, RoomName);
+
+
+pub(crate) mod vec_update {
+    use std::marker::PhantomData;
+
+    use std::{fmt, cmp};
+
+    use serde::de::{Deserialize, Deserializer, MapAccess, Unexpected, Visitor, Error};
+
+    use super::Updatable;
+
+    /// Update structure for a Vec.
+    #[derive(Debug, Clone)]
+    pub(crate) enum VecUpdate<T> {
+        Array(Vec<T>),
+        PartialObj(VecPartialUpdate<T>),
+    }
+    #[allow(non_upper_case_globals, unused_attributes, unused_qualifications)]
+    const _IMPL_DESERIALIZE_FOR_VecUpdate: () = {
+        extern crate serde as _serde;
+        impl<'de, T> _serde::Deserialize<'de> for VecUpdate<T>
+            where T: _serde::Deserialize<'de>
+        {
+            fn deserialize<__D>(__deserializer: __D) -> _serde::export::Result<Self, __D::Error>
+                where __D: _serde::Deserializer<'de>
+            {
+                let err1;
+                let err2;
+                let __content = <_serde::private::de::Content as Deserialize>::deserialize(__deserializer)?;
+                match Result::map(Vec::<T>::deserialize(
+                                _serde::private::de::ContentRefDeserializer::<__D::Error>::new(&__content)),
+                                                       VecUpdate::Array) {
+                       Ok(value) => return Ok(value),
+                       Err(e) => err1 = e,
+                    }
+                match Result::map(VecPartialUpdate::<T>::deserialize(
+                                _serde::private::de::ContentRefDeserializer::<__D::Error>::new(&__content)),
+                                                       VecUpdate::PartialObj) {
+                    Ok(value) => return Ok(value),
+                    Err(e) => err2 = e,
+                }
+                _serde::export::Err(_serde::de::Error::custom(format!("data did not match any variant of \
+                                                               untagged enum VecUpdate (error for \
+                                                               Array: {}, error for PartialObj: {})",
+                                                                      err1,
+                                                                      err2)))
+            }
+        }
+    };
+
+
+    #[derive(Debug, Clone)]
+    pub struct VecPartialUpdate<T>(Vec<(u32, T)>);
+
+    struct VecPartialUpdateVisitor<T> {
+        marker: PhantomData<T>,
+    }
+
+    impl<T> VecPartialUpdateVisitor<T> {
+        pub fn new() -> Self {
+            VecPartialUpdateVisitor { marker: PhantomData }
+        }
+    }
+
+    impl<'de, T> Visitor<'de> for VecPartialUpdateVisitor<T>
+        where T: Deserialize<'de>
+    {
+        type Value = VecPartialUpdate<T>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a map")
+        }
+
+        #[inline]
+        fn visit_unit<E>(self) -> Result<Self::Value, E> {
+            Ok(VecPartialUpdate(Vec::new()))
+        }
+
+        #[inline]
+        fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
+            where A: MapAccess<'de>
+        {
+            struct StringKeyAsInt(u32);
+
+            impl<'de> Deserialize<'de> for StringKeyAsInt {
+                fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+                    where D: Deserializer<'de>
+                {
+                    struct StringKeyAsIntVisitor;
+
+                    impl<'de> Visitor<'de> for StringKeyAsIntVisitor {
+                        type Value = StringKeyAsInt;
+
+                        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                            write!(formatter, "a string formatted number")
+                        }
+
+                        #[inline]
+                        fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                            where E: Error
+                        {
+                            Ok(StringKeyAsInt(value.parse()
+                                .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?))
+                        }
+                    }
+                    deserializer.deserialize_str(StringKeyAsIntVisitor)
+                }
+            }
+
+            let mut values = Vec::with_capacity(cmp::min(access.size_hint().unwrap_or(0), 4069));
+
+            while let Some((key, value)) = access.next_entry::<StringKeyAsInt, _>()? {
+                values.push((key.0, value));
+            }
+
+            Ok(VecPartialUpdate(values))
+        }
+    }
+
+    impl<'de, T> Deserialize<'de> for VecPartialUpdate<T>
+        where T: Deserialize<'de>
+    {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where D: Deserializer<'de>
+        {
+            deserializer.deserialize_map(VecPartialUpdateVisitor::new())
+        }
+    }
+
+    impl<T> Updatable for Vec<T>
+        where T: Updatable
+    {
+        type Update = VecUpdate<<T as Updatable>::Update>;
+
+        fn apply_update(&mut self, update: Self::Update) {
+            // TODO: proper erroring out here.
+            match update {
+                VecUpdate::Array(vec) => {
+                    if let Some(vec) = vec.into_iter().map(T::create_from_update).collect::<Option<Vec<T>>>() {
+                        *self = vec;
+                    }
+                }
+                VecUpdate::PartialObj(map) => {
+                    for (index, value) in map.0.into_iter() {
+                        let index = index as usize;
+                        if index > self.len() {
+                            continue; // what to do here..?
+                        } else if index == self.len() {
+                            if let Some(value) = T::create_from_update(value) {
+                                self.push(value);
+                            }
+                            continue;
+                        }
+                        self[index as usize].apply_update(value);
+                    }
+                }
+            }
+        }
+
+        fn create_from_update(update: Self::Update) -> Option<Self> {
+            match update {
+                VecUpdate::Array(vec) => vec.into_iter().map(T::create_from_update).collect::<Option<Self>>(),
+                VecUpdate::PartialObj(_) => None,
+            }
+        }
+    }
+}
 
 impl Updatable for serde_json::Value {
     type Update = serde_json::Value;
@@ -394,9 +560,9 @@ macro_rules! with_structure_fields_and_update_struct {
         with_base_fields_and_update_struct! {
             $( #[$struct_attr] )*
             pub struct $name {
-                /// The current number of hit-points this structure has.
+                /// The current number of hit points this room object has.
                 pub hits: i32,
-                /// The maximum number of hit-points this structure has.
+                /// The maximum number of hit points this room object can have.
                 #[serde(rename = "hitsMax")]
                 pub hits_max: i32,
                 $( $struct_field )*

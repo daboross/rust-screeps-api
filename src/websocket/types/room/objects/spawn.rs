@@ -40,7 +40,7 @@ with_structure_fields_and_update_struct! {
         /// The name of this spawn, unique per player.
         pub name: String,
         /// The creep that's currently spawning, if any.
-        pub spawning: SpawningCreep,
+        pub spawning: Option<SpawningCreep>,
     }
 
     /// The update structure for a mineral object.
@@ -54,12 +54,14 @@ with_structure_fields_and_update_struct! {
         - energy_capacity: i32,
         - notify_when_attacked: bool,
         - name: String,
-        - spawning: SpawningCreep,
+        - spawning: Option<SpawningCreep>,
     }
 }
 
 #[cfg(test)]
 mod test {
+    use serde_json;
+
     use serde::Deserialize;
 
     use data::RoomName;
@@ -67,7 +69,7 @@ mod test {
     use super::{StructureSpawn, SpawningCreep};
 
     #[test]
-    fn parse_spawn() {
+    fn parse_spawn_and_update() {
         let json = json!({
             "_id": "58a23b6c4370e6302d758099",
             "energy": 300,
@@ -89,7 +91,7 @@ mod test {
             "y": 6,
         });
 
-        let obj = StructureSpawn::deserialize(json).unwrap();
+        let mut obj = StructureSpawn::deserialize(json).unwrap();
 
         assert_eq!(obj, StructureSpawn {
             id: "58a23b6c4370e6302d758099".to_owned(),
@@ -103,12 +105,53 @@ mod test {
             name: "Spawn36".to_owned(),
             notify_when_attacked: true,
             disabled: false,
-            spawning: SpawningCreep {
+            spawning: Some(SpawningCreep {
                 name: "5599".to_owned(),
                 total_time: 126,
                 remaining_time: 5,
-            },
+            }),
             user: "57874d42d0ae911e3bd15bbc".to_owned(),
         });
+
+        obj.update(serde_json::from_value(json!({
+            "spawning": {
+                "remainingTime": 4,
+            },
+        }))
+            .unwrap());
+
+        obj.update(serde_json::from_value(json!({
+            "spawning": {
+                "remainingTime": 3,
+            },
+        }))
+            .unwrap());
+
+        obj.update(serde_json::from_value(json!({
+            "spawning": {
+                "remainingTime": 2,
+            },
+        }))
+            .unwrap());
+
+        obj.update(serde_json::from_value(json!({
+            "spawning": {
+                "remainingTime": 1,
+            },
+        }))
+            .unwrap());
+
+        assert_eq!(obj.spawning, Some(SpawningCreep {
+            name: "5599".to_owned(),
+            total_time: 126,
+            remaining_time: 1,
+        }));
+
+        obj.update(serde_json::from_value(json!({
+            "spawning": null,
+        }))
+            .unwrap());
+
+        assert_eq!(obj.spawning, None);
     }
 }

@@ -307,7 +307,6 @@ macro_rules! with_resource_fields_and_update_struct {
     )
 }
 
-
 macro_rules! resource_iterator_for {
     (
         {

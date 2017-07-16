@@ -6,7 +6,7 @@ with_structure_fields_and_update_struct! {
     #[derive(Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureRoad {
-        /// The next game tick when this roads hits will decrease naturally.
+        /// The next game tick when this structure's hits will decrease naturally.
         pub next_decay_time: u32,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
         pub notify_when_attacked: bool,

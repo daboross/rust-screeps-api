@@ -1,5 +1,6 @@
 //! `Mineral` data description.
 use data::RoomName;
+use super::super::resources::ResourceType;
 
 with_base_fields_and_update_struct! {
     /// A mineral, an object creeps can mine for a non-energy resource.
@@ -11,9 +12,9 @@ with_base_fields_and_update_struct! {
         /// Changes each regeneration.
         pub density: u8,
         /// The current amount of the resource in the mineral.
-        pub mineral_amount: u32,
-        /// The type of resource this mineral has. TODO: parse resource types.
-        pub mineral_type: String,
+        pub mineral_amount: f64,
+        /// The type of resource this mineral has.
+        pub mineral_type: ResourceType,
         /// The number of game ticks until the mineral next regenerates
         /// (or None if the mineral still has any resources left).
         pub next_regeneration_time: Option<u32>,
@@ -31,7 +32,7 @@ mod test {
 
     use data::RoomName;
 
-    use super::Mineral;
+    use super::{Mineral, ResourceType};
 
     #[test]
     fn parse_mineral() {
@@ -55,8 +56,8 @@ mod test {
             x: 14,
             y: 21,
             density: 3,
-            mineral_amount: 65590,
-            mineral_type: "H".to_owned(),
+            mineral_amount: 65590.0,
+            mineral_type: ResourceType::Hydrogen,
             next_regeneration_time: None,
         });
     }

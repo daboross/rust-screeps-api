@@ -70,7 +70,7 @@ with_update_struct! {
 }
 
 with_update_struct! {
-    /// A struct describing a room's reservation.
+    /// A struct describing a lab's actions.
     #[derive(Deserialize, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureLabActions {
