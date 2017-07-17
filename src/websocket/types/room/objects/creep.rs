@@ -1,6 +1,7 @@
 //! `Creep` data description.
 use data::RoomName;
 use super::ActionLogTarget;
+use super::super::resources::ResourceType;
 
 with_update_struct! {
     /// A struct describing a creep part.
@@ -14,6 +15,8 @@ with_update_struct! {
         /// Part type.
         #[serde(rename = "type")]
         pub part_type: CreepPartType,
+        /// Part boost, if any.
+        pub boost: Option<ResourceType>,
     }
 
     /// The update structure for a `CreepPart`.

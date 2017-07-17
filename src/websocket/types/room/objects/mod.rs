@@ -196,7 +196,6 @@ mod test {
                 if value.is_null() {
                     id_to_thing.remove(&id);
                 } else {
-
                     match id_to_thing.entry(id.clone()) {
                         Occupied(entry) => {
                             entry.into_mut()
