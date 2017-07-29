@@ -127,6 +127,16 @@ impl ops::Sub<(i32, i32)> for RoomName {
     }
 }
 
+impl ops::Sub<RoomName> for RoomName {
+    type Output = (i32, i32);
+
+    /// Subtracts an (x, y) coordinate pair to this room name.
+    #[inline]
+    fn sub(self, other: RoomName) -> (i32, i32) {
+        (self.x_coord - other.x_coord, self.y_coord - other.y_coord)
+    }
+}
+
 /// Something that can be turned into a room name.
 pub trait IntoRoomName {
     /// Turns this data into a room name, erroring if the format is not as expected.
