@@ -227,10 +227,11 @@ impl<C, H: Clone, T: Clone> Clone for Api<C, H, T> {
     }
 }
 
-static DEFAULT_URL_STR: &'static str = "https://screeps.com/api/";
+/// The official server's default api url`
+pub static DEFAULT_OFFICIAL_API_URL: &'static str = "https://screeps.com/api/";
 
 fn default_url() -> Url {
-    Url::parse(DEFAULT_URL_STR).expect("expected pre-set url to parse, parsing failed")
+    Url::parse(DEFAULT_OFFICIAL_API_URL).expect("expected pre-set url to parse, parsing failed")
 }
 
 impl<C, H, T: Default> Api<C, H, T> {

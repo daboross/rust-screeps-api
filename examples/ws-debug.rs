@@ -17,6 +17,8 @@ extern crate screeps_api;
 // json pretty printing
 extern crate serde_json;
 
+use std::borrow::Cow;
+
 use futures::{Sink, Stream, Future, future, stream};
 
 use websocket::OwnedMessage;
@@ -66,6 +68,7 @@ struct Config {
     console: bool,
     rooms: Vec<RoomName>,
     map_view: Vec<RoomName>,
+    url: Cow<'static, str>,
 }
 
 impl Config {
@@ -81,6 +84,9 @@ impl Config {
             map_view: args.values_of("map-view")
                 .map(|it| it.map(|v| RoomName::new(v)).collect::<Result<_, _>>())
                 .unwrap_or_else(|| Ok(Vec::new()))?,
+            url: args.value_of("url")
+                .map(|v| v.to_owned().into())
+                .unwrap_or_else(|| screeps_api::DEFAULT_OFFICIAL_API_URL.into()),
         })
     }
 
@@ -160,6 +166,12 @@ fn setup() -> Config {
             .help("Subscribes to a map-view room")
             .takes_value(true)
             .multiple(true))
+        .arg(clap::Arg::with_name("url")
+            .short("u")
+            .long("url")
+            .value_name("API_URL")
+            .help("Server url to connect to")
+            .takes_value(true))
         .get_matches();
 
     setup_logging(cmd_arguments.occurrences_of("verbose"));
@@ -182,7 +194,8 @@ fn main() {
 
     let token_storage = screeps_api::RcTokenStorage::default();
 
-    let mut client = screeps_api::SyncConfig::new().unwrap().tokens(token_storage.clone()).build().unwrap();
+    let mut client =
+        screeps_api::SyncConfig::new().unwrap().url(&config.url).tokens(token_storage.clone()).build().unwrap();
 
     // Login using the API client - this will storage the auth token in token_storage.
     client.login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD")).expect("failed to login");
@@ -196,9 +209,10 @@ fn main() {
 
     let handle = core.handle();
 
-    let url = screeps_api::websocket::default_url();
+    let ws_url = screeps_api::websocket::connecting::transform_url(&config.url)
+        .expect("expected server api url to parse into websocket url.");
 
-    let connection = websocket::ClientBuilder::from_url(&url).async_connect_secure(None, &handle);
+    let connection = websocket::ClientBuilder::from_url(&ws_url).async_connect(None, &handle);
 
     core.run(connection.then(|result| {
             let (client, _) = result.expect("expected successful connection to official server, found error");

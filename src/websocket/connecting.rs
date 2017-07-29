@@ -81,7 +81,7 @@ pub use self::error::Error as UrlError;
 
 /// Creates a new (random) websocket URL to connect to the official server.
 pub fn default_url() -> Url {
-    transform_url(::DEFAULT_URL_STR).expect("expected known good default URL to parse successfully.")
+    transform_url(::DEFAULT_OFFICIAL_API_URL).expect("expected known good default URL to parse successfully.")
 }
 
 /// Method for finding a websocket URL given the screeps API URL.

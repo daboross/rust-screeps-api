@@ -14,7 +14,7 @@ use self::hyper_tls::HttpsConnector;
 
 use error::Error;
 
-use {TokenStorage, RcTokenStorage, Api, DEFAULT_URL_STR};
+use {TokenStorage, RcTokenStorage, Api, DEFAULT_OFFICIAL_API_URL};
 
 use {MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats, LeaderboardPage, LeaderboardType,
      FoundUserRank, RecentPvpDetails, LeaderboardSeason};
@@ -144,7 +144,7 @@ impl Config<'static, UseHttpsConnector, UseRcTokens> {
             core: core,
             hyper: hyper,
             tokens: UseRcTokens,
-            url: DEFAULT_URL_STR,
+            url: DEFAULT_OFFICIAL_API_URL,
         };
 
         Ok(config)
