@@ -15,7 +15,7 @@ pub struct Response {
     password: bool,
     cpu: i32,
     gcl: u64,
-    credits: f64,
+    money: f64,
     // These can be added if needed
     // lastChargeTime: Option<String>,
     // lastTweetTime: Option<String>,
@@ -50,7 +50,7 @@ impl EndpointResult for MyInfo {
     type ErrorResult = data::ApiError;
 
     fn from_raw(raw: Response) -> Result<MyInfo> {
-        let Response { ok, _id: user_id, username, password, cpu, gcl, credits, .. } = raw;
+        let Response { ok, _id: user_id, username, password, cpu, gcl, money, .. } = raw;
 
         if ok != 1 {
             return Err(ApiError::NotOk(ok).into());
@@ -61,7 +61,7 @@ impl EndpointResult for MyInfo {
             has_password: password,
             cpu: cpu,
             gcl_points: gcl,
-            credits: credits,
+            credits: money,
             _phantom: PhantomData,
         })
     }
