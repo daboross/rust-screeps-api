@@ -51,6 +51,23 @@ pub enum CreepPartType {
 basic_updatable!(CreepPartType);
 
 with_update_struct! {
+    /// A struct describing a creep's message conveyed with `say`.
+    #[derive(Deserialize, Default, Clone, Debug, PartialEq)]
+    #[serde(rename_all = "camelCase")]
+    pub struct CreepMessage {
+        /// If true, the message is visible to all players.
+        pub is_public: bool,
+        /// The message.
+        pub message: String,
+    }
+
+    /// The update structure for a `CreepMessage`.
+    #[derive(Deserialize, Clone, Debug)]
+    #[serde(rename_all = "camelCase")]
+    pub struct CreepMessageUpdate { ... }
+}
+
+with_update_struct! {
     /// A struct describing a creep's actions.
     #[derive(Deserialize, Default, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
@@ -80,7 +97,7 @@ with_update_struct! {
         /// The location this creep was healed from last tick.
         pub healed: Option<ActionLogTarget>,
         /// The message this creep said last tick. TODO: confirm this is correct.
-        pub say: Option<String>,
+        pub say: Option<CreepMessage>,
     }
 
     /// The update structure for a `CreepActions`.

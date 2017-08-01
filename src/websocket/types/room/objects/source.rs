@@ -61,7 +61,7 @@ mod test {
             energy: 260,
             energy_capacity: 3000,
             invader_harvested: 29240,
-            next_regeneration_time: 19894026,
+            next_regeneration_time: Some(19894026),
             ticks_to_regeneration: 300,
         });
 
@@ -80,7 +80,7 @@ mod test {
             energy: 0,
             energy_capacity: 3000,
             invader_harvested: 29240,
-            next_regeneration_time: 19894026,
+            next_regeneration_time: Some(19894026),
             ticks_to_regeneration: 300,
         });
     }
