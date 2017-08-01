@@ -13,9 +13,11 @@ with_base_fields_and_update_struct! {
         /// The amount of energy either harvested on this source specifically or for the room since
         /// the last invasion (not sure which it is).
         pub invader_harvested: u32,
-        /// The game time at which the source will next regenerate.
-        pub next_regeneration_time: u64,
-        /// The number of ticks till next_regeneration_time occurs.
+        /// The game time at which the source will next regenerate. `None` when waiting on a creep to
+        /// first harvest it.
+        pub next_regeneration_time: Option<u64>,
+        /// The number of ticks between when a source is first harvested after regeneration and when it next
+        /// regenerates.
         pub ticks_to_regeneration: u32,
     }
 

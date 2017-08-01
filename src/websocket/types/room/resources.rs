@@ -199,7 +199,6 @@ impl ResourceType {
     }
 }
 
-
 /// This macro creates the struct described within the invocation, but with an additional 2 fields common to all
 /// Structures, with everything provided by `with_base_fields_and_update_struct!`, and with one field per in-game
 /// resource type.
