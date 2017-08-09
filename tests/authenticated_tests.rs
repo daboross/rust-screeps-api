@@ -37,9 +37,24 @@ fn test_auth_my_info() {
 fn test_auth_map_stats() {
     let mut api = logged_in();
 
-    let result = api.map_stats(&["E15N52", "E19S79", "E14S78", "E19S81", "W6S67", "InvalidRoomName"]).unwrap();
+    let result = api.map_stats("shard0",
+                   &["E15N52", "E21S79", "E3S69", "E19S81", "W6S67", "InvalidRoomName"])
+        .unwrap();
 
     assert_eq!(result.rooms.len(), 5);
+}
+
+#[test]
+fn test_auth_world_start() {
+    let mut api = logged_in();
+
+    let start = api.world_start_room().unwrap();
+
+    let shard = start.shard.as_ref().map(AsRef::as_ref).unwrap_or("");
+
+    let result = api.map_stats(shard, &[start.room_name]).unwrap();
+
+    assert_eq!(result.rooms.len(), 1);
 }
 
 #[test]
@@ -79,13 +94,13 @@ fn test_auth_room_overview() {
 
     for &interval in &[8u32, 180u32, 1440u32] {
         // At the time of writing, a room owned by a user who does not have a custom badge.
-        api.room_overview("W1N1", interval).unwrap();
+        api.room_overview("shard0", "W1N1", interval).unwrap();
 
         // At time of writing, one of dissi's rooms, a user who has a custom badge.
-        api.room_overview("W3N9", interval).unwrap();
+        api.room_overview("shard0", "W3N9", interval).unwrap();
 
         // A room that can't be owned on the official server.
-        api.room_overview("W0N0", interval).unwrap();
+        api.room_overview("shard0", "W0N0", interval).unwrap();
     }
 }
 

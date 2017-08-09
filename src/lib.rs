@@ -73,7 +73,7 @@ pub mod sync;
 
 pub use error::{Error, ErrorKind, NoToken};
 pub use data::RoomName;
-pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats};
+pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats, WorldStartRoom};
 pub use endpoints::leaderboard::LeaderboardType;
 pub use endpoints::room_terrain::TerrainGrid;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
@@ -96,7 +96,7 @@ use std::cell::RefCell;
 use url::Url;
 use hyper::header::ContentType;
 
-use endpoints::{login, my_info, room_overview, room_terrain, room_status, recent_pvp, map_stats};
+use endpoints::{login, recent_pvp, map_stats};
 
 use sealed::EndpointResult;
 
@@ -351,13 +351,30 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
         self.get("auth/me").auth().send()
     }
 
+    /// Gets the world shard and room name the server thinks the client should start with viewing.
+    pub fn world_start_room(&self) -> Result<FutureResponse<WorldStartRoom>, NoToken> {
+        self.get("user/world-start-room")
+            .auth()
+            .send()
+    }
+
+    /// Gets the room name the server thinks the client should start with viewing for a particular shard.
+    pub fn shard_start_room<'b, U>(&self, shard: U) -> Result<FutureResponse<WorldStartRoom>, NoToken>
+        where U: Into<Cow<'b, str>>
+    {
+        self.get("user/world-start-room")
+            .params(&[("shard", shard.into().into_owned())])
+            .auth()
+            .send()
+    }
+
     /// Get information on a number of rooms.
-    pub fn map_stats<'a, U, V>(&self, rooms: &'a V) -> Result<FutureResponse<MapStats>, NoToken>
+    pub fn map_stats<'a, U, V>(&self, shard: &'a str, rooms: &'a V) -> Result<FutureResponse<MapStats>, NoToken>
         where U: AsRef<str>,
               &'a V: IntoIterator<Item = U>
     {
         // TODO: interpret for different stats.
-        let args = map_stats::MapStatsArgs::new(rooms, map_stats::StatName::RoomOwner);
+        let args = map_stats::MapStatsArgs::new(shard, rooms, map_stats::StatName::RoomOwner);
 
         self.post("game/map-stats", args)
             .auth()
@@ -370,14 +387,18 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     /// All Allowed request_intervals are not known, but at least `8`, `180` and `1440` are allowed. The returned data,
     /// at the time of writing, includes 8 data points of each type, representing equal portions of the time period
     /// requested (hour for `8`, day for `180`, week for `1440`).
-    pub fn room_overview<'b, U>(&self,
-                                room_name: U,
-                                request_interval: u32)
-                                -> Result<FutureResponse<RoomOverview>, NoToken>
-        where U: Into<Cow<'b, str>>
+    pub fn room_overview<'b, U, V>(&self,
+                                   shard: U,
+                                   room_name: V,
+                                   request_interval: u32)
+                                   -> Result<FutureResponse<RoomOverview>, NoToken>
+        where U: Into<Cow<'b, str>>,
+              V: Into<Cow<'b, str>>
     {
         self.get("game/room-overview")
-            .params(&[("room", room_name.into().into_owned()), ("interval", request_interval.to_string())])
+            .params(&[("shard", shard.into().into_owned()),
+                      ("room", room_name.into().into_owned()),
+                      ("interval", request_interval.to_string())])
             .auth()
             .send()
     }
@@ -385,11 +406,14 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     /// Gets the terrain of a room, returning a 2d array of 50x50 points.
     ///
     /// Does not require authentication.
-    pub fn room_terrain<'b, U>(&self, room_name: U) -> FutureResponse<RoomTerrain>
-        where U: Into<Cow<'b, str>>
+    pub fn room_terrain<'b, U, V>(&self, shard: U, room_name: V) -> FutureResponse<RoomTerrain>
+        where U: Into<Cow<'b, str>>,
+              V: Into<Cow<'b, str>>
     {
         self.get("game/room-terrain")
-            .params(&[("room", room_name.into().into_owned()), ("encoded", true.to_string())])
+            .params(&[("shard", shard.into().into_owned()),
+                      ("room", room_name.into().into_owned()),
+                      ("encoded", true.to_string())])
             .send()
     }
 

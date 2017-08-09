@@ -36,6 +36,7 @@ pub struct MapStatsArgs<'a, T, I>
     rooms: MapStatsArgsInner<'a, T, I>,
     #[serde(rename = "statName")]
     stat: StatName,
+    shard: &'a str,
 }
 
 #[derive(Clone, Debug)]
@@ -52,8 +53,9 @@ impl<'a, T, I> MapStatsArgs<'a, T, I>
           &'a T: IntoIterator<Item = I>
 {
     /// Creates a new MapStatsArgs with the given iterator.
-    pub fn new(rooms: &'a T, stat: StatName) -> Self {
+    pub fn new(shard: &'a str, rooms: &'a T, stat: StatName) -> Self {
         MapStatsArgs {
+            shard: shard,
             rooms: MapStatsArgsInner { rooms: rooms },
             stat: stat,
         }
@@ -195,7 +197,12 @@ impl EndpointResult for MapStats {
             rooms: stats.into_iter()
                 .map(|(room_name, room_data)| {
                     let RoomResponse { status, own: owner, novice, open_time, sign, hard_sign } = room_data;
-                    if status != "normal" {
+                    if status == "out of borders" {
+                        // Oddity in Screeps: for shard0, all rooms which are out of bounds are simply left out of
+                        // the result. For shard1, room names which would exist in shard0, but don't exist in shard1
+                        // return an empty "out of bounds" status.
+                        return Ok(None);
+                    } else if status != "normal" {
                         return Err(ApiError::MalformedResponse(format!("expected room status for \"{}\" to be \
                                                                         \"normal\", found \"{}\"",
                                                                        room_name,
@@ -213,7 +220,12 @@ impl EndpointResult for MapStats {
                         _phantom: PhantomData,
                     };
 
-                    Ok(info)
+                    Ok(Some(info))
+                })
+                .flat_map(|result| match result {
+                    Ok(Some(v)) => Some(Ok(v)),
+                    Ok(None) => None,
+                    Err(e) => Some(Err(e)),
                 })
                 .collect::<ScapiResult<_>>()?,
             users: users.into_iter()

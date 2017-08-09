@@ -12,6 +12,7 @@ impl Into<error::Error> for ApiError {
     fn into(self) -> error::Error {
         let api_error = match &*self.error {
             "invalid room" => error::ApiError::InvalidRoom,
+            "invalid shard" => error::ApiError::InvalidShard,
             "result not found" => error::ApiError::ResultNotFound,
             "invalid params" => error::ApiError::InvalidParameters,
             "user not found" => error::ApiError::UserNotFound,

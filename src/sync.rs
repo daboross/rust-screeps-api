@@ -17,7 +17,7 @@ use error::Error;
 use {TokenStorage, RcTokenStorage, Api, DEFAULT_OFFICIAL_API_URL};
 
 use {MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats, LeaderboardPage, LeaderboardType,
-     FoundUserRank, RecentPvpDetails, LeaderboardSeason};
+     FoundUserRank, RecentPvpDetails, LeaderboardSeason, WorldStartRoom};
 
 mod error {
     use std::{io, fmt};
@@ -263,33 +263,55 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
         self.core.run(self.client.my_info()?)
     }
 
+    /// Gets the world shard and room name the server thinks the client should start with viewing.
+    ///
+    /// See [`Api::world_start_room`](../struct.Api.html#method.world_start_room) for more information.
+    pub fn world_start_room(&mut self) -> Result<WorldStartRoom, Error> {
+        self.core.run(self.client.world_start_room()?)
+    }
+
+    /// Gets the room name the server thinks the client should start with viewing for a particular shard.
+    ///
+    /// See [`Api::world_start_room`](../struct.Api.html#method.world_start_room) for more information.
+    pub fn shard_start_room<'b, U>(&mut self, shard: U) -> Result<WorldStartRoom, Error>
+        where U: Into<Cow<'b, str>>
+    {
+        self.core.run(self.client.shard_start_room(shard)?)
+    }
+
     /// Get information on a number of rooms.
     ///
     /// See [`Api::map_stats`](../struct.Api.html#method.map_stats) for more information.
-    pub fn map_stats<'a, U, V>(&mut self, rooms: &'a V) -> Result<MapStats, Error>
+    pub fn map_stats<'a, U, V>(&mut self, shard: &'a str, rooms: &'a V) -> Result<MapStats, Error>
         where U: AsRef<str>,
               &'a V: IntoIterator<Item = U>
     {
-        self.core.run(self.client.map_stats(rooms)?)
+        self.core.run(self.client.map_stats(shard, rooms)?)
     }
 
     /// Gets the overview of a room, returning totals for usually 3 intervals, 8, 180 and 1440, representing
     /// data for the past hour, data for the past 24 hours, and data for the past week respectively.
     ///
     /// See [`Api::room_overview`](../struct.Api.html#method.room_overview) for more information.
-    pub fn room_overview<'b, U>(&mut self, room_name: U, request_interval: u32) -> Result<RoomOverview, Error>
-        where U: Into<Cow<'b, str>>
+    pub fn room_overview<'b, U, V>(&mut self,
+                                   shard: U,
+                                   room_name: V,
+                                   request_interval: u32)
+                                   -> Result<RoomOverview, Error>
+        where U: Into<Cow<'b, str>>,
+              V: Into<Cow<'b, str>>
     {
-        self.core.run(self.client.room_overview(room_name, request_interval)?)
+        self.core.run(self.client.room_overview(shard, room_name, request_interval)?)
     }
 
     /// Gets the terrain of a room, returning a 2d array of 50x50 points.
     ///
     /// See [`Api::room_terrain`](../struct.Api.html#method.room_terrain) for more information.
-    pub fn room_terrain<'b, U>(&mut self, room_name: U) -> Result<RoomTerrain, Error>
-        where U: Into<Cow<'b, str>>
+    pub fn room_terrain<'b, U, V>(&mut self, shard: U, room_name: V) -> Result<RoomTerrain, Error>
+        where U: Into<Cow<'b, str>>,
+              V: Into<Cow<'b, str>>
     {
-        self.core.run(self.client.room_terrain(room_name))
+        self.core.run(self.client.room_terrain(shard, room_name))
     }
 
     /// Gets the "status" of a room: if it is open, if it is in a novice area, if it exists.

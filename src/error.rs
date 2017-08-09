@@ -318,6 +318,8 @@ pub enum ApiError {
     ServerDown,
     /// A known response to a query about an invalid room.
     InvalidRoom,
+    /// A known response to a query about an invalid shard.
+    InvalidShard,
     /// The data being requested was not found.
     ResultNotFound,
     /// The user whose data was being requested was not found.
@@ -343,6 +345,7 @@ impl fmt::Display for ApiError {
             ApiError::MalformedResponse(ref desc) => write!(f, "malformed field from api result: {}", desc),
             ApiError::GenericError(ref err) => write!(f, "api call resulted in error: {}", err),
             ApiError::InvalidRoom |
+            ApiError::InvalidShard |
             ApiError::ResultNotFound |
             ApiError::UserNotFound |
             ApiError::InvalidParameters |
@@ -360,6 +363,7 @@ impl StdError for ApiError {
             ApiError::MalformedResponse(_) => "malformed field in api result",
             ApiError::GenericError(_) => "api call resulted in error",
             ApiError::InvalidRoom => "malformed api call: invalid room",
+            ApiError::InvalidShard => "malformed apic all: invalid shard",
             ApiError::ResultNotFound => "specific data requested was not found",
             ApiError::UserNotFound => "the user requested was not found",
             ApiError::InvalidParameters => "one or more parameters to the function were invalid",
