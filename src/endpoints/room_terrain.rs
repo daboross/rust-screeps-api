@@ -1,10 +1,12 @@
 //! Interpreting room terrain results.
 
-use EndpointResult;
+use std::marker::PhantomData;
+
+use arrayvec::ArrayVec;
+
 use data;
 use error::{Result, ApiError};
-use std::marker::PhantomData;
-use {arrayvec, generic_array, typenum};
+use EndpointResult;
 
 /// Room overview raw result.
 #[derive(Deserialize, Clone, Hash, Debug)]
@@ -42,11 +44,11 @@ pub enum TerrainType {
 }
 
 /// A type alias for a single row in the terrain grid.
-pub type TerrainRow = arrayvec::ArrayVec<generic_array::GenericArray<TerrainType, typenum::U50>>;
+pub type TerrainRow = ArrayVec<[TerrainType; 50]>;
 
 /// A type alias for a 50x50 terrain grid. terrain[y_pos][x_pos] can be used to access any terrain
 /// from x 0-49, y 0-49.
-pub type TerrainGrid = arrayvec::ArrayVec<generic_array::GenericArray<TerrainRow, typenum::U50>>;
+pub type TerrainGrid = ArrayVec<[TerrainRow; 50]>;
 
 /// Structure describing the terrain of a room
 #[derive(Clone, Debug)]

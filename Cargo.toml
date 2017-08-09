@@ -26,9 +26,7 @@ serde_derive = "1.0"
 serde_json = "1.0"
 serde_ignored = "0.0.4"
 serde-tuple-vec-map = "0.2"
-typenum = "1.0"
-generic-array = "0.5"
-arrayvec = { version = "0.3", features = ["use_generic_array"] }
+arrayvec = "0.4"
 time = "0.1"
 # HTTP
 futures = "0.1"
