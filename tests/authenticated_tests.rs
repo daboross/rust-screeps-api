@@ -1,4 +1,3 @@
-
 extern crate dotenv;
 extern crate screeps_api;
 
