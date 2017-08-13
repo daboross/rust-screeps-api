@@ -743,7 +743,7 @@ where
 
         // headers
         {
-            let mut headers = request.headers_mut();
+            let headers = request.headers_mut();
 
             headers.set(ContentType::json());
 
