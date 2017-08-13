@@ -2,7 +2,7 @@
 use std::marker::PhantomData;
 use std::{cmp, fmt};
 
-use serde::{Deserializer, Deserialize};
+use serde::{Deserialize, Deserializer};
 use serde::de::{MapAccess, Visitor};
 
 /// "Map view" room status update. This contains all entities in a given room,
@@ -40,7 +40,9 @@ struct RoomMapViewUpdateVisitor {
 
 impl RoomMapViewUpdateVisitor {
     pub fn new() -> Self {
-        RoomMapViewUpdateVisitor { marker: PhantomData }
+        RoomMapViewUpdateVisitor {
+            marker: PhantomData,
+        }
     }
 }
 
@@ -58,7 +60,8 @@ impl<'de> Visitor<'de> for RoomMapViewUpdateVisitor {
 
     #[inline]
     fn visit_map<T>(self, mut access: T) -> Result<Self::Value, T::Error>
-        where T: MapAccess<'de>
+    where
+        T: MapAccess<'de>,
     {
         let mut walls = None;
         let mut roads = None;
@@ -104,7 +107,8 @@ impl<'de> Visitor<'de> for RoomMapViewUpdateVisitor {
 
 impl<'de> Deserialize<'de> for RoomMapViewUpdate {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         deserializer.deserialize_map(RoomMapViewUpdateVisitor::new())
     }

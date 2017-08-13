@@ -1,8 +1,8 @@
 //! Error types for the screeps api.
-use std::{io, fmt, str};
+use std::{fmt, io, str};
 use std::error::Error as StdError;
 
-use {url, hyper, serde_json};
+use {hyper, serde_json, url};
 
 use data::room_name::RoomNameParseError;
 
@@ -218,9 +218,11 @@ impl fmt::Display for Error {
             Api(ref err) => err.fmt(f)?,
             RoomNameParse(ref err) => err.fmt(f)?,
             Unauthorized => {
-                write!(f,
-                       "access not authorized: token expired, username/password
-                       incorrect or no login provided")?;
+                write!(
+                    f,
+                    "access not authorized: token expired, username/password
+                       incorrect or no login provided"
+                )?;
             }
             ErrorKind::__Nonexhaustive => unreachable!(),
         }
@@ -229,12 +231,10 @@ impl fmt::Display for Error {
         }
         match self.data {
             AdditionalData::Json(ref json) => write!(f, " | return json: '{}'", json)?,
-            AdditionalData::Body(ref body) => {
-                match str::from_utf8(&body) {
-                    Ok(v) => write!(f, " | return body: '{}'", v)?,
-                    Err(_) => write!(f, " | return body: '{:?}'", &*body)?,
-                }
-            }
+            AdditionalData::Body(ref body) => match str::from_utf8(&body) {
+                Ok(v) => write!(f, " | return body: '{}'", v)?,
+                Err(_) => write!(f, " | return body: '{:?}'", &*body)?,
+            },
             AdditionalData::None => (),
         }
         Ok(())
@@ -248,28 +248,24 @@ impl StdError for Error {
             Hyper(ref err) => err.description(),
             Url(ref err) => err.description(),
             Io(ref err) => err.description(),
-            StatusCode(ref status) => {
-                match status.canonical_reason() {
-                    Some(reason) => reason,
-                    None => {
-                        if status.is_informational() {
-                            "status code error: informational"
-                        } else if status.is_success() {
-                            "status code error: success"
-                        } else if status.is_redirection() {
-                            "status code error: redirection"
-                        } else if status.is_client_error() {
-                            "status code error: client error"
-                        } else if status.is_server_error() {
-                            "status code error: server error"
-                        } else if status.is_strange_status() {
-                            "status code error: strange status"
-                        } else {
-                            "status code error: wrong status"
-                        }
-                    }
-                }
-            }
+            StatusCode(ref status) => match status.canonical_reason() {
+                Some(reason) => reason,
+                None => if status.is_informational() {
+                    "status code error: informational"
+                } else if status.is_success() {
+                    "status code error: success"
+                } else if status.is_redirection() {
+                    "status code error: redirection"
+                } else if status.is_client_error() {
+                    "status code error: client error"
+                } else if status.is_server_error() {
+                    "status code error: server error"
+                } else if status.is_strange_status() {
+                    "status code error: strange status"
+                } else {
+                    "status code error: wrong status"
+                },
+            },
             Api(ref err) => err.description(),
             RoomNameParse(ref err) => err.description(),
             Unauthorized => "access not authorized: token expired, username/password incorrect or no login provided",

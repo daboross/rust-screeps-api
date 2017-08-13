@@ -275,22 +275,27 @@ mod test {
         let obj = StructureTerminal::deserialize(json).unwrap();
 
         match obj {
-            StructureTerminal { ghodium_oxide: 0,
-                                keanium_oxide: 0,
-                                oxygen: 0,
-                                keanium: 0,
-                                energy: 1321,
-                                capacity: 300000,
-                                hits: 3000,
-                                hits_max: 3000,
-                                notify_when_attacked: true,
-                                cooldown_time: 20236024,
-                                disabled: false,
-                                x: 30,
-                                y: 35,
-                                ref user,
-                                ref id,
-                                .. } if user == "57874d42d0ae911e3bd15bbc" && id == "59675fbfb554456b195342e7" => (),
+            StructureTerminal {
+                ghodium_oxide: 0,
+                keanium_oxide: 0,
+                oxygen: 0,
+                keanium: 0,
+                energy: 1321,
+                capacity: 300000,
+                hits: 3000,
+                hits_max: 3000,
+                notify_when_attacked: true,
+                cooldown_time: 20236024,
+                disabled: false,
+                x: 30,
+                y: 35,
+                ref user,
+                ref id,
+                ..
+            } if user == "57874d42d0ae911e3bd15bbc" && id == "59675fbfb554456b195342e7" =>
+            {
+                ()
+            }
             other => panic!("expected pre-set StructureTerminal to match, found {:#?}", other),
         }
 

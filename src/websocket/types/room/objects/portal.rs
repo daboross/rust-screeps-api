@@ -1,7 +1,7 @@
 //! `StructurePortal` data description.
 use time;
 
-use data::{RoomName, optional_timespec_seconds, double_optional_timespec_seconds};
+use data::{double_optional_timespec_seconds, optional_timespec_seconds, RoomName};
 
 with_update_struct! {
     /// The destination for a portal structure.
@@ -60,7 +60,7 @@ mod test {
 
     use data::RoomName;
 
-    use super::{StructurePortal, PortalDestination};
+    use super::{PortalDestination, StructurePortal};
 
     #[test]
     fn parse_portal_decaying() {
@@ -128,11 +128,12 @@ mod test {
             }
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "decayTime": 20197693,
             "unstableDate": null,
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructurePortal {
             room: RoomName::new("W5N85").unwrap(),

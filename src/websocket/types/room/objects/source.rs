@@ -65,12 +65,13 @@ mod test {
             ticks_to_regeneration: 300,
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "x": 40,
             "y": 50,
             "energy": 0,
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, Source {
             id: "57ef9dba86f108ae6e60e2fc".to_owned(),

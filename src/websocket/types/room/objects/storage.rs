@@ -276,20 +276,22 @@ mod test {
         let obj = StructureStorage::deserialize(json).unwrap();
 
         match obj {
-            StructureStorage { ghodium_oxide: 0,
-                               keanium_oxide: 0,
-                               oxygen: 0,
-                               utrium: 33581,
-                               catalyzed_ghodium_alkalide: 5400,
-                               keanium: 0,
-                               energy: 631112,
-                               capacity: 1000000,
-                               hits: 10000,
-                               hits_max: 10000,
-                               notify_when_attacked: true,
-                               x: 7,
-                               y: 16,
-                               .. } => (),
+            StructureStorage {
+                ghodium_oxide: 0,
+                keanium_oxide: 0,
+                oxygen: 0,
+                utrium: 33581,
+                catalyzed_ghodium_alkalide: 5400,
+                keanium: 0,
+                energy: 631112,
+                capacity: 1000000,
+                hits: 10000,
+                hits_max: 10000,
+                notify_when_attacked: true,
+                x: 7,
+                y: 16,
+                ..
+            } => (),
             other => panic!("expected pre-set StructureStorage to match, found {:#?}", other),
         }
 

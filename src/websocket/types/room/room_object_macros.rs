@@ -48,9 +48,9 @@ basic_updatable!(String, Timespec, RoomName);
 pub(crate) mod vec_update {
     use std::marker::PhantomData;
 
-    use std::{fmt, cmp};
+    use std::{cmp, fmt};
 
-    use serde::de::{Deserialize, Deserializer, MapAccess, Unexpected, Visitor, Error};
+    use serde::de::{Deserialize, Deserializer, Error, MapAccess, Unexpected, Visitor};
 
     use super::Updatable;
 
@@ -64,31 +64,39 @@ pub(crate) mod vec_update {
     const _IMPL_DESERIALIZE_FOR_VecUpdate: () = {
         extern crate serde as _serde;
         impl<'de, T> _serde::Deserialize<'de> for VecUpdate<T>
-            where T: _serde::Deserialize<'de>
+        where
+            T: _serde::Deserialize<'de>,
         {
             fn deserialize<__D>(__deserializer: __D) -> _serde::export::Result<Self, __D::Error>
-                where __D: _serde::Deserializer<'de>
+            where
+                __D: _serde::Deserializer<'de>,
             {
                 let err1;
                 let err2;
                 let __content = <_serde::private::de::Content as Deserialize>::deserialize(__deserializer)?;
-                match Result::map(Vec::<T>::deserialize(
-                                _serde::private::de::ContentRefDeserializer::<__D::Error>::new(&__content)),
-                                                       VecUpdate::Array) {
-                       Ok(value) => return Ok(value),
-                       Err(e) => err1 = e,
-                    }
-                match Result::map(VecPartialUpdate::<T>::deserialize(
-                                _serde::private::de::ContentRefDeserializer::<__D::Error>::new(&__content)),
-                                                       VecUpdate::PartialObj) {
+                match Result::map(
+                    Vec::<T>::deserialize(_serde::private::de::ContentRefDeserializer::<__D::Error>::new(&__content)),
+                    VecUpdate::Array,
+                ) {
+                    Ok(value) => return Ok(value),
+                    Err(e) => err1 = e,
+                }
+                match Result::map(
+                    VecPartialUpdate::<T>::deserialize(
+                        _serde::private::de::ContentRefDeserializer::<__D::Error>::new(&__content),
+                    ),
+                    VecUpdate::PartialObj,
+                ) {
                     Ok(value) => return Ok(value),
                     Err(e) => err2 = e,
                 }
-                _serde::export::Err(_serde::de::Error::custom(format!("data did not match any variant of \
-                                                               untagged enum VecUpdate (error for \
-                                                               Array: {}, error for PartialObj: {})",
-                                                                      err1,
-                                                                      err2)))
+                _serde::export::Err(_serde::de::Error::custom(format!(
+                    "data did not match any variant of \
+                     untagged enum VecUpdate (error for \
+                     Array: {}, error for PartialObj: {})",
+                    err1,
+                    err2
+                )))
             }
         }
     };
@@ -103,12 +111,15 @@ pub(crate) mod vec_update {
 
     impl<T> VecPartialUpdateVisitor<T> {
         pub fn new() -> Self {
-            VecPartialUpdateVisitor { marker: PhantomData }
+            VecPartialUpdateVisitor {
+                marker: PhantomData,
+            }
         }
     }
 
     impl<'de, T> Visitor<'de> for VecPartialUpdateVisitor<T>
-        where T: Deserialize<'de>
+    where
+        T: Deserialize<'de>,
     {
         type Value = VecPartialUpdate<T>;
 
@@ -123,13 +134,15 @@ pub(crate) mod vec_update {
 
         #[inline]
         fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
-            where A: MapAccess<'de>
+        where
+            A: MapAccess<'de>,
         {
             struct StringKeyAsInt(u32);
 
             impl<'de> Deserialize<'de> for StringKeyAsInt {
                 fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-                    where D: Deserializer<'de>
+                where
+                    D: Deserializer<'de>,
                 {
                     struct StringKeyAsIntVisitor;
 
@@ -142,9 +155,11 @@ pub(crate) mod vec_update {
 
                         #[inline]
                         fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                            where E: Error
+                        where
+                            E: Error,
                         {
-                            Ok(StringKeyAsInt(value.parse()
+                            Ok(StringKeyAsInt(value
+                                .parse()
                                 .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?))
                         }
                     }
@@ -163,28 +178,32 @@ pub(crate) mod vec_update {
     }
 
     impl<'de, T> Deserialize<'de> for VecPartialUpdate<T>
-        where T: Deserialize<'de>
+    where
+        T: Deserialize<'de>,
     {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where D: Deserializer<'de>
+        where
+            D: Deserializer<'de>,
         {
             deserializer.deserialize_map(VecPartialUpdateVisitor::new())
         }
     }
 
     impl<T> Updatable for Vec<T>
-        where T: Updatable
+    where
+        T: Updatable,
     {
         type Update = VecUpdate<<T as Updatable>::Update>;
 
         fn apply_update(&mut self, update: Self::Update) {
             // TODO: proper erroring out here.
             match update {
-                VecUpdate::Array(vec) => {
-                    if let Some(vec) = vec.into_iter().map(T::create_from_update).collect::<Option<Vec<T>>>() {
-                        *self = vec;
-                    }
-                }
+                VecUpdate::Array(vec) => if let Some(vec) = vec.into_iter()
+                    .map(T::create_from_update)
+                    .collect::<Option<Vec<T>>>()
+                {
+                    *self = vec;
+                },
                 VecUpdate::PartialObj(map) => {
                     for (index, value) in map.0.into_iter() {
                         let index = index as usize;
@@ -204,7 +223,9 @@ pub(crate) mod vec_update {
 
         fn create_from_update(update: Self::Update) -> Option<Self> {
             match update {
-                VecUpdate::Array(vec) => vec.into_iter().map(T::create_from_update).collect::<Option<Self>>(),
+                VecUpdate::Array(vec) => vec.into_iter()
+                    .map(T::create_from_update)
+                    .collect::<Option<Self>>(),
                 VecUpdate::PartialObj(_) => None,
             }
         }
@@ -217,12 +238,10 @@ impl Updatable for serde_json::Value {
     fn apply_update(&mut self, update: Self::Update) {
         use serde_json::Value::*;
         match update {
-            Object(map) => {
-                match *self {
-                    Object(ref mut here_map) => here_map.extend(map.into_iter()),
-                    _ => *self = Object(map),
-                }
-            }
+            Object(map) => match *self {
+                Object(ref mut here_map) => here_map.extend(map.into_iter()),
+                _ => *self = Object(map),
+            },
             other => *self = other,
         }
     }
@@ -233,18 +252,17 @@ impl Updatable for serde_json::Value {
 }
 
 impl<T> Updatable for Option<T>
-    where T: Updatable
+where
+    T: Updatable,
 {
     type Update = Option<T::Update>;
 
     fn apply_update(&mut self, update: Self::Update) {
         match update {
-            Some(value_update) => {
-                match *self {
-                    Some(ref mut existing) => existing.apply_update(value_update),
-                    None => *self = T::create_from_update(value_update),
-                }
-            }
+            Some(value_update) => match *self {
+                Some(ref mut existing) => existing.apply_update(value_update),
+                None => *self = T::create_from_update(value_update),
+            },
             None => *self = None,
         }
     }
@@ -313,8 +331,9 @@ pub(crate) mod always_some {
     use serde::{Deserialize, Deserializer};
 
     pub fn deserialize<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
-        where T: Deserialize<'de>,
-              D: Deserializer<'de>
+    where
+        T: Deserialize<'de>,
+        D: Deserializer<'de>,
     {
         Deserialize::deserialize(deserializer).map(Some)
     }

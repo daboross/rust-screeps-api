@@ -7,7 +7,7 @@ use std::convert::AsRef;
 use time;
 use serde::{Serialize, Serializer};
 
-use data::{self, RoomName, optional_timespec_seconds};
+use data::{self, optional_timespec_seconds, RoomName};
 
 use EndpointResult;
 use error::ApiError;
@@ -29,9 +29,10 @@ pub enum StatName {
 #[derive(Serialize, Clone, Debug)]
 #[serde(bound = "")]
 pub struct MapStatsArgs<'a, T, I>
-    where I: AsRef<str>,
-          T: 'a,
-          &'a T: IntoIterator<Item = I>
+where
+    I: AsRef<str>,
+    T: 'a,
+    &'a T: IntoIterator<Item = I>,
 {
     rooms: MapStatsArgsInner<'a, T, I>,
     #[serde(rename = "statName")]
@@ -41,16 +42,18 @@ pub struct MapStatsArgs<'a, T, I>
 
 #[derive(Clone, Debug)]
 struct MapStatsArgsInner<'a, T, I>
-    where I: AsRef<str>,
-          T: 'a,
-          &'a T: IntoIterator<Item = I>
+where
+    I: AsRef<str>,
+    T: 'a,
+    &'a T: IntoIterator<Item = I>,
 {
     rooms: &'a T,
 }
 
 impl<'a, T, I> MapStatsArgs<'a, T, I>
-    where I: AsRef<str>,
-          &'a T: IntoIterator<Item = I>
+where
+    I: AsRef<str>,
+    &'a T: IntoIterator<Item = I>,
 {
     /// Creates a new MapStatsArgs with the given iterator.
     pub fn new(shard: &'a str, rooms: &'a T, stat: StatName) -> Self {
@@ -63,11 +66,13 @@ impl<'a, T, I> MapStatsArgs<'a, T, I>
 }
 
 impl<'a, T, I> Serialize for MapStatsArgsInner<'a, T, I>
-    where I: AsRef<str>,
-          &'a T: IntoIterator<Item = I>
+where
+    I: AsRef<str>,
+    &'a T: IntoIterator<Item = I>,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         use serde::ser::SerializeSeq;
 
@@ -103,11 +108,11 @@ struct RoomResponse {
     status: String,
     own: Option<RoomOwner>,
     /// The end time for the novice area this room is or was last in.
-    #[serde(with="optional_timespec_seconds")]
+    #[serde(with = "optional_timespec_seconds")]
     #[serde(default)]
     novice: Option<time::Timespec>,
     /// The time this room will open or did open into the novice area as a second tier novice room.
-    #[serde(with="optional_timespec_seconds")]
+    #[serde(with = "optional_timespec_seconds")]
     #[serde(default)]
     open_time: Option<time::Timespec>,
     sign: Option<data::RoomSign>,
@@ -194,20 +199,31 @@ impl EndpointResult for MapStats {
         }
 
         Ok(MapStats {
-            rooms: stats.into_iter()
+            rooms: stats
+                .into_iter()
                 .map(|(room_name, room_data)| {
-                    let RoomResponse { status, own: owner, novice, open_time, sign, hard_sign } = room_data;
+                    let RoomResponse {
+                        status,
+                        own: owner,
+                        novice,
+                        open_time,
+                        sign,
+                        hard_sign,
+                    } = room_data;
                     if status == "out of borders" {
                         // Oddity in Screeps: for shard0, all rooms which are out of bounds are simply left out of
                         // the result. For shard1, room names which would exist in shard0, but don't exist in shard1
                         // return an empty "out of bounds" status.
                         return Ok(None);
                     } else if status != "normal" {
-                        return Err(ApiError::MalformedResponse(format!("expected room status for \"{}\" to be \
-                                                                        \"normal\", found \"{}\"",
-                                                                       room_name,
-                                                                       status))
-                            .into());
+                        return Err(
+                            ApiError::MalformedResponse(format!(
+                                "expected room status for \"{}\" to be \
+                                 \"normal\", found \"{}\"",
+                                room_name,
+                                status
+                            )).into(),
+                        );
                     }
 
                     let info = RoomInfo {
@@ -228,15 +244,23 @@ impl EndpointResult for MapStats {
                     Err(e) => Some(Err(e)),
                 })
                 .collect::<ScapiResult<_>>()?,
-            users: users.into_iter()
+            users: users
+                .into_iter()
                 .map(|(user_id, user_data)| {
-                    let UserResponse { badge, _id: user_id2, username } = user_data;
+                    let UserResponse {
+                        badge,
+                        _id: user_id2,
+                        username,
+                    } = user_data;
                     if user_id != user_id2 {
-                        return Err(ApiError::MalformedResponse(format!("expected user id object key to match user \
-                                                                        id, {} != {}",
-                                                                       user_id,
-                                                                       user_id2))
-                            .into());
+                        return Err(
+                            ApiError::MalformedResponse(format!(
+                                "expected user id object key to match user \
+                                 id, {} != {}",
+                                user_id,
+                                user_id2
+                            )).into(),
+                        );
                     }
 
                     let info = UserInfo {

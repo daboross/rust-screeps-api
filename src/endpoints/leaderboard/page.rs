@@ -3,7 +3,7 @@
 use super::find_rank;
 use EndpointResult;
 use data;
-use error::{Result, ApiError};
+use error::{ApiError, Result};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -72,7 +72,12 @@ impl EndpointResult for LeaderboardPage {
     type ErrorResult = data::ApiError;
 
     fn from_raw(raw: Response) -> Result<LeaderboardPage> {
-        let Response { ok, count: total_count, list, users: user_details } = raw;
+        let Response {
+            ok,
+            count: total_count,
+            list,
+            users: user_details,
+        } = raw;
 
         if ok != 1 {
             return Err(ApiError::NotOk(ok).into());
@@ -91,16 +96,19 @@ impl EndpointResult for LeaderboardPage {
                     }
                 })
                 .collect(),
-            user_details: user_details.into_iter()
+            user_details: user_details
+                .into_iter()
                 .map(|(user_id, data)| {
-                    (user_id,
-                     UserDetails {
-                         user_id: data._id,
-                         badge: data.badge,
-                         gcl_points: data.gcl,
-                         username: data.username,
-                         _phantom: PhantomData,
-                     })
+                    (
+                        user_id,
+                        UserDetails {
+                            user_id: data._id,
+                            badge: data.badge,
+                            gcl_points: data.gcl,
+                            username: data.username,
+                            _phantom: PhantomData,
+                        },
+                    )
                 })
                 .collect(),
             _phantom: PhantomData,

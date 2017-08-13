@@ -9,11 +9,11 @@ pub use self::channel::Channel;
 pub use self::commands::{authenticate, subscribe, unsubscribe};
 pub use self::connecting::{default_url, transform_url};
 
-pub use self::parsing::{SockjsMessage, ScreepsMessage};
+pub use self::parsing::{ScreepsMessage, SockjsMessage};
 
 pub use self::types::ChannelUpdate;
-pub use self::types::messages::{Message, ConversationUpdate, MessageUnreadUpdate, MessageUpdate};
-pub use self::types::room::{RoomUpdateInfo, RoomUpdateUserInfo, RoomUpdate};
+pub use self::types::messages::{ConversationUpdate, Message, MessageUnreadUpdate, MessageUpdate};
+pub use self::types::room::{RoomUpdate, RoomUpdateInfo, RoomUpdateUserInfo};
 pub use self::types::room_map_view::RoomMapViewUpdate;
 pub use self::types::user_console::UserConsoleUpdate;
 pub use self::types::user_cpu::UserCpuUpdate;

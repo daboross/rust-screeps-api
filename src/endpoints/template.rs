@@ -2,7 +2,7 @@
 
 use EndpointResult;
 use data;
-use error::{Result, ApiError};
+use error::{ApiError, Result};
 use std::marker::PhantomData;
 
 /// Call raw result.
@@ -30,7 +30,9 @@ impl EndpointResult for CallInfo {
             return Err(ApiError::NotOk(ok).into());
         }
 
-        Ok(CallInfo { _phantom: PhantomData })
+        Ok(CallInfo {
+            _phantom: PhantomData,
+        })
     }
 }
 

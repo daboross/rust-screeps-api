@@ -78,7 +78,9 @@ impl Channel<'static> {
 
     /// Creates a channel subscribing to map-view updates of a room.
     pub fn room_map_view(room_name: RoomName) -> Self {
-        Channel::RoomMapView { room_name: room_name }
+        Channel::RoomMapView {
+            room_name: room_name,
+        }
     }
 
     /// Creates a channel subscribing to detailed updates of a room's contents.
@@ -87,25 +89,32 @@ impl Channel<'static> {
     /// it is random which 2 will received updates on any given ticks. Rooms which are not updated do receive an error
     /// message on "off" ticks.
     pub fn room_detail(room_name: RoomName) -> Self {
-        Channel::RoomDetail { room_name: room_name }
+        Channel::RoomDetail {
+            room_name: room_name,
+        }
     }
 }
 
 impl<'a> Channel<'a> {
     /// Creates a channel subscribing to a user's CPU and memory.
     pub fn user_cpu<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
-        Channel::UserCpu { user_id: user_id.into() }
+        Channel::UserCpu {
+            user_id: user_id.into(),
+        }
     }
 
     /// Creates a channel subscribing to a user's new message notifications.
     pub fn user_messages<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
-        Channel::UserMessages { user_id: user_id.into() }
+        Channel::UserMessages {
+            user_id: user_id.into(),
+        }
     }
 
     /// Creates a channel subscribing to new messages in a user's specific conversation.
     pub fn user_conversation<T, U>(user_id: T, target_user_id: U) -> Self
-        where T: Into<Cow<'a, str>>,
-              U: Into<Cow<'a, str>>
+    where
+        T: Into<Cow<'a, str>>,
+        U: Into<Cow<'a, str>>,
     {
         Channel::UserConversation {
             user_id: user_id.into(),
@@ -115,13 +124,16 @@ impl<'a> Channel<'a> {
 
     /// Creates a channel subscribing to a user's credit count.
     pub fn user_credits<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
-        Channel::UserCredits { user_id: user_id.into() }
+        Channel::UserCredits {
+            user_id: user_id.into(),
+        }
     }
 
     /// Creates a channel subscribing to a path in a user's memory.
     pub fn user_memory_path<T, U>(user_id: T, path: U) -> Self
-        where T: Into<Cow<'a, str>>,
-              U: Into<Cow<'a, str>>
+    where
+        T: Into<Cow<'a, str>>,
+        U: Into<Cow<'a, str>>,
     {
         Channel::UserMemoryPath {
             user_id: user_id.into(),
@@ -131,17 +143,23 @@ impl<'a> Channel<'a> {
 
     /// Creates a channel subscribing to a user's console output.
     pub fn user_console<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
-        Channel::UserConsole { user_id: user_id.into() }
+        Channel::UserConsole {
+            user_id: user_id.into(),
+        }
     }
 
     /// Creates a channel subscribing to when a user's active code branch changes.
     pub fn user_active_branch<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
-        Channel::UserActiveBranch { user_id: user_id.into() }
+        Channel::UserActiveBranch {
+            user_id: user_id.into(),
+        }
     }
 
     /// Creates a channel using the fully specified channel name.
     pub fn other<T: Into<Cow<'a, str>>>(channel: T) -> Self {
-        Channel::Other { channel: channel.into() }
+        Channel::Other {
+            channel: channel.into(),
+        }
     }
 }
 
@@ -151,11 +169,15 @@ impl<'a> fmt::Display for Channel<'a> {
             Channel::ServerMessages => write!(f, "server-message"),
             Channel::UserCpu { ref user_id } => write!(f, "user:{}/cpu", user_id),
             Channel::UserMessages { ref user_id } => write!(f, "user:{}/newMessage", user_id),
-            Channel::UserConversation { ref user_id, ref target_user_id } => {
-                write!(f, "user:{}/message:{}", user_id, target_user_id)
-            }
+            Channel::UserConversation {
+                ref user_id,
+                ref target_user_id,
+            } => write!(f, "user:{}/message:{}", user_id, target_user_id),
             Channel::UserCredits { ref user_id } => write!(f, "user:{}/money", user_id),
-            Channel::UserMemoryPath { ref user_id, ref path } => write!(f, "user:{}/memory/{}", user_id, path),
+            Channel::UserMemoryPath {
+                ref user_id,
+                ref path,
+            } => write!(f, "user:{}/memory/{}", user_id, path),
             Channel::UserConsole { ref user_id } => write!(f, "user:{}/console", user_id),
             Channel::UserActiveBranch { ref user_id } => write!(f, "user:{}/set-active-branch", user_id),
             Channel::RoomMapView { ref room_name } => write!(f, "roomMap2:{}", room_name),

@@ -138,7 +138,13 @@ impl EndpointResult for RoomOverview {
     type ErrorResult = data::ApiError;
 
     fn from_raw(raw: Response) -> Result<RoomOverview> {
-        let Response { ok, owner, stats, stats_max, .. } = raw;
+        let Response {
+            ok,
+            owner,
+            stats,
+            stats_max,
+            ..
+        } = raw;
         if ok != 1 {
             return Err(ApiError::NotOk(ok).into());
         }
@@ -159,41 +165,47 @@ impl EndpointResult for RoomOverview {
             owner: username,
             owner_badge: badge,
             energy_harvested: stats.energy_harvested.into_iter().map(Into::into).collect(),
-            energy_spent_construction: stats.energy_construction.into_iter().map(Into::into).collect(),
+            energy_spent_construction: stats
+                .energy_construction
+                .into_iter()
+                .map(Into::into)
+                .collect(),
             energy_spent_creeps: stats.energy_creeps.into_iter().map(Into::into).collect(),
             energy_spent_control: stats.energy_control.into_iter().map(Into::into).collect(),
             creep_parts_produced: stats.creeps_produced.into_iter().map(Into::into).collect(),
             creep_parts_lost: stats.creeps_lost.into_iter().map(Into::into).collect(),
-            total_stats: vec![TotalStats {
-                                  time_period: 8,
-                                  energy_harvested: stats_max.energy_8,
-                                  energy_spent_creeps: stats_max.energy_creeps_8,
-                                  energy_spent_control: stats_max.energy_control_8,
-                                  energy_spent_construction: stats_max.energy_construction_8,
-                                  creep_parts_produced: stats_max.creeps_produced_8,
-                                  creep_parts_lost: stats_max.creeps_lost_8,
-                                  _phantom: PhantomData,
-                              },
-                              TotalStats {
-                                  time_period: 180,
-                                  energy_harvested: stats_max.energy_180,
-                                  energy_spent_creeps: stats_max.energy_creeps_180,
-                                  energy_spent_control: stats_max.energy_control_180,
-                                  energy_spent_construction: stats_max.energy_construction_180,
-                                  creep_parts_produced: stats_max.creeps_produced_180,
-                                  creep_parts_lost: stats_max.creeps_lost_180,
-                                  _phantom: PhantomData,
-                              },
-                              TotalStats {
-                                  time_period: 1440,
-                                  energy_harvested: stats_max.energy_1440,
-                                  energy_spent_creeps: stats_max.energy_creeps_1440,
-                                  energy_spent_control: stats_max.energy_control_1440,
-                                  energy_spent_construction: stats_max.energy_construction_1440,
-                                  creep_parts_produced: stats_max.creeps_produced_1440,
-                                  creep_parts_lost: stats_max.creeps_lost_1440,
-                                  _phantom: PhantomData,
-                              }],
+            total_stats: vec![
+                TotalStats {
+                    time_period: 8,
+                    energy_harvested: stats_max.energy_8,
+                    energy_spent_creeps: stats_max.energy_creeps_8,
+                    energy_spent_control: stats_max.energy_control_8,
+                    energy_spent_construction: stats_max.energy_construction_8,
+                    creep_parts_produced: stats_max.creeps_produced_8,
+                    creep_parts_lost: stats_max.creeps_lost_8,
+                    _phantom: PhantomData,
+                },
+                TotalStats {
+                    time_period: 180,
+                    energy_harvested: stats_max.energy_180,
+                    energy_spent_creeps: stats_max.energy_creeps_180,
+                    energy_spent_control: stats_max.energy_control_180,
+                    energy_spent_construction: stats_max.energy_construction_180,
+                    creep_parts_produced: stats_max.creeps_produced_180,
+                    creep_parts_lost: stats_max.creeps_lost_180,
+                    _phantom: PhantomData,
+                },
+                TotalStats {
+                    time_period: 1440,
+                    energy_harvested: stats_max.energy_1440,
+                    energy_spent_creeps: stats_max.energy_creeps_1440,
+                    energy_spent_control: stats_max.energy_control_1440,
+                    energy_spent_construction: stats_max.energy_construction_1440,
+                    creep_parts_produced: stats_max.creeps_produced_1440,
+                    creep_parts_lost: stats_max.creeps_lost_1440,
+                    _phantom: PhantomData,
+                },
+            ],
             _phantom: PhantomData,
         })
     }

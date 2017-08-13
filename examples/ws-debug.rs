@@ -1,30 +1,37 @@
 // .env parsing
+
 extern crate dotenv;
 // command line argument parsing
+
 extern crate clap;
 // logging macros
+
 #[macro_use]
 extern crate log;
 // console logging output
-extern crate fern;
+
 extern crate chrono;
+extern crate fern;
 // sockets
-extern crate tokio_core;
+
 extern crate futures;
+extern crate tokio_core;
 extern crate websocket;
 // Screeps API
+
 extern crate screeps_api;
 // json pretty printing
+
 extern crate serde_json;
 
 use std::borrow::Cow;
 
-use futures::{Sink, Stream, Future, future, stream};
+use futures::{future, stream, Future, Sink, Stream};
 
 use websocket::OwnedMessage;
 
-use screeps_api::{TokenStorage, RoomName};
-use screeps_api::websocket::{Channel, ChannelUpdate, SockjsMessage, ScreepsMessage};
+use screeps_api::{RoomName, TokenStorage};
+use screeps_api::websocket::{Channel, ChannelUpdate, ScreepsMessage, SockjsMessage};
 
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
 fn env(var: &str) -> String {
@@ -93,10 +100,10 @@ impl Config {
     fn subscribe_with(&self, id: &str) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         use screeps_api::websocket::subscribe;
 
-        let mut messages = Vec::with_capacity(1 + self.cpu as usize + self.messages as usize + self.credits as usize +
-                                              self.console as usize +
-                                              self.rooms.len() +
-                                              self.map_view.len());
+        let mut messages = Vec::with_capacity(
+            1 + self.cpu as usize + self.messages as usize + self.credits as usize + self.console as usize +
+                self.rooms.len() + self.map_view.len(),
+        );
 
         messages.push(subscribe(&Channel::ServerMessages));
 
@@ -125,67 +132,84 @@ impl Config {
             messages.push(subscribe(&Channel::room_map_view(*room_name)));
         }
 
-        Box::new(stream::iter(messages.into_iter().map(|string| Ok(OwnedMessage::Text(string)))))
+        Box::new(stream::iter(
+            messages
+                .into_iter()
+                .map(|string| Ok(OwnedMessage::Text(string))),
+        ))
     }
 }
 
 fn setup() -> Config {
     let cmd_arguments = clap::App::new("ws-debug")
-        .arg(clap::Arg::with_name("verbose")
-            .short("v")
-            .long("verbose")
-            .multiple(true)
-            .help("Enables verbose logging"))
-        .arg(clap::Arg::with_name("cpu")
-            .short("p")
-            .long("cpu")
-            .help("Subscribe to user cpu and memory updates"))
-        .arg(clap::Arg::with_name("credits")
-            .short("c")
-            .long("credits")
-            .help("Subscribe to per-tick user credit updates"))
-        .arg(clap::Arg::with_name("console")
-            .short("o")
-            .long("console")
-            .help("Subscribe to user console messages"))
-        .arg(clap::Arg::with_name("messages")
-            .short("e")
-            .long("messages")
-            .help("Subscribe to user message alerts"))
-        .arg(clap::Arg::with_name("room")
-            .short("r")
-            .long("room")
-            .value_name("ROOM_NAME")
-            .help("Subscribes to a room")
-            .takes_value(true)
-            .multiple(true))
-        .arg(clap::Arg::with_name("map-view")
-            .short("m")
-            .long("map-view")
-            .value_name("ROOM_NAME")
-            .help("Subscribes to a map-view room")
-            .takes_value(true)
-            .multiple(true))
-        .arg(clap::Arg::with_name("url")
-            .short("u")
-            .long("url")
-            .value_name("API_URL")
-            .help("Server url to connect to")
-            .takes_value(true))
+        .arg(
+            clap::Arg::with_name("verbose")
+                .short("v")
+                .long("verbose")
+                .multiple(true)
+                .help("Enables verbose logging"),
+        )
+        .arg(
+            clap::Arg::with_name("cpu")
+                .short("p")
+                .long("cpu")
+                .help("Subscribe to user cpu and memory updates"),
+        )
+        .arg(
+            clap::Arg::with_name("credits")
+                .short("c")
+                .long("credits")
+                .help("Subscribe to per-tick user credit updates"),
+        )
+        .arg(
+            clap::Arg::with_name("console")
+                .short("o")
+                .long("console")
+                .help("Subscribe to user console messages"),
+        )
+        .arg(
+            clap::Arg::with_name("messages")
+                .short("e")
+                .long("messages")
+                .help("Subscribe to user message alerts"),
+        )
+        .arg(
+            clap::Arg::with_name("room")
+                .short("r")
+                .long("room")
+                .value_name("ROOM_NAME")
+                .help("Subscribes to a room")
+                .takes_value(true)
+                .multiple(true),
+        )
+        .arg(
+            clap::Arg::with_name("map-view")
+                .short("m")
+                .long("map-view")
+                .value_name("ROOM_NAME")
+                .help("Subscribes to a map-view room")
+                .takes_value(true)
+                .multiple(true),
+        )
+        .arg(
+            clap::Arg::with_name("url")
+                .short("u")
+                .long("url")
+                .value_name("API_URL")
+                .help("Server url to connect to")
+                .takes_value(true),
+        )
         .get_matches();
 
     setup_logging(cmd_arguments.occurrences_of("verbose"));
 
     match Config::new(&cmd_arguments) {
         Ok(v) => v,
-        Err(e) => {
-            clap::Error {
-                    message: e.to_string(),
-                    kind: clap::ErrorKind::InvalidValue,
-                    info: None,
-                }
-                .exit()
-        }
+        Err(e) => clap::Error {
+            message: e.to_string(),
+            kind: clap::ErrorKind::InvalidValue,
+            info: None,
+        }.exit(),
     }
 }
 
@@ -194,16 +218,21 @@ fn main() {
 
     let token_storage = screeps_api::RcTokenStorage::default();
 
-    let mut client =
-        screeps_api::SyncConfig::new().unwrap().url(&config.url).tokens(token_storage.clone()).build().unwrap();
+    let mut client = screeps_api::SyncConfig::new()
+        .unwrap()
+        .url(&config.url)
+        .tokens(token_storage.clone())
+        .build()
+        .unwrap();
 
     // Login using the API client - this will storage the auth token in token_storage.
-    client.login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD")).expect("failed to login");
+    client
+        .login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD"))
+        .expect("failed to login");
 
     let my_info = client.my_info().unwrap();
 
-    info!("Logged in as {}, attempting to connect to stream.",
-          my_info.username);
+    info!("Logged in as {}, attempting to connect to stream.", my_info.username);
 
     let mut core = tokio_core::reactor::Core::new().expect("expected IO core to start up without issue.");
 
@@ -215,31 +244,33 @@ fn main() {
     let connection = websocket::ClientBuilder::from_url(&ws_url).async_connect(None, &handle);
 
     core.run(connection.then(|result| {
-            let (client, _) = result.expect("expected successful connection to official server, found error");
+        let (client, _) = result.expect("expected successful connection to official server, found error");
 
-            let (sink, stream) = client.split();
+        let (sink, stream) = client.split();
 
-            sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(&token_storage.take_token().unwrap())))
-                .and_then(|sink| {
-                    let handler = Handler::new(token_storage, my_info, config);
+        sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(&token_storage.take_token().unwrap())))
+            .and_then(|sink| {
+                let handler = Handler::new(token_storage, my_info, config);
 
-                    sink.send_all((stream.and_then(move |data| future::ok(handler.handle_data(data)))
+                sink.send_all(
+                    (stream
+                        .and_then(move |data| future::ok(handler.handle_data(data)))
                         .or_else(|err| {
                             warn!("error occurred: {}", err);
 
                             future::ok::<_, websocket::WebSocketError>(Box::new(stream::empty()) as
-                                                                       Box<Stream<Item = OwnedMessage,
-                                                                                  Error = websocket::WebSocketError>>)
+                                Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>)
                         })
-                        .flatten()))
-                })
+                        .flatten()),
+                )
+            })
 
-        }))
-        .expect("expected websocket connection to complete successfully, but an error occurred");
+    })).expect("expected websocket connection to complete successfully, but an error occurred");
 }
 
 struct Handler<T>
-    where T: screeps_api::TokenStorage
+where
+    T: screeps_api::TokenStorage,
 {
     tokens: T,
     info: screeps_api::MyInfo,
@@ -247,7 +278,8 @@ struct Handler<T>
 }
 
 impl<T> Handler<T>
-    where T: screeps_api::TokenStorage
+where
+    T: screeps_api::TokenStorage,
 {
     fn new(tokens: T, info: screeps_api::MyInfo, config: Config) -> Self {
         Handler {
@@ -260,8 +292,8 @@ impl<T> Handler<T>
     fn handle_data(&self, data: OwnedMessage) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         match data {
             OwnedMessage::Text(string) => {
-                let data = SockjsMessage::parse(&string)
-                    .expect("expected a correct SockJS message, found a parse error.");
+                let data =
+                    SockjsMessage::parse(&string).expect("expected a correct SockJS message, found a parse error.");
 
                 match data {
                     SockjsMessage::Open => debug!("SockJS connection opened"),
@@ -271,7 +303,8 @@ impl<T> Handler<T>
                         return Box::new(self.handle_parsed_message(message));
                     }
                     SockjsMessage::Messages(messages) => {
-                        let results = messages.into_iter()
+                        let results = messages
+                            .into_iter()
                             .map(|message| Ok(self.handle_parsed_message(message)))
                             .collect::<Vec<_>>();
 
@@ -289,28 +322,30 @@ impl<T> Handler<T>
         Box::new(stream::empty())
     }
 
-    fn handle_parsed_message(&self,
-                             message: screeps_api::websocket::parsing::ScreepsMessage)
-                             -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
+    fn handle_parsed_message(
+        &self,
+        message: screeps_api::websocket::parsing::ScreepsMessage,
+    ) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         match message {
             ScreepsMessage::AuthFailed => panic!("authentication with stored token failed!"),
             ScreepsMessage::AuthOk { new_token } => {
-                info!("authentication succeeded, now authenticated as {}.",
-                      self.info.username);
+                info!("authentication succeeded, now authenticated as {}.", self.info.username);
                 // return the token to the token storage in case we need it again - we won't in this example
                 // program, but this is a good practice
                 //
                 // TODO: find an efficient way to do this automatically in the handler.
                 self.tokens.return_token(new_token);
 
-                return Box::new(self.config
-                    .subscribe_with(&self.info.user_id)
-                    .chain(stream::futures_unordered(vec![future::lazy(|| {
-                        warn!("subscribed!");
-                        future::ok::<_, websocket::WebSocketError>(stream::empty())
-                    })])
-                        .flatten())) as
-                       Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>;
+                return Box::new(
+                    self.config.subscribe_with(&self.info.user_id).chain(
+                        stream::futures_unordered(vec![
+                            future::lazy(|| {
+                                warn!("subscribed!");
+                                future::ok::<_, websocket::WebSocketError>(stream::empty())
+                            }),
+                        ]).flatten(),
+                    ),
+                ) as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>;
             }
             ScreepsMessage::ChannelUpdate { update } => {
                 self.handle_update(update);
@@ -340,13 +375,12 @@ impl<T> Handler<T>
             }
             ChannelUpdate::RoomDetail { room_name, update } => {
                 debug!("Room Detail: [{}] {:?}", room_name, update);
-                info!("Room {}: {}",
-                      room_name,
-                      serde_json::to_string_pretty(&serde_json::Value::Object(update.objects
-                              .iter()
-                              .cloned()
-                              .collect()))
-                          .expect("expected to_string to succeed on plain map."));
+                info!(
+                    "Room {}: {}",
+                    room_name,
+                    serde_json::to_string_pretty(&serde_json::Value::Object(update.objects.iter().cloned().collect()))
+                        .expect("expected to_string to succeed on plain map.")
+                );
             }
             ChannelUpdate::NoRoomDetail { room_name } => {
                 info!("Room Skipped: {}", room_name);
@@ -360,16 +394,19 @@ impl<T> Handler<T>
             ChannelUpdate::UserMessage { user_id, update } => {
                 info!("New message: [{}] {:#?}", user_id, update);
             }
-            ChannelUpdate::UserConversation { user_id, target_user_id, update } => {
-                info!("Conversation update: [{}->{}] {:#?}",
-                      user_id,
-                      target_user_id,
-                      update);
+            ChannelUpdate::UserConversation {
+                user_id,
+                target_user_id,
+                update,
+            } => {
+                info!("Conversation update: [{}->{}] {:#?}", user_id, target_user_id, update);
             }
             ChannelUpdate::Other { channel, update } => {
-                warn!("ChannelUpdate::Other: {}\n{}",
-                      channel,
-                      serde_json::to_string_pretty(&update).expect("failed to serialize json string"));
+                warn!(
+                    "ChannelUpdate::Other: {}\n{}",
+                    channel,
+                    serde_json::to_string_pretty(&update).expect("failed to serialize json string")
+                );
             }
         }
     }

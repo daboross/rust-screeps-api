@@ -1,7 +1,7 @@
 //! `Resource` data description.
 use std::fmt;
 
-use serde::de::{Deserialize, Deserializer, Visitor, Error, MapAccess, IgnoredAny, IntoDeserializer};
+use serde::de::{Deserialize, Deserializer, Error, IgnoredAny, IntoDeserializer, MapAccess, Visitor};
 use serde::de::value::Error as ValueError;
 
 use data::RoomName;
@@ -52,7 +52,8 @@ enum FieldName {
 impl<'de> Deserialize<'de> for FieldName {
     #[inline]
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         struct FieldVisitor;
         impl<'de> Visitor<'de> for FieldVisitor {
@@ -63,7 +64,8 @@ impl<'de> Deserialize<'de> for FieldName {
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
                 match value {
                     "_id" => Ok(FieldName::Id),
@@ -81,7 +83,8 @@ impl<'de> Deserialize<'de> for FieldName {
             }
 
             fn visit_bytes<E>(self, value: &[u8]) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
                 match value {
                     b"_id" => Ok(FieldName::Id),
@@ -89,18 +92,15 @@ impl<'de> Deserialize<'de> for FieldName {
                     b"x" => Ok(FieldName::X),
                     b"y" => Ok(FieldName::Y),
                     b"resourceType" => Ok(FieldName::ResourceType),
-                    other => {
-                        match ::std::str::from_utf8(other) {
-                            Ok(other_str) => {
-                                match ResourceType::deserialize(IntoDeserializer::<ValueError>
-                                                                ::into_deserializer(other_str)) {
-                                    Ok(resource_type) => Ok(FieldName::Other(resource_type)),
-                                    Err(_) => Ok(FieldName::Ignored),
-                                }
-                            }
+                    other => match ::std::str::from_utf8(other) {
+                        Ok(other_str) => match ResourceType::deserialize(
+                            IntoDeserializer::<ValueError>::into_deserializer(other_str),
+                        ) {
+                            Ok(resource_type) => Ok(FieldName::Other(resource_type)),
                             Err(_) => Ok(FieldName::Ignored),
-                        }
-                    }
+                        },
+                        Err(_) => Ok(FieldName::Ignored),
+                    },
                 }
             }
         }
@@ -110,7 +110,8 @@ impl<'de> Deserialize<'de> for FieldName {
 
 impl<'de> Deserialize<'de> for Resource {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         struct ResourceVisitor;
         impl<'de> Visitor<'de> for ResourceVisitor {
@@ -121,7 +122,8 @@ impl<'de> Deserialize<'de> for Resource {
 
             #[inline]
             fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
-                where A: MapAccess<'de>
+            where
+                A: MapAccess<'de>,
             {
                 let mut id: Option<String> = None;
                 let mut room: Option<RoomName> = None;
@@ -185,12 +187,14 @@ impl<'de> Deserialize<'de> for Resource {
 
                     impl fmt::Display for ResourceTypeMismatchError {
                         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                            write!(f,
-                                   "this structure expects both a resourceType field declaring a name, and a field \
-                                    named by that name; found that resourceType field's value ({:?}) and name of \
-                                    amount field ({:?}) did not match.",
-                                   self.0,
-                                   self.1)
+                            write!(
+                                f,
+                                "this structure expects both a resourceType field declaring a name, and a field \
+                                 named by that name; found that resourceType field's value ({:?}) and name of \
+                                 amount field ({:?}) did not match.",
+                                self.0,
+                                self.1
+                            )
                         }
                     }
 
@@ -213,7 +217,8 @@ impl<'de> Deserialize<'de> for Resource {
 
 impl<'de> Deserialize<'de> for ResourceUpdate {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         struct ResourceUpdateVisitor;
         impl<'de> Visitor<'de> for ResourceUpdateVisitor {
@@ -224,7 +229,8 @@ impl<'de> Deserialize<'de> for ResourceUpdate {
 
             #[inline]
             fn visit_map<A>(self, mut access: A) -> Result<Self::Value, A::Error>
-                where A: MapAccess<'de>
+            where
+                A: MapAccess<'de>,
             {
                 let mut id: Option<String> = None;
                 let mut room: Option<RoomName> = None;
@@ -268,7 +274,8 @@ impl<'de> Deserialize<'de> for ResourceUpdate {
                             struct CanBeNullI32(Option<i32>);
                             impl<'de> Deserialize<'de> for CanBeNullI32 {
                                 fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-                                    where D: Deserializer<'de>
+                                where
+                                    D: Deserializer<'de>,
                                 {
                                     Ok(CanBeNullI32(Option::deserialize(deserializer)?))
                                 }
@@ -297,10 +304,7 @@ impl<'de> Deserialize<'de> for ResourceUpdate {
             }
         }
         const FIELDS: &'static [&'static str] = &["id", "room", "x", "y", "resourceType"];
-        Deserializer::deserialize_struct(deserializer,
-                                         "ResourceUpdate",
-                                         FIELDS,
-                                         ResourceUpdateVisitor)
+        Deserializer::deserialize_struct(deserializer, "ResourceUpdate", FIELDS, ResourceUpdateVisitor)
     }
 }
 
@@ -310,7 +314,7 @@ mod test {
 
     use data::RoomName;
 
-    use super::{ResourceType, Resource};
+    use super::{Resource, ResourceType};
 
     #[test]
     fn parse_resource() {

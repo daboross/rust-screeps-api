@@ -1,7 +1,7 @@
 //! `StructureController` data description.
 use time;
 
-use data::{RoomName, RoomSign, optional_timespec_seconds};
+use data::{optional_timespec_seconds, RoomName, RoomSign};
 
 implement_update_for_no_extra_meta! {
     RoomSign;
@@ -99,7 +99,7 @@ mod test {
 
     use data::{RoomName, RoomSign};
 
-    use super::{StructureController, ControllerReservation};
+    use super::{ControllerReservation, StructureController};
 
     #[test]
     fn parse_controller_and_update() {
@@ -156,10 +156,11 @@ mod test {
             user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "safeModeAvailable": 8,
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureController {
             id: "57ef9dba86f108ae6e60e2fd".to_owned(),
@@ -237,12 +238,13 @@ mod test {
             sign: None,
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "reservation": {
                 "endTime": 20158029,
             },
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureController {
             id: "579fa94c0700be0674d2f15a".to_owned(),
@@ -295,10 +297,11 @@ mod test {
             user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
         };
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "sign": null,
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureController {
             id: "57ef9dba86f108ae6e60e2fd".to_owned(),

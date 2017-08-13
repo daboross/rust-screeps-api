@@ -63,7 +63,7 @@ mod test {
 
     use data::RoomName;
 
-    use super::{StructureTower, StructureTowerActions, ActionLogTarget};
+    use super::{ActionLogTarget, StructureTower, StructureTowerActions};
 
     #[test]
     fn parse_tower_and_update() {
@@ -107,7 +107,8 @@ mod test {
             user: "57874d42d0ae911e3bd15bbc".to_owned(),
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "actionLog": {
                 "attack": {
                     "x": 10,
@@ -115,8 +116,8 @@ mod test {
                 }
             },
             "energy": 820
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj.action_log, StructureTowerActions {
             attack: Some(ActionLogTarget {

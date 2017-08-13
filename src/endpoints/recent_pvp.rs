@@ -2,7 +2,7 @@
 
 use EndpointResult;
 use data;
-use error::{Result, ApiError};
+use error::{ApiError, Result};
 use std::marker::PhantomData;
 
 /// Call parameters for requesting recent pvp
@@ -87,7 +87,8 @@ impl EndpointResult for RecentPvp {
         Ok(RecentPvp {
             shards: pvp.into_iter()
                 .map(|(name, data)| {
-                    Ok((name,
+                    Ok((
+                        name,
                         ShardRecentPvp {
                             rooms: data.rooms
                                 .into_iter()
@@ -95,7 +96,8 @@ impl EndpointResult for RecentPvp {
                                 .collect::<Result<_>>()?,
                             reported_up_to: data.time,
                             _phantom: PhantomData,
-                        }))
+                        },
+                    ))
                 })
                 .collect::<Result<_>>()?,
             _phantom: PhantomData,

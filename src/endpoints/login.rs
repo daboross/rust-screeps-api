@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use std::borrow::Cow;
 
 use data;
-use error::{Result, ApiError};
+use error::{ApiError, Result};
 
 use {EndpointResult, TokenStorage};
 
@@ -47,7 +47,8 @@ pub struct LoggedIn {
 impl LoggedIn {
     /// Stores the token into the given token storage.
     pub fn return_to<T>(self, storage: &T)
-        where T: TokenStorage
+    where
+        T: TokenStorage,
     {
         storage.return_token(self.token);
     }
@@ -64,12 +65,10 @@ impl EndpointResult for LoggedIn {
             return Err(ApiError::NotOk(ok).into());
         }
         match token {
-            Some(token) => {
-                Ok(LoggedIn {
-                    token: token,
-                    _phantom: PhantomData,
-                })
-            }
+            Some(token) => Ok(LoggedIn {
+                token: token,
+                _phantom: PhantomData,
+            }),
             None => Err(ApiError::MissingField("token").into()),
         }
     }

@@ -53,10 +53,11 @@ mod test {
             next_spawn_time: None,
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "nextSpawnTime": 20000000,
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureKeeperLair {
             room: RoomName::new("E4N4").unwrap(),
@@ -90,10 +91,11 @@ mod test {
             next_spawn_time: Some(20184048),
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "nextSpawnTime": null,
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureKeeperLair {
             room: RoomName::new("W14S5").unwrap(),

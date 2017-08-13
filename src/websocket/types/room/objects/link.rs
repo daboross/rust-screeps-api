@@ -62,7 +62,7 @@ mod test {
 
     use data::RoomName;
 
-    use super::{StructureLink, StructureLinkActions, ActionLogTarget};
+    use super::{ActionLogTarget, StructureLink, StructureLinkActions};
 
     #[test]
     fn parse_link_and_updates() {
@@ -104,24 +104,28 @@ mod test {
             user: "57874d42d0ae911e3bd15bbc".to_owned(),
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "cooldown": 2
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "cooldown": 1
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "cooldown": 0
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj.cooldown, 0);
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "actionLog": {
                 "transferEnergy": {
                     "x": 9,
@@ -130,8 +134,8 @@ mod test {
             },
             "cooldown": 11,
             "energy": 0
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj.action_log, StructureLinkActions {
             transfer_energy: Some(ActionLogTarget {
@@ -140,14 +144,15 @@ mod test {
             })
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "actionLog": {
                 "transferEnergy": null
             },
             "cooldown": 10,
             "energy": 50
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureLink {
             room: RoomName::new("E17N55").unwrap(),

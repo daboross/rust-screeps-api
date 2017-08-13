@@ -45,22 +45,19 @@ impl RoomState {
     /// `novice_end` is generally named `novice` in API results, `open_time` is `openTime`. Respectively, they mean the
     /// time at which the novice area at this room ends/ended, and the time at which this room opens/opened into a
     /// larger novice area from being completely inaccessible.
-    pub fn from_data(current_time: time::Timespec,
-                     novice_end: Option<time::Timespec>,
-                     open_time: Option<time::Timespec>)
-                     -> Result<Self, error::ApiError> {
+    pub fn from_data(
+        current_time: time::Timespec,
+        novice_end: Option<time::Timespec>,
+        open_time: Option<time::Timespec>,
+    ) -> Result<Self, error::ApiError> {
         let state = match novice_end {
-            Some(n) if n > current_time => {
-                match open_time {
-                    Some(o) if o > current_time => {
-                        RoomState::SecondTierNovice {
-                            room_open_time: o,
-                            end_time: n,
-                        }
-                    }
-                    _ => RoomState::Novice { end_time: n },
-                }
-            }
+            Some(n) if n > current_time => match open_time {
+                Some(o) if o > current_time => RoomState::SecondTierNovice {
+                    room_open_time: o,
+                    end_time: n,
+                },
+                _ => RoomState::Novice { end_time: n },
+            },
             Some(_) | None => RoomState::Open,
         };
 
@@ -119,21 +116,23 @@ pub struct HardSign {
 /// Serialization / deserialization of `time::Timespec`.
 pub mod timespec_seconds {
     use time::Timespec;
-    use serde::{Serializer, Deserializer};
+    use serde::{Deserializer, Serializer};
 
     /// Serializes a Timespec by just serializing the seconds as a number.
     pub fn serialize<S>(date: &Timespec, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         serializer.serialize_i64(date.sec)
     }
 
     /// Deserializes either a number or a string into a Timespec, interpreting both as the timespec's seconds.
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Timespec, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         use std::fmt;
-        use serde::de::{Visitor, Error, Unexpected};
+        use serde::de::{Error, Unexpected, Visitor};
 
         struct TimeVisitor;
 
@@ -146,23 +145,28 @@ pub mod timespec_seconds {
 
             #[inline]
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
-                let seconds = value.parse().map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
+                let seconds = value
+                    .parse()
+                    .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
 
                 Ok(Timespec::new(seconds, 0))
 
             }
             #[inline]
             fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
                 Ok(Timespec::new(value, 0))
             }
 
             #[inline]
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
                 Ok(Timespec::new(value as i64, 0))
             }
@@ -175,13 +179,14 @@ pub mod timespec_seconds {
 /// Serialization / deserialization of `Option<time::Timespec>`.
 pub mod optional_timespec_seconds {
     use time::Timespec;
-    use serde::{Serializer, Deserializer};
+    use serde::{Deserializer, Serializer};
 
     /// Serializes an `Option<Timespec>` as the timespec's seconds as a number.
     ///
     /// A unit / nothing will be serialized if the Option is None.
     pub fn serialize<S>(date: &Option<Timespec>, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         match *date {
             Some(ref d) => serializer.serialize_i64(d.sec),
@@ -195,10 +200,11 @@ pub mod optional_timespec_seconds {
     ///
     /// Nothing / a unit will be parsed as None.
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Timespec>, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         use std::fmt;
-        use serde::de::{Visitor, Error, Unexpected};
+        use serde::de::{Error, Unexpected, Visitor};
 
         struct TimeVisitor;
 
@@ -211,16 +217,20 @@ pub mod optional_timespec_seconds {
 
             #[inline]
             fn visit_unit<E>(self) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
                 Ok(None)
             }
 
             #[inline]
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
-                let seconds = value.parse().map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
+                let seconds = value
+                    .parse()
+                    .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
 
                 Ok(Some(Timespec::new(seconds, 0)))
 
@@ -228,14 +238,16 @@ pub mod optional_timespec_seconds {
 
             #[inline]
             fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
                 Ok(Some(Timespec::new(value, 0)))
             }
 
             #[inline]
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
                 Ok(Some(Timespec::new(value as i64, 0)))
             }
@@ -252,13 +264,14 @@ pub mod optional_timespec_seconds {
 /// Useful for updating structs.
 pub mod double_optional_timespec_seconds {
     use time::Timespec;
-    use serde::{Serializer, Deserializer};
+    use serde::{Deserializer, Serializer};
 
     /// Serializes an `Option<Option<Timespec>>` as the timespec's seconds as a number.
     ///
     /// A unit / nothing will be serialized if the Option is None.
     pub fn serialize<S>(date: &Option<Option<Timespec>>, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         match *date {
             Some(Some(ref d)) => serializer.serialize_i64(d.sec),
@@ -272,10 +285,11 @@ pub mod double_optional_timespec_seconds {
     ///
     /// Nothing / a unit will be parsed as None.
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Option<Timespec>>, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         use std::fmt;
-        use serde::de::{Visitor, Error, Unexpected};
+        use serde::de::{Error, Unexpected, Visitor};
 
         struct TimeVisitor;
 
@@ -288,16 +302,20 @@ pub mod double_optional_timespec_seconds {
 
             #[inline]
             fn visit_unit<E>(self) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
                 Ok(Some(None))
             }
 
             #[inline]
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
-                let seconds = value.parse().map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
+                let seconds = value
+                    .parse()
+                    .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
 
                 Ok(Some(Some(Timespec::new(seconds, 0))))
 
@@ -305,14 +323,16 @@ pub mod double_optional_timespec_seconds {
 
             #[inline]
             fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
                 Ok(Some(Some(Timespec::new(value, 0))))
             }
 
             #[inline]
             fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
-                where E: Error
+            where
+                E: Error,
             {
                 Ok(Some(Some(Timespec::new(value as i64, 0))))
             }
@@ -324,7 +344,7 @@ pub mod double_optional_timespec_seconds {
 
 #[cfg(test)]
 mod tests {
-    use super::{timespec_seconds, RoomState, RoomSign, HardSign};
+    use super::{timespec_seconds, HardSign, RoomSign, RoomState};
     use serde_json;
     use time;
 
@@ -352,48 +372,58 @@ mod tests {
     #[test]
     fn parse_room_state_open_previously_novice() {
         // Current time is 4, room opened at 2, novice area ended at 3.
-        let state = RoomState::from_data(time::Timespec::new(4, 0),
-                                         Some(time::Timespec::new(3, 0)),
-                                         Some(time::Timespec::new(2, 0)))
-            .unwrap();
+        let state = RoomState::from_data(
+            time::Timespec::new(4, 0),
+            Some(time::Timespec::new(3, 0)),
+            Some(time::Timespec::new(2, 0)),
+        ).unwrap();
         assert_eq!(state, RoomState::Open);
     }
 
     #[test]
     fn parse_room_state_novice_never_closed() {
         // Current time is 4, novice area ends at 10.
-        let state = RoomState::from_data(time::Timespec::new(4, 0),
-                                         Some(time::Timespec::new(10, 0)),
-                                         None)
-            .unwrap();
-        assert_eq!(state,
-                   RoomState::Novice { end_time: time::Timespec::new(10, 0) });
+        let state = RoomState::from_data(time::Timespec::new(4, 0), Some(time::Timespec::new(10, 0)), None).unwrap();
+        assert_eq!(
+            state,
+            RoomState::Novice {
+                end_time: time::Timespec::new(10, 0),
+            }
+        );
     }
 
     #[test]
     fn parse_room_state_novice_previously_second_tier() {
         // Current time is 4, room opened at 2, novice area ends at 10.
-        let state = RoomState::from_data(time::Timespec::new(4, 0),
-                                         Some(time::Timespec::new(10, 0)),
-                                         Some(time::Timespec::new(2, 0)))
-            .unwrap();
-        assert_eq!(state,
-                   RoomState::Novice { end_time: time::Timespec::new(10, 0) });
+        let state = RoomState::from_data(
+            time::Timespec::new(4, 0),
+            Some(time::Timespec::new(10, 0)),
+            Some(time::Timespec::new(2, 0)),
+        ).unwrap();
+        assert_eq!(
+            state,
+            RoomState::Novice {
+                end_time: time::Timespec::new(10, 0),
+            }
+        );
     }
 
     #[test]
     fn parse_room_state_second_tier_novice() {
         // Current time is 10, room opens to novice at 15, novice area ends at 20.
-        let state = RoomState::from_data(time::Timespec::new(10, 0),
-                                         Some(time::Timespec::new(20, 0)),
-                                         Some(time::Timespec::new(15, 0)))
-            .unwrap();
+        let state = RoomState::from_data(
+            time::Timespec::new(10, 0),
+            Some(time::Timespec::new(20, 0)),
+            Some(time::Timespec::new(15, 0)),
+        ).unwrap();
 
-        assert_eq!(state,
-                   RoomState::SecondTierNovice {
-                       room_open_time: time::Timespec::new(15, 0),
-                       end_time: time::Timespec::new(20, 0),
-                   });
+        assert_eq!(
+            state,
+            RoomState::SecondTierNovice {
+                room_open_time: time::Timespec::new(15, 0),
+                end_time: time::Timespec::new(20, 0),
+            }
+        );
     }
 
     #[test]
@@ -403,8 +433,7 @@ mod tests {
             "text": "I have plans for this block",
             "datetime": 1484071532985i64,
             "user": "57c7df771d90a0c561977377"
-        }))
-            .unwrap();
+        })).unwrap();
     }
 
     #[test]
@@ -415,7 +444,6 @@ mod tests {
             "text": "A new Novice Area is being planned somewhere in this sector. \
                      Please make sure all important rooms are reserved.",
             "endDatetime": 1490978122587i64
-        }))
-            .unwrap();
+        })).unwrap();
     }
 }

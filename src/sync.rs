@@ -1,7 +1,8 @@
 //! Small wrapper around the asynchronous Api struct providing synchronous access methods.
-extern crate tokio_core;
+
 extern crate hyper_tls;
 extern crate native_tls;
+extern crate tokio_core;
 
 use std::borrow::Cow;
 use std::ops::Deref;
@@ -14,13 +15,13 @@ use self::hyper_tls::HttpsConnector;
 
 use error::Error;
 
-use {TokenStorage, RcTokenStorage, Api, DEFAULT_OFFICIAL_API_URL};
+use {Api, RcTokenStorage, TokenStorage, DEFAULT_OFFICIAL_API_URL};
 
-use {MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats, LeaderboardPage, LeaderboardType,
-     FoundUserRank, RecentPvpDetails, LeaderboardSeason, WorldStartRoom};
+use {FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType, MapStats, MyInfo, RecentPvp,
+     RecentPvpDetails, RoomOverview, RoomStatus, RoomTerrain, WorldStartRoom};
 
 mod error {
-    use std::{io, fmt};
+    use std::{fmt, io};
     use url;
     use super::native_tls;
 
@@ -154,7 +155,8 @@ impl Config<'static, UseHttpsConnector, UseRcTokens> {
 impl<'a, C, T> Config<'a, C, T> {
     /// Sets the Hyper connector to connect to to the given connector.
     pub fn connector<F, CC>(self, connector: F) -> Config<'a, CC, T>
-        where F: FnOnce(&tokio_core::reactor::Handle) -> CC
+    where
+        F: FnOnce(&tokio_core::reactor::Handle) -> CC,
     {
         let handle = self.core.handle();
         Config {
@@ -167,7 +169,8 @@ impl<'a, C, T> Config<'a, C, T> {
 
     /// Sets the Hyper connector to connect to to the given connector.
     pub fn try_connector<F, E, CC>(self, connector: F) -> Result<Config<'a, CC, T>, E>
-        where F: FnOnce(&tokio_core::reactor::Handle) -> Result<CC, E>
+    where
+        F: FnOnce(&tokio_core::reactor::Handle) -> Result<CC, E>,
     {
         let handle = self.core.handle();
         Ok(Config {
@@ -228,7 +231,12 @@ impl<'a> Config<'a, UseHttpsConnector, UseRcTokens> {
 impl<'a, C: hyper::client::Connect, T: TokenStorage> Config<'a, C, T> {
     /// Builds the config into a SyncApi.
     pub fn build(self) -> Result<SyncApi<C, T>, SyncError> {
-        let Config { core, hyper, tokens, url } = self;
+        let Config {
+            core,
+            hyper,
+            tokens,
+            url,
+        } = self;
         let handle = core.handle();
         let hyper = hyper.build(&handle);
 
@@ -246,8 +254,9 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     ///
     /// The authentication token will then be stored in this client.
     pub fn login<'b, U, V>(&mut self, username: U, password: V) -> Result<(), Error>
-        where U: Into<Cow<'b, str>>,
-              V: Into<Cow<'b, str>>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
     {
         let result = self.core.run(self.client.login(username, password))?;
 
@@ -274,7 +283,8 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     ///
     /// See [`Api::world_start_room`](../struct.Api.html#method.world_start_room) for more information.
     pub fn shard_start_room<'b, U>(&mut self, shard: U) -> Result<WorldStartRoom, Error>
-        where U: Into<Cow<'b, str>>
+    where
+        U: Into<Cow<'b, str>>,
     {
         self.core.run(self.client.shard_start_room(shard)?)
     }
@@ -283,8 +293,9 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     ///
     /// See [`Api::map_stats`](../struct.Api.html#method.map_stats) for more information.
     pub fn map_stats<'a, U, V>(&mut self, shard: &'a str, rooms: &'a V) -> Result<MapStats, Error>
-        where U: AsRef<str>,
-              &'a V: IntoIterator<Item = U>
+    where
+        U: AsRef<str>,
+        &'a V: IntoIterator<Item = U>,
     {
         self.core.run(self.client.map_stats(shard, rooms)?)
     }
@@ -293,23 +304,27 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     /// data for the past hour, data for the past 24 hours, and data for the past week respectively.
     ///
     /// See [`Api::room_overview`](../struct.Api.html#method.room_overview) for more information.
-    pub fn room_overview<'b, U, V>(&mut self,
-                                   shard: U,
-                                   room_name: V,
-                                   request_interval: u32)
-                                   -> Result<RoomOverview, Error>
-        where U: Into<Cow<'b, str>>,
-              V: Into<Cow<'b, str>>
+    pub fn room_overview<'b, U, V>(
+        &mut self,
+        shard: U,
+        room_name: V,
+        request_interval: u32,
+    ) -> Result<RoomOverview, Error>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client.room_overview(shard, room_name, request_interval)?)
+        self.core.run(self.client
+            .room_overview(shard, room_name, request_interval)?)
     }
 
     /// Gets the terrain of a room, returning a 2d array of 50x50 points.
     ///
     /// See [`Api::room_terrain`](../struct.Api.html#method.room_terrain) for more information.
     pub fn room_terrain<'b, U, V>(&mut self, shard: U, room_name: V) -> Result<RoomTerrain, Error>
-        where U: Into<Cow<'b, str>>,
-              V: Into<Cow<'b, str>>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
     {
         self.core.run(self.client.room_terrain(shard, room_name))
     }
@@ -318,7 +333,8 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     ///
     /// See [`Api::room_status`](../struct.Api.html#method.room_status) for more information.
     pub fn room_status<'b, U>(&mut self, room_name: U) -> Result<RoomStatus, Error>
-        where U: Into<Cow<'b, str>>
+    where
+        U: Into<Cow<'b, str>>,
     {
         self.core.run(self.client.room_status(room_name)?)
     }
@@ -342,40 +358,49 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     /// See [`Api::find_season_leaderboard_rank`] for more information.
     ///
     /// [`Api::find_season_leaderboard_rank`]: ../struct.Api.html#method.find_season_leaderboard_rank
-    pub fn find_season_leaderboard_rank<'b, U, V>(&mut self,
-                                                  leaderboard_type: LeaderboardType,
-                                                  username: U,
-                                                  season: V)
-                                                  -> Result<FoundUserRank, Error>
-        where U: Into<Cow<'b, str>>,
-              V: Into<Cow<'b, str>>
+    pub fn find_season_leaderboard_rank<'b, U, V>(
+        &mut self,
+        leaderboard_type: LeaderboardType,
+        username: U,
+        season: V,
+    ) -> Result<FoundUserRank, Error>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client.find_season_leaderboard_rank(leaderboard_type, username, season)?)
+        self.core.run(self.client
+            .find_season_leaderboard_rank(leaderboard_type, username, season)?)
     }
 
     /// Finds the rank of a user for all seasons for a specific leaderboard type.
     ///
     /// See [`Api::leaderboard_page`](../struct.Api.html#method.find_leaderboard_ranks) for more information.
-    pub fn find_leaderboard_ranks<'b, U>(&mut self,
-                                         leaderboard_type: LeaderboardType,
-                                         username: U)
-                                         -> Result<Vec<FoundUserRank>, Error>
-        where U: Into<Cow<'b, str>>
+    pub fn find_leaderboard_ranks<'b, U>(
+        &mut self,
+        leaderboard_type: LeaderboardType,
+        username: U,
+    ) -> Result<Vec<FoundUserRank>, Error>
+    where
+        U: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client.find_leaderboard_ranks(leaderboard_type, username)?)
+        self.core.run(self.client
+            .find_leaderboard_ranks(leaderboard_type, username)?)
     }
 
     /// Gets a page of the leaderboard for a given season.
     ///
     /// See [`Api::leaderboard_page`](../struct.Api.html#method.leaderboard_page) for more information.
-    pub fn leaderboard_page<'b, U>(&mut self,
-                                   leaderboard_type: LeaderboardType,
-                                   season: U,
-                                   limit: u32,
-                                   offset: u32)
-                                   -> Result<LeaderboardPage, Error>
-        where U: Into<Cow<'b, str>>
+    pub fn leaderboard_page<'b, U>(
+        &mut self,
+        leaderboard_type: LeaderboardType,
+        season: U,
+        limit: u32,
+        offset: u32,
+    ) -> Result<LeaderboardPage, Error>
+    where
+        U: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client.leaderboard_page(leaderboard_type, season, limit, offset)?)
+        self.core.run(self.client
+            .leaderboard_page(leaderboard_type, season, limit, offset)?)
     }
 }

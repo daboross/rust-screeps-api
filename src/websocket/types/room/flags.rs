@@ -1,7 +1,7 @@
 //! Types for user flags which can appear in rooms.
 use std::fmt;
 
-use serde::de::{Deserializer, Visitor, Error, Unexpected};
+use serde::de::{Deserializer, Error, Unexpected, Visitor};
 
 /// Single flag.
 #[derive(Clone, Debug, Hash)]
@@ -80,10 +80,7 @@ impl FlagColor {
             8 => Ok(FlagColor::Brown),
             9 => Ok(FlagColor::Grey),
             10 => Ok(FlagColor::White),
-            other => {
-                Err(E::invalid_value(Unexpected::Unsigned(other as u64),
-                                     &"an integer between 1 and 10"))
-            }
+            other => Err(E::invalid_value(Unexpected::Unsigned(other as u64), &"an integer between 1 and 10")),
         }
     }
 }
@@ -99,14 +96,16 @@ impl<'de> Visitor<'de> for FlagStringVisitor {
 
     #[inline]
     fn visit_unit<E>(self) -> Result<Self::Value, E>
-        where E: Error
+    where
+        E: Error,
     {
         Ok(Vec::new())
     }
 
     #[inline]
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where E: Error
+    where
+        E: Error,
     {
         if v.is_empty() {
             return Ok(Vec::new());
@@ -153,7 +152,8 @@ impl<'de> Visitor<'de> for FlagStringVisitor {
 }
 
 pub(super) fn deserialize_flags<'de, D>(deserializer: D) -> Result<Vec<Flag>, D::Error>
-    where D: Deserializer<'de>
+where
+    D: Deserializer<'de>,
 {
     deserializer.deserialize_str(FlagStringVisitor)
 }

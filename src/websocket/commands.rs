@@ -42,10 +42,7 @@ pub fn unsubscribe(channel: &Channel) -> String {
 /// After doing this, you'll be able to subscribe and unsubscribe to messages. A "auth success" message
 /// will happen as a response which returns either this token or a new one.
 pub fn authenticate(token: &Token) -> String {
-    let message = "auth "
-        .chars()
-        .chain(token.chars())
-        .collect::<String>();
+    let message = "auth ".chars().chain(token.chars()).collect::<String>();
 
     sockjs_send_from_internal(&message)
 }

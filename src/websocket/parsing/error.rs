@@ -36,13 +36,11 @@ impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             ParseError::Other(ref s) => write!(f, "parse error: {}", s),
-            ParseError::Serde { ref error_desc, ref full_string, ref err } => {
-                write!(f,
-                       "error parsing `{}`: {}: {}",
-                       full_string,
-                       error_desc,
-                       err)
-            }
+            ParseError::Serde {
+                ref error_desc,
+                ref full_string,
+                ref err,
+            } => write!(f, "error parsing `{}`: {}: {}", full_string, error_desc, err),
             ParseError::__Nonexhaustive => unreachable!(),
         }
     }

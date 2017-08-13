@@ -91,7 +91,7 @@ mod test {
 
     use data::RoomName;
 
-    use super::{ResourceType, StructureLab, StructureLabActions, LabActionTarget};
+    use super::{LabActionTarget, ResourceType, StructureLab, StructureLabActions};
 
     #[test]
     fn parse_lab_and_updates() {
@@ -139,38 +139,45 @@ mod test {
             user: "561e4d4645f3f7244a7622e8".to_owned(),
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "cooldown": 5
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "cooldown": 4
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "cooldown": 3
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "cooldown": 2
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "cooldown": 1
-        }))
-            .unwrap());
-        obj.update(serde_json::from_value(json!({
+        })).unwrap(),
+        );
+        obj.update(
+            serde_json::from_value(json!({
             "cooldown": 0
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj.cooldown, 0);
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "actionLog": {
                 "runReaction": {
                     "x1": 18,
@@ -181,8 +188,8 @@ mod test {
             },
             "cooldown": 9,
             "mineralAmount": 160
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj.action_log, StructureLabActions {
             run_reaction: Some(LabActionTarget {
@@ -193,13 +200,14 @@ mod test {
             })
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "cooldown": 8,
             "actionLog": {
                 "runReaction": null,
             },
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureLab {
             room: RoomName::new("E9N23").unwrap(),

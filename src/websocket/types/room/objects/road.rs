@@ -57,12 +57,13 @@ mod test {
             notify_when_attacked: true,
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             // note: these are fake values, not a real update.
             "hits": 2000,
             "nextDecayTime": 20000000,
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureRoad {
             room: RoomName::new("E4S61").unwrap(),

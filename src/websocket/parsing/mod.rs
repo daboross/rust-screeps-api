@@ -4,10 +4,10 @@ use std::convert::AsRef;
 use std::marker::PhantomData;
 use std::{cmp, fmt};
 
-use serde::{Deserializer, Deserialize};
-use serde::de::{Visitor, SeqAccess};
+use serde::{Deserialize, Deserializer};
+use serde::de::{SeqAccess, Visitor};
 
-use {serde_json, serde_ignored};
+use {serde_ignored, serde_json};
 
 use Token;
 
@@ -18,7 +18,8 @@ mod error;
 pub use self::error::ParseError;
 
 fn from_str_with_warning<'de, T>(input: &'de str, context: &str) -> Result<T, serde_json::Error>
-    where T: Deserialize<'de>
+where
+    T: Deserialize<'de>,
 {
     let mut deserializer = serde_json::Deserializer::new(serde_json::de::StrRead::new(input));
 
@@ -69,12 +70,10 @@ impl<'a> SockjsMessage<'a> {
             'c' => {
                 let rest = &message[1..];
                 match serde_json::from_str::<(i64, &str)>(rest) {
-                    Ok((code, reason)) => {
-                        SockjsMessage::Close {
-                            code: code,
-                            reason: reason.into(),
-                        }
-                    }
+                    Ok((code, reason)) => SockjsMessage::Close {
+                        code: code,
+                        reason: reason.into(),
+                    },
                     Err(e) => return Err(ParseError::serde("error parsing closed json message", rest.to_owned(), e)),
                 }
             }
@@ -98,10 +97,12 @@ impl<'a> SockjsMessage<'a> {
                 }
             }
             other => {
-                return Err(ParseError::Other(format!("Error parsing message, unknown start character: {} (full \
-                                                      message: {})",
-                                                     other,
-                                                     message)))
+                return Err(ParseError::Other(format!(
+                    "Error parsing message, unknown start character: {} (full \
+                     message: {})",
+                    other,
+                    message
+                )))
             }
         };
 
@@ -117,7 +118,9 @@ struct MultipleMessagesVisitor {
 
 impl MultipleMessagesVisitor {
     fn new() -> Self {
-        MultipleMessagesVisitor { marker: PhantomData }
+        MultipleMessagesVisitor {
+            marker: PhantomData,
+        }
     }
 }
 
@@ -129,7 +132,8 @@ impl<'de> Visitor<'de> for MultipleMessagesVisitor {
     }
 
     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-        where A: SeqAccess<'de>
+    where
+        A: SeqAccess<'de>,
     {
 
         let mut values = Vec::with_capacity(cmp::min(seq.size_hint().unwrap_or(0), 4069));
@@ -144,7 +148,8 @@ impl<'de> Visitor<'de> for MultipleMessagesVisitor {
 
 impl<'de> Deserialize<'de> for MultipleMessagesIntermediate {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         deserializer.deserialize_seq(MultipleMessagesVisitor::new())
     }
@@ -206,12 +211,16 @@ impl ScreepsMessage<'static> {
 
                 return {
                     if rest.starts_with(AUTH_OK) {
-                        ScreepsMessage::AuthOk { new_token: rest[AUTH_OK.len()..].to_owned() }
+                        ScreepsMessage::AuthOk {
+                            new_token: rest[AUTH_OK.len()..].to_owned(),
+                        }
                     } else if rest == AUTH_FAILED {
                         ScreepsMessage::AuthFailed
                     } else {
-                        warn!("expected \"auth failed\", found \"{}\" (occurred when parsing authentication failure)",
-                              message);
+                        warn!(
+                            "expected \"auth failed\", found \"{}\" (occurred when parsing authentication failure)",
+                            message
+                        );
                         ScreepsMessage::AuthFailed
                     }
                 };
@@ -221,8 +230,7 @@ impl ScreepsMessage<'static> {
                 match rest.parse::<u64>() {
                     Ok(v) => return ScreepsMessage::ServerTime { time: v },
                     Err(_) => {
-                        warn!("expected \"time <integer>\", found \"{}\". Ignoring inconsistent message!",
-                              rest);
+                        warn!("expected \"time <integer>\", found \"{}\". Ignoring inconsistent message!", rest);
                     }
                 }
             } else if message.starts_with(PROTOCOL_PREFIX) {
@@ -231,8 +239,7 @@ impl ScreepsMessage<'static> {
                 match rest.parse::<u32>() {
                     Ok(v) => return ScreepsMessage::ServerProtocol { protocol: v },
                     Err(_) => {
-                        warn!("expected \"protocol <integer>\", found \"{}\". Ignoring inconsistent message!",
-                              rest);
+                        warn!("expected \"protocol <integer>\", found \"{}\". Ignoring inconsistent message!", rest);
                     }
                 }
             } else if message.starts_with(PACKAGE_PREFIX) {
@@ -241,8 +248,7 @@ impl ScreepsMessage<'static> {
                 match rest.parse::<u32>() {
                     Ok(v) => return ScreepsMessage::ServerPackage { package: v },
                     Err(_) => {
-                        warn!("expected \"package <integer>\", found \"{}\". Ignoring inconsistent message!",
-                              rest);
+                        warn!("expected \"package <integer>\", found \"{}\". Ignoring inconsistent message!", rest);
                     }
                 }
             }

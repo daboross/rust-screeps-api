@@ -2,7 +2,7 @@
 
 use EndpointResult;
 use data;
-use error::{Result, ApiError};
+use error::{ApiError, Result};
 use std::marker::PhantomData;
 
 /// Raw result for when the API endpoint is called with a specific season id.
@@ -61,7 +61,13 @@ impl EndpointResult for FoundUserRank {
     type ErrorResult = data::ApiError;
 
     fn from_raw(raw: SingleResponse) -> Result<FoundUserRank> {
-        let SingleResponse { ok, rank, score, season, user } = raw;
+        let SingleResponse {
+            ok,
+            rank,
+            score,
+            season,
+            user,
+        } = raw;
 
         if ok != 1 {
             return Err(ApiError::NotOk(ok).into());
@@ -83,24 +89,35 @@ impl EndpointResult for Vec<FoundUserRank> {
     type ErrorResult = data::ApiError;
 
     fn from_raw(raw: AllSeasonRanksResponse) -> Result<Vec<FoundUserRank>> {
-        let AllSeasonRanksResponse { ok, list: season_ranks } = raw;
+        let AllSeasonRanksResponse {
+            ok,
+            list: season_ranks,
+        } = raw;
 
         if ok != 1 {
             return Err(ApiError::NotOk(ok).into());
         }
 
-        Ok(season_ranks.into_iter()
-            .map(|raw_rank| {
-                let InnerAllSeasonsResponse { rank, score, season, user } = raw_rank;
-                FoundUserRank {
-                    season_id: season,
-                    user_id: user,
-                    rank: rank,
-                    raw_score: score,
-                    _phantom: PhantomData,
-                }
-            })
-            .collect())
+        Ok(
+            season_ranks
+                .into_iter()
+                .map(|raw_rank| {
+                    let InnerAllSeasonsResponse {
+                        rank,
+                        score,
+                        season,
+                        user,
+                    } = raw_rank;
+                    FoundUserRank {
+                        season_id: season,
+                        user_id: user,
+                        rank: rank,
+                        raw_score: score,
+                        _phantom: PhantomData,
+                    }
+                })
+                .collect(),
+        )
     }
 }
 

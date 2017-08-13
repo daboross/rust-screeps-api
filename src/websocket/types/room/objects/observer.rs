@@ -71,10 +71,11 @@ mod test {
             user: "561e4d4645f3f7244a7622e8".to_owned(),
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "observeRoom": "E4N20"
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureObserver {
             room: RoomName::new("E9N23").unwrap(),
@@ -89,10 +90,11 @@ mod test {
             user: "561e4d4645f3f7244a7622e8".to_owned(),
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "observeRoom": null
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureObserver {
             room: RoomName::new("E9N23").unwrap(),

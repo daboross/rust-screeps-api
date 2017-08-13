@@ -49,12 +49,10 @@ mod error {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match *self {
                 Error::Parse { ref err, ref url } => write!(f, "URL parse error: {} | url: {}", err, url),
-                Error::WrongScheme { ref scheme, ref url } => {
-                    write!(f,
-                           "expected HTTP or HTTPS url, found {} | url: {}",
-                           scheme,
-                           url)
-                }
+                Error::WrongScheme {
+                    ref scheme,
+                    ref url,
+                } => write!(f, "expected HTTP or HTTPS url, found {} | url: {}", scheme, url),
             }
         }
     }
@@ -109,7 +107,8 @@ pub fn transform_url<U: AsRef<str> + ?Sized>(url: &U) -> Result<Url, UrlError> {
         Err(other) => return Err(UrlError::wrong_scheme(other, url)),
     };
 
-    url.set_scheme(new_scheme).expect("expected `ws` and `wss` to be valid url schemes.");
+    url.set_scheme(new_scheme)
+        .expect("expected `ws` and `wss` to be valid url schemes.");
 
 
     // we could probably just use gen_ascii_chars for the session ID, but to be safe

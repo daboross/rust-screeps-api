@@ -38,17 +38,19 @@ enum InnerUpdateRepresentation {
 
 impl<'de> Deserialize<'de> for UserConsoleUpdate {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         let intermediate = InnerUpdateRepresentation::deserialize(deserializer)?;
 
         Ok(match intermediate {
-            InnerUpdateRepresentation::Messages { log_messages, result_messages } => {
-                UserConsoleUpdate::Messages {
-                    log_messages: log_messages,
-                    result_messages: result_messages,
-                }
-            }
+            InnerUpdateRepresentation::Messages {
+                log_messages,
+                result_messages,
+            } => UserConsoleUpdate::Messages {
+                log_messages: log_messages,
+                result_messages: result_messages,
+            },
             InnerUpdateRepresentation::Error(message) => UserConsoleUpdate::Error { message: message },
         })
     }

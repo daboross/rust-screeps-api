@@ -86,7 +86,8 @@ impl RoomName {
     /// This will parse the input, and return an error if it is in an invalid format.
     #[inline]
     pub fn new<T>(x: &T) -> Result<Self, RoomNameParseError>
-        where T: IntoRoomName + ?Sized
+    where
+        T: IntoRoomName + ?Sized,
     {
         x.into_room_name()
     }
@@ -197,7 +198,8 @@ fn parse_or_cheap_failure(s: &str) -> Result<RoomName, ()> {
 }
 
 impl<T> IntoRoomName for T
-    where T: AsRef<str> + ?Sized
+where
+    T: AsRef<str> + ?Sized,
 {
     fn into_room_name(&self) -> Result<RoomName, RoomNameParseError> {
         let s = self.as_ref();
@@ -240,23 +242,22 @@ impl<'a> error::Error for RoomNameParseError<'a> {
 
 impl<'a> fmt::Display for RoomNameParseError<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-               "expected room name formatted `(E|W)[0-9]+(N|S)[0-9]+`, found `{}`",
-               self.0.as_ref())
+        write!(f, "expected room name formatted `(E|W)[0-9]+(N|S)[0-9]+`, found `{}`", self.0.as_ref())
     }
 }
 
 mod serde {
-    use super::{RoomName, parse_or_cheap_failure};
+    use super::{parse_or_cheap_failure, RoomName};
 
     use std::fmt;
 
-    use serde::de::{Deserialize, Deserializer, Visitor, Error, Unexpected};
+    use serde::de::{Deserialize, Deserializer, Error, Unexpected, Visitor};
     use serde::ser::{Serialize, Serializer};
 
     impl Serialize for RoomName {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-            where S: Serializer
+        where
+            S: Serializer,
         {
             serializer.collect_str(self)
         }
@@ -272,7 +273,8 @@ mod serde {
         }
 
         fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-            where E: Error
+        where
+            E: Error,
         {
             parse_or_cheap_failure(v).map_err(|()| E::invalid_value(Unexpected::Str(v), &self))
         }
@@ -280,7 +282,8 @@ mod serde {
 
     impl<'de> Deserialize<'de> for RoomName {
         fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-            where D: Deserializer<'de>
+        where
+            D: Deserializer<'de>,
         {
             deserializer.deserialize_str(RoomNameVisitor)
         }
@@ -304,9 +307,11 @@ mod tests {
 
     #[test]
     fn parse_and_test_result() {
-        let pairs = [("E0N0", RoomName::from_pos(true, true, 0, 0)),
-                     ("W0S0", RoomName::from_pos(false, false, 0, 0)),
-                     ("E20S7777", RoomName::from_pos(true, false, 20, 7777))];
+        let pairs = [
+            ("E0N0", RoomName::from_pos(true, true, 0, 0)),
+            ("W0S0", RoomName::from_pos(false, false, 0, 0)),
+            ("E20S7777", RoomName::from_pos(true, false, 20, 7777)),
+        ];
 
         for &(ref string, ref expected) in pairs.iter() {
             assert_eq!(&RoomName::new(string).unwrap(), expected);

@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 
 use EndpointResult;
 use data;
-use error::{Result, ApiError};
+use error::{ApiError, Result};
 
 
 /// World start room raw result.
@@ -39,9 +39,12 @@ impl EndpointResult for WorldStartRoom {
 
 
         if room.len() < 1 {
-            return Err(ApiError::MalformedResponse(format!("expected response.room to be an array of \
-                                                            length 1 or greater, found empty array"))
-                .into());
+            return Err(
+                ApiError::MalformedResponse(format!(
+                    "expected response.room to be an array of \
+                     length 1 or greater, found empty array"
+                )).into(),
+            );
         }
 
         let room_string = room.swap_remove(0);
@@ -75,25 +78,29 @@ mod tests {
 
     #[test]
     fn parse_sample() {
-        test_parse(json! ({
-            "ok": 1,
-            "room": [
-                "shard0/E4S61",
-            ]
-        }),
-                   "E4S61",
-                   Some("shard0"));
+        test_parse(
+            json! ({
+                "ok": 1,
+                "room": [
+                    "shard0/E4S61",
+                ]
+            }),
+            "E4S61",
+            Some("shard0"),
+        );
     }
 
     #[test]
     fn parse_sample_no_shard() {
-        test_parse(json! ({
-            "ok": 1,
-            "room": [
-                "E0N0",
-            ]
-        }),
-                   "E0N0",
-                   None);
+        test_parse(
+            json! ({
+                "ok": 1,
+                "room": [
+                    "E0N0",
+                ]
+            }),
+            "E0N0",
+            None,
+        );
     }
 }

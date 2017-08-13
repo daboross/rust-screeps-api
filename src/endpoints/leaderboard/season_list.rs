@@ -2,7 +2,7 @@
 
 use EndpointResult;
 use data;
-use error::{Result, ApiError};
+use error::{ApiError, Result};
 use std::marker::PhantomData;
 
 /// Call raw result.
@@ -47,16 +47,19 @@ impl EndpointResult for Vec<LeaderboardSeason> {
             return Err(ApiError::NotOk(ok).into());
         }
 
-        Ok(seasons.into_iter()
-            .map(|s| {
-                LeaderboardSeason {
-                    name: s.name,
-                    season_id: s._id,
-                    end_date: s.date,
-                    _phantom: PhantomData,
-                }
-            })
-            .collect())
+        Ok(
+            seasons
+                .into_iter()
+                .map(|s| {
+                    LeaderboardSeason {
+                        name: s.name,
+                        season_id: s._id,
+                        end_date: s.date,
+                        _phantom: PhantomData,
+                    }
+                })
+                .collect(),
+        )
     }
 }
 

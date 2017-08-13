@@ -50,7 +50,16 @@ impl EndpointResult for MyInfo {
     type ErrorResult = data::ApiError;
 
     fn from_raw(raw: Response) -> Result<MyInfo> {
-        let Response { ok, _id: user_id, username, password, cpu, gcl, money, .. } = raw;
+        let Response {
+            ok,
+            _id: user_id,
+            username,
+            password,
+            cpu,
+            gcl,
+            money,
+            ..
+        } = raw;
 
         if ok != 1 {
             return Err(ApiError::NotOk(ok).into());

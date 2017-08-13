@@ -4,8 +4,8 @@ use std::convert::AsRef;
 use std::marker::PhantomData;
 use std::fmt;
 
-use serde::{Deserializer, Deserialize};
-use serde::de::{self, Visitor, SeqAccess, Unexpected};
+use serde::{Deserialize, Deserializer};
+use serde::de::{self, SeqAccess, Unexpected, Visitor};
 
 use serde_json;
 use websocket::Channel;
@@ -16,7 +16,7 @@ use self::room_map_view::RoomMapViewUpdate;
 use self::user_cpu::UserCpuUpdate;
 use self::user_console::UserConsoleUpdate;
 use self::room::RoomUpdate;
-use self::messages::{MessageUpdate, ConversationUpdate};
+use self::messages::{ConversationUpdate, MessageUpdate};
 
 pub mod room;
 pub mod messages;
@@ -142,15 +142,18 @@ impl<'a> ChannelUpdate<'a> {
     pub fn channel(&self) -> Channel {
         match *self {
             ChannelUpdate::RoomMapView { room_name, .. } => Channel::room_map_view(room_name),
-            ChannelUpdate::RoomDetail { room_name, .. } |
-            ChannelUpdate::NoRoomDetail { room_name, .. } => Channel::room_detail(room_name),
+            ChannelUpdate::RoomDetail { room_name, .. } | ChannelUpdate::NoRoomDetail { room_name, .. } => {
+                Channel::room_detail(room_name)
+            }
             ChannelUpdate::UserCpu { ref user_id, .. } => Channel::user_cpu(user_id.as_ref()),
             ChannelUpdate::UserConsole { ref user_id, .. } => Channel::user_console(user_id.as_ref()),
             ChannelUpdate::UserCredits { ref user_id, .. } => Channel::user_credits(user_id.as_ref()),
             ChannelUpdate::UserMessage { ref user_id, .. } => Channel::user_messages(user_id.as_ref()),
-            ChannelUpdate::UserConversation { ref user_id, ref target_user_id, .. } => {
-                Channel::user_conversation(user_id.as_ref(), target_user_id.as_ref())
-            }
+            ChannelUpdate::UserConversation {
+                ref user_id,
+                ref target_user_id,
+                ..
+            } => Channel::user_conversation(user_id.as_ref(), target_user_id.as_ref()),
             ChannelUpdate::Other { ref channel, .. } => Channel::other(channel.as_ref()),
         }
     }
@@ -162,7 +165,9 @@ struct ChannelUpdateVisitor<'a> {
 
 impl<'a> ChannelUpdateVisitor<'a> {
     fn new() -> Self {
-        ChannelUpdateVisitor { marker: PhantomData }
+        ChannelUpdateVisitor {
+            marker: PhantomData,
+        }
     }
 }
 
@@ -174,7 +179,8 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
     }
 
     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-        where A: SeqAccess<'de>
+    where
+        A: SeqAccess<'de>,
     {
         const ROOM_MAP_VIEW_PREFIX: &'static str = "roomMap2:";
         const ROOM_PREFIX: &'static str = "room:";
@@ -186,7 +192,8 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
         const USER_MESSAGE: &'static str = "newMessage";
         const USER_CONVERSATION_PREFIX: &'static str = "message:";
 
-        let channel: &str = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
+        let channel: &str = seq.next_element()
+            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
         macro_rules! finish_other {
             () => ({
@@ -201,35 +208,35 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             let room_name = &channel[ROOM_MAP_VIEW_PREFIX.len()..];
 
             let room_name = RoomName::new(room_name).map_err(|_| {
-                    de::Error::invalid_value(Unexpected::Str(room_name),
-                                             &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
-                })?;
+                de::Error::invalid_value(Unexpected::Str(room_name), &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
+            })?;
 
             return Ok(ChannelUpdate::RoomMapView {
                 room_name: room_name,
-                update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                update: seq.next_element()
+                    ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
         } else if channel.starts_with(ROOM_PREFIX) {
             let room_name = &channel[ROOM_PREFIX.len()..];
 
             let room_name = RoomName::new(room_name).map_err(|_| {
-                    de::Error::invalid_value(Unexpected::Str(room_name),
-                                             &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
-                })?;
+                de::Error::invalid_value(Unexpected::Str(room_name), &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
+            })?;
 
             return Ok(ChannelUpdate::RoomDetail {
                 room_name: room_name,
-                update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                update: seq.next_element()
+                    ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
         } else if channel.starts_with(ROOM_ERR_PREFIX) {
             let room_name = &channel[ROOM_ERR_PREFIX.len()..];
 
             let room_name = RoomName::new(room_name).map_err(|_| {
-                    de::Error::invalid_value(Unexpected::Str(room_name),
-                                             &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
-                })?;
+                de::Error::invalid_value(Unexpected::Str(room_name), &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
+            })?;
 
-            let err_message = seq.next_element::<&str>()?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
+            let err_message = seq.next_element::<&str>()
+                ?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
             // TODO: This is currently just a patch in for a common error message, but we don't handle any other
             // errors that are reported as `err@<rest of channel name>`.
@@ -240,7 +247,9 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             // B. add handling of all err@ messages into a variant which can then just parse the channel name into
             //    a `Channel`.
             if err_message == "subscribe limit reached" {
-                return Ok(ChannelUpdate::NoRoomDetail { room_name: room_name });
+                return Ok(ChannelUpdate::NoRoomDetail {
+                    room_name: room_name,
+                });
             }
         } else if channel.starts_with(USER_PREFIX) {
             let user_id_and_part = &channel[USER_PREFIX.len()..];
@@ -257,40 +266,43 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                 USER_CPU => {
                     return Ok(ChannelUpdate::UserCpu {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()
+                            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     });
                 }
                 USER_CONSOLE => {
                     return Ok(ChannelUpdate::UserConsole {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()
+                            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     });
                 }
                 USER_CREDITS => {
                     return Ok(ChannelUpdate::UserCredits {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()
+                            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     })
                 }
                 USER_MESSAGE => {
                     return Ok(ChannelUpdate::UserMessage {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()
+                            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     })
                 }
-                sub_channel => {
-                    if sub_channel.starts_with(USER_CONVERSATION_PREFIX) {
-                        let target_user_id = &sub_channel[USER_CONVERSATION_PREFIX.len()..];
+                sub_channel => if sub_channel.starts_with(USER_CONVERSATION_PREFIX) {
+                    let target_user_id = &sub_channel[USER_CONVERSATION_PREFIX.len()..];
 
-                        return Ok(ChannelUpdate::UserConversation {
-                            user_id: user_id.to_owned().into(),
-                            target_user_id: target_user_id.to_owned().into(),
-                            update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
-                        });
-                    } else {
-                        finish_other!()
-                    }
-                }
+                    return Ok(ChannelUpdate::UserConversation {
+                        user_id: user_id.to_owned().into(),
+                        target_user_id: target_user_id.to_owned().into(),
+                        update: seq.next_element()
+                            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                    });
+                } else {
+                    finish_other!()
+                },
             }
         }
 
@@ -300,7 +312,8 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
 
 impl<'de> Deserialize<'de> for ChannelUpdate<'static> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         deserializer.deserialize_seq(ChannelUpdateVisitor::new())
     }

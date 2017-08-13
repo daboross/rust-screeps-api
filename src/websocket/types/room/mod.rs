@@ -17,11 +17,11 @@ mod room_object_macros;
 pub mod resources;
 pub mod objects;
 
-use self::flags::{Flag, deserialize_flags};
+use self::flags::{deserialize_flags, Flag};
 
 /// Update for detailed room information.
 #[derive(Deserialize, Clone, Debug)]
-#[serde(rename_all="camelCase")]
+#[serde(rename_all = "camelCase")]
 pub struct RoomUpdate {
     /// The game time when this update was created.
     pub game_time: Option<u32>,
@@ -73,7 +73,7 @@ pub struct RoomUpdateInfo {
 #[derive(Deserialize, Clone, Hash, Debug)]
 pub struct RoomUpdateUserInfo {
     /// User ID
-    #[serde(rename="_id")]
+    #[serde(rename = "_id")]
     pub user_id: Option<String>,
     /// Username
     pub username: Option<String>,

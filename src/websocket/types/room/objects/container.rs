@@ -262,20 +262,25 @@ mod test {
         let obj = StructureContainer::deserialize(json).unwrap();
 
         match obj {
-            StructureContainer { ghodium_oxide: 0,
-                                 keanium_oxide: 0,
-                                 oxygen: 0,
-                                 keanium: 0,
-                                 energy: 2000,
-                                 capacity: 2000,
-                                 hits: 250000,
-                                 hits_max: 250000,
-                                 next_decay_time: 20233841,
-                                 notify_when_attacked: true,
-                                 x: 19,
-                                 y: 22,
-                                 ref id,
-                                 .. } if id == "58cc8143050a8f701678f22e" => (),
+            StructureContainer {
+                ghodium_oxide: 0,
+                keanium_oxide: 0,
+                oxygen: 0,
+                keanium: 0,
+                energy: 2000,
+                capacity: 2000,
+                hits: 250000,
+                hits_max: 250000,
+                next_decay_time: 20233841,
+                notify_when_attacked: true,
+                x: 19,
+                y: 22,
+                ref id,
+                ..
+            } if id == "58cc8143050a8f701678f22e" =>
+            {
+                ()
+            }
             other => panic!("expected pre-set StructureContainer to match, found {:#?}", other),
         }
 

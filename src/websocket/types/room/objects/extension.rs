@@ -74,11 +74,12 @@ mod test {
             user: "57874d42d0ae911e3bd15bbc".to_owned(),
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "energy": 0,
             "notifyWhenAttacked": false,
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj, StructureExtension {
             room: RoomName::new("E4S61").unwrap(),

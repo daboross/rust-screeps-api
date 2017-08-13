@@ -41,26 +41,30 @@
 //! [`Api`]: struct.Api.html
 //! [`SyncApi`]: sync/struct.SyncApi.html
 #![deny(missing_docs)]
-#![recursion_limit="512"]
+#![recursion_limit = "512"]
 // Logging
+
 #[macro_use]
 extern crate log;
 // Parsing
+
+extern crate arrayvec;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate serde_ignored;
 #[cfg_attr(test, macro_use)]
 extern crate serde_json;
-extern crate serde_ignored;
-extern crate tuple_vec_map;
-extern crate arrayvec;
 extern crate time;
+extern crate tuple_vec_map;
 // HTTP
+
 extern crate futures;
-extern crate url;
 #[macro_use]
 extern crate hyper;
+extern crate url;
 // Websockets
+
 extern crate rand;
 
 pub mod error;
@@ -73,7 +77,7 @@ pub mod sync;
 
 pub use error::{Error, ErrorKind, NoToken};
 pub use data::RoomName;
-pub use endpoints::{MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, MapStats, WorldStartRoom};
+pub use endpoints::{MapStats, MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, WorldStartRoom};
 pub use endpoints::leaderboard::LeaderboardType;
 pub use endpoints::room_terrain::TerrainGrid;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
@@ -83,7 +87,7 @@ pub use endpoints::leaderboard::find_rank::FoundUserRank;
 pub use endpoints::leaderboard::page::LeaderboardPage;
 pub use connecting::FutureResponse;
 #[cfg(feature = "sync")]
-pub use sync::{SyncApi, Config as SyncConfig};
+pub use sync::{Config as SyncConfig, SyncApi};
 
 use std::marker::PhantomData;
 use std::borrow::Cow;
@@ -96,7 +100,7 @@ use std::cell::RefCell;
 use url::Url;
 use hyper::header::ContentType;
 
-use endpoints::{login, recent_pvp, map_stats};
+use endpoints::{login, map_stats, recent_pvp};
 
 use sealed::EndpointResult;
 
@@ -113,13 +117,21 @@ mod sealed {
     }
 
     pub trait Sealed: ::EndpointResult {}
-    impl<T> Sealed for T where T: ::EndpointResult {}
+    impl<T> Sealed for T
+    where
+        T: ::EndpointResult,
+    {
+    }
 }
 
 /// Sealed trait implemented for each endpoint.
 pub trait EndpointType: sealed::Sealed {}
 
-impl<T> EndpointType for T where T: sealed::Sealed {}
+impl<T> EndpointType for T
+where
+    T: sealed::Sealed,
+{
+}
 
 /// An API token that allows for one-time authentication. Each use of an API token with the screeps API
 /// will cause the API to return a new token which should be stored in its place.
@@ -128,7 +140,8 @@ pub type Token = String;
 /// A generic trait over hyper's Client which allows for references, owned clients, and `Arc<hyper::Client>`
 /// to be used.
 pub trait HyperClient<C>
-    where C: hyper::client::Connect
+where
+    C: hyper::client::Connect,
 {
     /// Get a reference to this client.
     fn client(&self) -> &hyper::Client<C>;
@@ -150,7 +163,8 @@ pub type ArcTokenStorage = Arc<Mutex<VecDeque<Token>>>;
 pub type RcTokenStorage = Rc<RefCell<VecDeque<Token>>>;
 
 impl<C> HyperClient<C> for hyper::Client<C>
-    where C: hyper::client::Connect
+where
+    C: hyper::client::Connect,
 {
     fn client(&self) -> &hyper::Client<C> {
         self
@@ -158,7 +172,8 @@ impl<C> HyperClient<C> for hyper::Client<C>
 }
 
 impl<'a, C> HyperClient<C> for &'a hyper::Client<C>
-    where C: hyper::client::Connect
+where
+    C: hyper::client::Connect,
 {
     fn client(&self) -> &hyper::Client<C> {
         self
@@ -166,7 +181,8 @@ impl<'a, C> HyperClient<C> for &'a hyper::Client<C>
 }
 
 impl<C> HyperClient<C> for Arc<hyper::Client<C>>
-    where C: hyper::client::Connect
+where
+    C: hyper::client::Connect,
 {
     fn client(&self) -> &hyper::Client<C> {
         &self
@@ -174,7 +190,8 @@ impl<C> HyperClient<C> for Arc<hyper::Client<C>>
 }
 
 impl<C> HyperClient<C> for Rc<hyper::Client<C>>
-    where C: hyper::client::Connect
+where
+    C: hyper::client::Connect,
 {
     fn client(&self) -> &hyper::Client<C> {
         &self
@@ -197,7 +214,9 @@ impl TokenStorage for Arc<Mutex<VecDeque<Token>>> {
     }
 
     fn return_token(&self, token: Token) {
-        self.lock().unwrap_or_else(|e| e.into_inner()).push_back(token)
+        self.lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push_back(token)
     }
 }
 
@@ -298,11 +317,13 @@ impl<C, H, T> Api<C, H, T> {
 impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T> {
     /// Starts preparing a POST or GET request to the given endpoint URL
     #[inline]
-    fn request<'a, R, S>(&'a self,
-                         endpoint: &'a str)
-                         -> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, S>
-        where R: EndpointResult,
-              S: serde::Serialize
+    fn request<'a, R, S>(
+        &'a self,
+        endpoint: &'a str,
+    ) -> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, S>
+    where
+        R: EndpointResult,
+        S: serde::Serialize,
     {
         PartialRequest {
             client: self,
@@ -315,10 +336,12 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
 
     /// Makes a new GET request to the given endpoint URL, with given the query parameters added to the end.
     #[inline]
-    fn get<'a, R>(&'a self,
-                  endpoint: &'a str)
-                  -> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, &'static str>
-        where R: EndpointResult
+    fn get<'a, R>(
+        &'a self,
+        endpoint: &'a str,
+    ) -> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, &'static str>
+    where
+        R: EndpointResult,
     {
         self.request(endpoint)
     }
@@ -326,12 +349,14 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
 
     /// Makes a POST request to the given endpoint URL, with the given data encoded as JSON in the body of the request.
     #[inline]
-    fn post<'a, U, R>(&'a self,
-                      endpoint: &'a str,
-                      request_text: U)
-                      -> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, U>
-        where U: serde::Serialize,
-              R: EndpointResult
+    fn post<'a, U, R>(
+        &'a self,
+        endpoint: &'a str,
+        request_text: U,
+    ) -> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, U>
+    where
+        U: serde::Serialize,
+        R: EndpointResult,
     {
         self.request(endpoint).post(request_text)
     }
@@ -340,10 +365,12 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     ///
     /// Use `logged_in.return_to(client.tokens)` to let the client use the token from logging in.
     pub fn login<'b, U, V>(&self, username: U, password: V) -> FutureResponse<LoggedIn>
-        where U: Into<Cow<'b, str>>,
-              V: Into<Cow<'b, str>>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
     {
-        self.post("auth/signin", login::Details::new(username, password)).send()
+        self.post("auth/signin", login::Details::new(username, password))
+            .send()
     }
 
     /// Gets user information on the user currently logged in, including username and user id.
@@ -353,14 +380,13 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
 
     /// Gets the world shard and room name the server thinks the client should start with viewing.
     pub fn world_start_room(&self) -> Result<FutureResponse<WorldStartRoom>, NoToken> {
-        self.get("user/world-start-room")
-            .auth()
-            .send()
+        self.get("user/world-start-room").auth().send()
     }
 
     /// Gets the room name the server thinks the client should start with viewing for a particular shard.
     pub fn shard_start_room<'b, U>(&self, shard: U) -> Result<FutureResponse<WorldStartRoom>, NoToken>
-        where U: Into<Cow<'b, str>>
+    where
+        U: Into<Cow<'b, str>>,
     {
         self.get("user/world-start-room")
             .params(&[("shard", shard.into().into_owned())])
@@ -370,15 +396,14 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
 
     /// Get information on a number of rooms.
     pub fn map_stats<'a, U, V>(&self, shard: &'a str, rooms: &'a V) -> Result<FutureResponse<MapStats>, NoToken>
-        where U: AsRef<str>,
-              &'a V: IntoIterator<Item = U>
+    where
+        U: AsRef<str>,
+        &'a V: IntoIterator<Item = U>,
     {
         // TODO: interpret for different stats.
         let args = map_stats::MapStatsArgs::new(shard, rooms, map_stats::StatName::RoomOwner);
 
-        self.post("game/map-stats", args)
-            .auth()
-            .send()
+        self.post("game/map-stats", args).auth().send()
     }
 
     /// Gets the overview of a room, returning totals for usually 3 intervals, 8, 180 and 1440, representing
@@ -387,18 +412,22 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     /// All Allowed request_intervals are not known, but at least `8`, `180` and `1440` are allowed. The returned data,
     /// at the time of writing, includes 8 data points of each type, representing equal portions of the time period
     /// requested (hour for `8`, day for `180`, week for `1440`).
-    pub fn room_overview<'b, U, V>(&self,
-                                   shard: U,
-                                   room_name: V,
-                                   request_interval: u32)
-                                   -> Result<FutureResponse<RoomOverview>, NoToken>
-        where U: Into<Cow<'b, str>>,
-              V: Into<Cow<'b, str>>
+    pub fn room_overview<'b, U, V>(
+        &self,
+        shard: U,
+        room_name: V,
+        request_interval: u32,
+    ) -> Result<FutureResponse<RoomOverview>, NoToken>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
     {
         self.get("game/room-overview")
-            .params(&[("shard", shard.into().into_owned()),
-                      ("room", room_name.into().into_owned()),
-                      ("interval", request_interval.to_string())])
+            .params(&[
+                ("shard", shard.into().into_owned()),
+                ("room", room_name.into().into_owned()),
+                ("interval", request_interval.to_string()),
+            ])
             .auth()
             .send()
     }
@@ -407,21 +436,28 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     ///
     /// Does not require authentication.
     pub fn room_terrain<'b, U, V>(&self, shard: U, room_name: V) -> FutureResponse<RoomTerrain>
-        where U: Into<Cow<'b, str>>,
-              V: Into<Cow<'b, str>>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
     {
         self.get("game/room-terrain")
-            .params(&[("shard", shard.into().into_owned()),
-                      ("room", room_name.into().into_owned()),
-                      ("encoded", true.to_string())])
+            .params(&[
+                ("shard", shard.into().into_owned()),
+                ("room", room_name.into().into_owned()),
+                ("encoded", true.to_string()),
+            ])
             .send()
     }
 
     /// Gets the "status" of a room: if it is open, if it is in a novice area, if it exists.
     pub fn room_status<'b, U>(&self, room_name: U) -> Result<FutureResponse<RoomStatus>, NoToken>
-        where U: Into<Cow<'b, str>>
+    where
+        U: Into<Cow<'b, str>>,
     {
-        self.get("game/room-status").params(&[("room", room_name.into().into_owned())]).auth().send()
+        self.get("game/room-status")
+            .params(&[("room", room_name.into().into_owned())])
+            .auth()
+            .send()
     }
 
     /// Experimental endpoint to get all rooms in which PvP has recently occurred, or where PvP has occurred since a
@@ -455,19 +491,23 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     ///
     /// This is technically the same API endpoint as find_leaderboard_rank, but the result format differs when
     /// requesting a specific season from when requesting all season ranks.
-    pub fn find_season_leaderboard_rank<'b, U, V>(&self,
-                                                  leaderboard_type: LeaderboardType,
-                                                  username: U,
-                                                  season: V)
-                                                  -> Result<FutureResponse<FoundUserRank>, NoToken>
-        where U: Into<Cow<'b, str>>,
-              V: Into<Cow<'b, str>>
+    pub fn find_season_leaderboard_rank<'b, U, V>(
+        &self,
+        leaderboard_type: LeaderboardType,
+        username: U,
+        season: V,
+    ) -> Result<FutureResponse<FoundUserRank>, NoToken>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
     {
         self.get("leaderboard/find")
             .auth()
-            .params(&[("mode", leaderboard_type.api_representation().to_string()),
-                      ("season", season.into().into_owned()),
-                      ("username", username.into().into_owned())])
+            .params(&[
+                ("mode", leaderboard_type.api_representation().to_string()),
+                ("season", season.into().into_owned()),
+                ("username", username.into().into_owned()),
+            ])
             .send()
     }
 
@@ -476,16 +516,20 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     /// This will return `ApiError::UserNotFound` if a username does not exist, and may also return an empty `Vec` as
     /// the result if the user does not have any ranks in the given leaderboard type (they have never contributed any
     /// global control points, or processed power, depending on the type).
-    pub fn find_leaderboard_ranks<'b, U>(&self,
-                                         leaderboard_type: LeaderboardType,
-                                         username: U)
-                                         -> Result<FutureResponse<Vec<FoundUserRank>>, NoToken>
-        where U: Into<Cow<'b, str>>
+    pub fn find_leaderboard_ranks<'b, U>(
+        &self,
+        leaderboard_type: LeaderboardType,
+        username: U,
+    ) -> Result<FutureResponse<Vec<FoundUserRank>>, NoToken>
+    where
+        U: Into<Cow<'b, str>>,
     {
         self.get("leaderboard/find")
             .auth()
-            .params(&[("mode", leaderboard_type.api_representation().to_string()),
-                      ("username", username.into().into_owned())])
+            .params(&[
+                ("mode", leaderboard_type.api_representation().to_string()),
+                ("username", username.into().into_owned()),
+            ])
             .send()
     }
 
@@ -496,20 +540,24 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     ///
     /// Offset doesn't have to be a multiple of limit, but it's most likely most useful that it is. Offset 0 will get
     /// you the start/top of the ranked list.
-    pub fn leaderboard_page<'b, U>(&self,
-                                   leaderboard_type: LeaderboardType,
-                                   season: U,
-                                   limit: u32,
-                                   offset: u32)
-                                   -> Result<FutureResponse<LeaderboardPage>, NoToken>
-        where U: Into<Cow<'b, str>>
+    pub fn leaderboard_page<'b, U>(
+        &self,
+        leaderboard_type: LeaderboardType,
+        season: U,
+        limit: u32,
+        offset: u32,
+    ) -> Result<FutureResponse<LeaderboardPage>, NoToken>
+    where
+        U: Into<Cow<'b, str>>,
     {
         self.get("leaderboard/list")
             .auth()
-            .params(&[("mode", leaderboard_type.api_representation().to_string()),
-                      ("season", season.into().into_owned()),
-                      ("limit", limit.to_string()),
-                      ("offset", offset.to_string())])
+            .params(&[
+                ("mode", leaderboard_type.api_representation().to_string()),
+                ("season", season.into().into_owned()),
+                ("limit", limit.to_string()),
+                ("offset", offset.to_string()),
+            ])
             .send()
     }
 }
@@ -556,12 +604,13 @@ impl<T> PartialRequestAuth<T> for AuthRequired<T> {
 }
 
 struct PartialRequest<'a, C, H, T, R, A = NoAuthRequired<FutureResponse<R>>, S = &'static str>
-    where C: hyper::client::Connect,
-          H: HyperClient<C> + 'a,
-          T: TokenStorage + 'a,
-          R: EndpointResult,
-          A: PartialRequestAuth<FutureResponse<R>>,
-          S: serde::Serialize + 'a
+where
+    C: hyper::client::Connect,
+    H: HyperClient<C> + 'a,
+    T: TokenStorage + 'a,
+    R: EndpointResult,
+    A: PartialRequestAuth<FutureResponse<R>>,
+    S: serde::Serialize + 'a,
 {
     client: &'a Api<C, H, T>,
     endpoint: &'a str,
@@ -571,11 +620,12 @@ struct PartialRequest<'a, C, H, T, R, A = NoAuthRequired<FutureResponse<R>>, S =
 }
 
 impl<'a, C, H, T, R, S> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResponse<R>>, S>
-    where C: hyper::client::Connect,
-          H: HyperClient<C> + 'a,
-          T: TokenStorage + 'a,
-          R: EndpointResult,
-          S: serde::Serialize
+where
+    C: hyper::client::Connect,
+    H: HyperClient<C> + 'a,
+    T: TokenStorage + 'a,
+    R: EndpointResult,
+    S: serde::Serialize,
 {
     #[inline]
     fn auth(self) -> PartialRequest<'a, C, H, T, R, AuthRequired<FutureResponse<R>>, S> {
@@ -590,11 +640,12 @@ impl<'a, C, H, T, R, S> PartialRequest<'a, C, H, T, R, NoAuthRequired<FutureResp
 }
 
 impl<'a, C, H, T, R, S> PartialRequest<'a, C, H, T, R, AuthRequired<FutureResponse<R>>, S>
-    where C: hyper::client::Connect,
-          H: HyperClient<C> + 'a,
-          T: TokenStorage + 'a,
-          R: EndpointResult,
-          S: serde::Serialize
+where
+    C: hyper::client::Connect,
+    H: HyperClient<C> + 'a,
+    T: TokenStorage + 'a,
+    R: EndpointResult,
+    S: serde::Serialize,
 {
     // This particular method should be a useful one to have around, even if just for completeness.
     #[allow(dead_code)]
@@ -611,12 +662,13 @@ impl<'a, C, H, T, R, S> PartialRequest<'a, C, H, T, R, AuthRequired<FutureRespon
 }
 
 impl<'a, C, H, T, R, A, S> PartialRequest<'a, C, H, T, R, A, S>
-    where C: hyper::client::Connect,
-          H: HyperClient<C> + 'a,
-          T: TokenStorage + 'a,
-          R: EndpointResult,
-          A: PartialRequestAuth<FutureResponse<R>>,
-          S: serde::Serialize
+where
+    C: hyper::client::Connect,
+    H: HyperClient<C> + 'a,
+    T: TokenStorage + 'a,
+    R: EndpointResult,
+    A: PartialRequestAuth<FutureResponse<R>>,
+    S: serde::Serialize,
 {
     #[inline]
     fn params(mut self, params: &'a [(&'static str, String)]) -> Self {
@@ -635,7 +687,13 @@ impl<'a, C, H, T, R, A, S> PartialRequest<'a, C, H, T, R, A, S>
     /// Returns either `connecting::FutureResponse<R>` or `Result<connecting::FutureResponse<R>, NoToken>`
     /// depending on if auth() has been called.
     fn send(self) -> A::Result {
-        let PartialRequest { client, endpoint, query_params, post_body, _phantom: _ } = self;
+        let PartialRequest {
+            client,
+            endpoint,
+            query_params,
+            post_body,
+            _phantom: _,
+        } = self;
 
         // this checks if authentication is required.
         //
@@ -663,8 +721,10 @@ impl<'a, C, H, T, R, A, S> PartialRequest<'a, C, H, T, R, A, S>
         };
 
         let url = {
-            let mut temp =
-                client.url.join(endpoint).expect("expected pre-set endpoint url text to succeed, but it failed.");
+            let mut temp = client
+                .url
+                .join(endpoint)
+                .expect("expected pre-set endpoint url text to succeed, but it failed.");
 
             if let Some(pairs) = query_params {
                 temp.query_pairs_mut().extend_pairs(pairs).finish();
@@ -673,11 +733,13 @@ impl<'a, C, H, T, R, A, S> PartialRequest<'a, C, H, T, R, A, S>
             temp
         };
 
-        let mut request = hyper::client::Request::new(method,
-                                                      url.as_str()
-                                                          .parse()
-                                                          .expect("expected parsed url to successfully \
-                                                               parse as uri, but it failed."));
+        let mut request = hyper::client::Request::new(
+            method,
+            url.as_str().parse().expect(
+                "expected parsed url to successfully \
+                 parse as uri, but it failed.",
+            ),
+        );
 
         // headers
         {
@@ -693,8 +755,10 @@ impl<'a, C, H, T, R, A, S> PartialRequest<'a, C, H, T, R, A, S>
         }
 
         if let Some(ref serializable) = post_body {
-            request.set_body(serde_json::to_string(serializable)
-                .expect("expected serde_json::to_string to unfailingly succeed, but it failed."));
+            request.set_body(
+                serde_json::to_string(serializable)
+                    .expect("expected serde_json::to_string to unfailingly succeed, but it failed."),
+            );
         }
 
         let hyper_future = client.client.client().request(request);
@@ -721,7 +785,9 @@ mod headers {
         }
 
         fn parse_header(raw: &header::Raw) -> hyper::Result<Self> {
-            header::parsing::from_one_raw_str(raw).map(Arc::new).map(XTokenHeader)
+            header::parsing::from_one_raw_str(raw)
+                .map(Arc::new)
+                .map(XTokenHeader)
         }
 
         fn fmt_header(&self, f: &mut header::Formatter) -> fmt::Result {
@@ -738,7 +804,9 @@ mod headers {
         }
 
         fn parse_header(raw: &header::Raw) -> hyper::Result<Self> {
-            header::parsing::from_one_raw_str(raw).map(Arc::new).map(XUsernameHeader)
+            header::parsing::from_one_raw_str(raw)
+                .map(Arc::new)
+                .map(XUsernameHeader)
         }
 
         fn fmt_header(&self, f: &mut header::Formatter) -> fmt::Result {

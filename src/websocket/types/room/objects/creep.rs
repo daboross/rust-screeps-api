@@ -528,65 +528,66 @@ mod test {
         let obj = Creep::deserialize(json).unwrap();
 
         match obj {
-            Creep { ref id,
-                    ref room,
-                    x: 27,
-                    y: 38,
-                    energy: 0,
-                    ghodium: 0,
-                    capacity: 100,
-                    hits: 2900,
-                    hits_max: 2900,
-                    age_time: Some(20236257),
-                    ref name,
-                    notify_when_attacked: true,
-                    spawning: false,
-                    action_log: CreepActions { attack: None,
-                                   attacked: None,
-                                   build: None,
-                                   harvest: None,
-                                   heal: None,
-                                   healed: None,
-                                   ranged_attack: None,
-                                   ranged_heal: None,
-                                   ranged_mass_attack: None,
-                                   repair: None,
-                                   reserve_controller: None,
-                                   say: None,
-                                   upgrade_controller: None },
-                    ref body,
-                    ref user,
-                    .. } => {
-                if user != "57874d42d0ae911e3bd15bbc" || id != "5969704a55d1b111cbe6b150" ||
-                   *room != RoomName::new("W65N19").unwrap() || name != "b873" ||
-                   body.iter()
+            Creep {
+                ref id,
+                ref room,
+                x: 27,
+                y: 38,
+                energy: 0,
+                ghodium: 0,
+                capacity: 100,
+                hits: 2900,
+                hits_max: 2900,
+                age_time: Some(20236257),
+                ref name,
+                notify_when_attacked: true,
+                spawning: false,
+                action_log: CreepActions {
+                    attack: None,
+                    attacked: None,
+                    build: None,
+                    harvest: None,
+                    heal: None,
+                    healed: None,
+                    ranged_attack: None,
+                    ranged_heal: None,
+                    ranged_mass_attack: None,
+                    repair: None,
+                    reserve_controller: None,
+                    say: None,
+                    upgrade_controller: None,
+                },
+                ref body,
+                ref user,
+                ..
+            } => if user != "57874d42d0ae911e3bd15bbc" || id != "5969704a55d1b111cbe6b150" ||
+                *room != RoomName::new("W65N19").unwrap() || name != "b873" ||
+                body.iter()
                     .map(|part| if part.part_type == CreepPartType::Carry {
                         1
                     } else {
                         0
                     })
                     .sum::<i32>() != 2 ||
-                   body.iter()
+                body.iter()
                     .map(|part| if part.part_type == CreepPartType::Work {
                         1
                     } else {
                         0
                     })
                     .sum::<i32>() != 17 ||
-                   body.iter()
+                body.iter()
                     .map(|part| if part.part_type == CreepPartType::Move {
                         1
                     } else {
                         0
                     })
-                    .sum::<i32>() != 10 ||
-                   !body.iter().all(|part| {
-                    part.part_type == CreepPartType::Move || part.part_type == CreepPartType::Work ||
+                    .sum::<i32>() != 10 || !body.iter().all(|part| {
+                part.part_type == CreepPartType::Move || part.part_type == CreepPartType::Work ||
                     part.part_type == CreepPartType::Carry
-                }) {
-                    panic!("some fields wrong from pre-set Creep: {:#?}", obj);
-                }
-            }
+            }) {
+                panic!("some fields wrong from pre-set Creep: {:#?}", obj);
+            },
             other => panic!("expected pre-set Creep to match, found {:#?}", other),
         }
 

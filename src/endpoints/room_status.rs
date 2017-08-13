@@ -1,8 +1,8 @@
 //! Interpreting room status results.
 
 use EndpointResult;
-use data::{self, RoomState, RoomName};
-use error::{Result, ApiError};
+use data::{self, RoomName, RoomState};
+use error::{ApiError, Result};
 use std::marker::PhantomData;
 use time;
 
@@ -55,7 +55,12 @@ impl EndpointResult for RoomStatus {
             return Err(ApiError::NotOk(ok).into());
         }
 
-        let InnerRoom { _id: room_name, status, novice, open_time } = match room {
+        let InnerRoom {
+            _id: room_name,
+            status,
+            novice,
+            open_time,
+        } = match room {
             Some(v) => v,
             None => {
                 return Ok(RoomStatus {
@@ -67,10 +72,13 @@ impl EndpointResult for RoomStatus {
         };
 
         if status != "normal" {
-            return Err(ApiError::MalformedResponse(format!("expected room status to be \"normal\", \
-                                                            found \"{}\".",
-                                                           &status))
-                .into());
+            return Err(
+                ApiError::MalformedResponse(format!(
+                    "expected room status to be \"normal\", \
+                     found \"{}\".",
+                    &status
+                )).into(),
+            );
         }
 
         let state = RoomState::from_data(time::get_time(), novice, open_time)?;

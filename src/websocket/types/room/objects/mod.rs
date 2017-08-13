@@ -127,28 +127,30 @@ impl KnownRoomObject {
             )
         }
 
-        large_match!(Source,
-                     Mineral,
-                     Spawn,
-                     Extension,
-                     Wall,
-                     Road,
-                     Rampart,
-                     KeeperLair,
-                     Controller,
-                     Portal,
-                     Link,
-                     Storage,
-                     Tower,
-                     Observer,
-                     PowerBank,
-                     PowerSpawn,
-                     Lab,
-                     Terminal,
-                     Container,
-                     Nuker,
-                     Creep,
-                     Resource);
+        large_match!(
+            Source,
+            Mineral,
+            Spawn,
+            Extension,
+            Wall,
+            Road,
+            Rampart,
+            KeeperLair,
+            Controller,
+            Portal,
+            Link,
+            Storage,
+            Tower,
+            Observer,
+            PowerBank,
+            PowerSpawn,
+            Lab,
+            Terminal,
+            Container,
+            Nuker,
+            Creep,
+            Resource
+        );
 
         Ok(())
     }
@@ -181,7 +183,8 @@ mod test {
             other => panic!("expected Map, found {:?}", other),
         };
 
-        let mut id_to_thing = first_value.into_iter()
+        let mut id_to_thing = first_value
+            .into_iter()
             .map(|(id, value)| Ok((id, serde_json::from_value(value)?)))
             .collect::<Result<HashMap<String, KnownRoomObject>, serde_json::Error>>()
             .expect("expected initial json map to parse.");
@@ -198,13 +201,16 @@ mod test {
                 } else {
                     match id_to_thing.entry(id.clone()) {
                         Occupied(entry) => {
-                            entry.into_mut()
+                            entry
+                                .into_mut()
                                 .update(value)
                                 .expect(&format!("expected {} in update #{} to succeed", id, update_index));
                         }
                         Vacant(entry) => {
-                            entry.insert(serde_json::from_value(value)
-                                .expect(&format!("expected {} in update #{} to succeed", id, update_index)));
+                            entry.insert(
+                                serde_json::from_value(value)
+                                    .expect(&format!("expected {} in update #{} to succeed", id, update_index)),
+                            );
                         }
                     }
                 }

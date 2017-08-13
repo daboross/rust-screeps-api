@@ -66,7 +66,7 @@ mod test {
 
     use data::RoomName;
 
-    use super::{StructureSpawn, SpawningCreep};
+    use super::{SpawningCreep, StructureSpawn};
 
     #[test]
     fn parse_spawn_and_update() {
@@ -113,33 +113,37 @@ mod test {
             user: "57874d42d0ae911e3bd15bbc".to_owned(),
         });
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "spawning": {
                 "remainingTime": 4,
             },
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "spawning": {
                 "remainingTime": 3,
             },
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "spawning": {
                 "remainingTime": 2,
             },
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "spawning": {
                 "remainingTime": 1,
             },
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj.spawning, Some(SpawningCreep {
             name: "5599".to_owned(),
@@ -147,10 +151,11 @@ mod test {
             remaining_time: 1,
         }));
 
-        obj.update(serde_json::from_value(json!({
+        obj.update(
+            serde_json::from_value(json!({
             "spawning": null,
-        }))
-            .unwrap());
+        })).unwrap(),
+        );
 
         assert_eq!(obj.spawning, None);
     }
