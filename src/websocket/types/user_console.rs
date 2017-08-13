@@ -25,6 +25,7 @@ pub enum UserConsoleUpdate {
 }
 
 impl UserConsoleUpdate {
+    /// Gets the shard this update is for.
     pub fn shard(&self) -> Option<&str> {
         match *self {
             UserConsoleUpdate::Messages { ref shard, .. } => shard.as_ref().map(|s| s.as_ref()),
