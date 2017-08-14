@@ -36,8 +36,7 @@ impl PvpArgs {
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
-    #[serde(with = "::tuple_vec_map")]
-    pvp: Vec<(String, InnerShard)>,
+    #[serde(with = "::tuple_vec_map")] pvp: Vec<(String, InnerShard)>,
 }
 
 #[derive(Deserialize, Clone, Hash, Debug)]
@@ -49,8 +48,7 @@ struct InnerShard {
 #[derive(Deserialize, Clone, Hash, Debug)]
 struct InnerRoom {
     _id: String,
-    #[serde(rename = "lastPvpTime")]
-    last_pvp_time: u32,
+    #[serde(rename = "lastPvpTime")] last_pvp_time: u32,
 }
 
 /// Result storing recent pvp matches for the entire world.

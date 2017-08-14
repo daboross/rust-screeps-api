@@ -192,8 +192,8 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
         const USER_MESSAGE: &'static str = "newMessage";
         const USER_CONVERSATION_PREFIX: &'static str = "message:";
 
-        let channel: &str = seq.next_element()
-            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
+        let channel: &str = seq.next_element()?
+            .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
         macro_rules! finish_other {
             () => ({
@@ -213,8 +213,8 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
 
             return Ok(ChannelUpdate::RoomMapView {
                 room_name: room_name,
-                update: seq.next_element()
-                    ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                update: seq.next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
         } else if channel.starts_with(ROOM_PREFIX) {
             let room_name = &channel[ROOM_PREFIX.len()..];
@@ -225,8 +225,8 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
 
             return Ok(ChannelUpdate::RoomDetail {
                 room_name: room_name,
-                update: seq.next_element()
-                    ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                update: seq.next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
         } else if channel.starts_with(ROOM_ERR_PREFIX) {
             let room_name = &channel[ROOM_ERR_PREFIX.len()..];
@@ -235,8 +235,8 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                 de::Error::invalid_value(Unexpected::Str(room_name), &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
             })?;
 
-            let err_message = seq.next_element::<&str>()
-                ?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
+            let err_message = seq.next_element::<&str>()?
+                .ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
             // TODO: This is currently just a patch in for a common error message, but we don't handle any other
             // errors that are reported as `err@<rest of channel name>`.
@@ -266,29 +266,29 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                 USER_CPU => {
                     return Ok(ChannelUpdate::UserCpu {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()
-                            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()?
+                            .ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     });
                 }
                 USER_CONSOLE => {
                     return Ok(ChannelUpdate::UserConsole {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()
-                            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()?
+                            .ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     });
                 }
                 USER_CREDITS => {
                     return Ok(ChannelUpdate::UserCredits {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()
-                            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()?
+                            .ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     })
                 }
                 USER_MESSAGE => {
                     return Ok(ChannelUpdate::UserMessage {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()
-                            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()?
+                            .ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     })
                 }
                 sub_channel => if sub_channel.starts_with(USER_CONVERSATION_PREFIX) {
@@ -297,8 +297,8 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                     return Ok(ChannelUpdate::UserConversation {
                         user_id: user_id.to_owned().into(),
                         target_user_id: target_user_id.to_owned().into(),
-                        update: seq.next_element()
-                            ?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()?
+                            .ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     });
                 } else {
                     finish_other!()
