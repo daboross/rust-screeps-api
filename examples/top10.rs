@@ -2,9 +2,10 @@
 //!
 //! Logs in using the SCREEPS_API_USERNAME and SCREEPS_API_PASSWORD env variables.
 extern crate dotenv;
+extern crate fern;
+extern crate log;
 extern crate screeps_api;
 
-use screeps_api::SyncApi;
 use screeps_api::LeaderboardType::*;
 use screeps_api::endpoints::leaderboard::page::LeaderboardPage;
 
@@ -14,6 +15,14 @@ fn env(var: &str) -> String {
     match ::std::env::var(var) {
         Ok(value) => value,
         Err(e) => panic!("must have `{}` defined (err: {:?})", var, e),
+    }
+}
+
+fn opt_env(var: &str, default: &str) -> String {
+    dotenv::dotenv().ok();
+    match ::std::env::var(var) {
+        Ok(value) => value,
+        Err(_) => default.to_owned(),
     }
 }
 
@@ -36,7 +45,17 @@ fn print_ranks(result: &LeaderboardPage) {
 }
 
 fn main() {
-    let mut client = SyncApi::new().unwrap();
+    fern::Dispatch::new()
+        .level(log::LogLevelFilter::Warn)
+        .chain(std::io::stdout())
+        .apply()
+        .unwrap();
+
+    let mut client = screeps_api::SyncConfig::new()
+        .unwrap()
+        .url(&opt_env("SCREEPS_API_URL", screeps_api::DEFAULT_OFFICIAL_API_URL))
+        .build()
+        .unwrap();
 
     client
         .login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD"))
