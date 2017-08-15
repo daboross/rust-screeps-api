@@ -22,6 +22,7 @@ pub struct Response {
     // github: Option<serde_json::Value>,
     // twitter: Option<serde_json::Value>,
     // notifyPrefs: Option<serde_json::Value>,
+    // steam: Option<serde_json::Value>,
     badge: Badge,
 }
 
