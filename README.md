@@ -46,6 +46,9 @@ Unofficial documentation for HTTP endpoints can be found at https://github.com/s
   - Getting new message notifications
   - Getting console messages
   - Parts of getting room detailed updates
+    - Almost all room objects are parsed
+    - Flags are parsed
+    - RoomVisuals are not parsed
 
 ### What isn't implemented
 
@@ -54,8 +57,7 @@ Unofficial documentation for HTTP endpoints can be found at https://github.com/s
 - Detailed user information API
 - Game manipulation API
 - Room history API
-- Parsing room objects from room socket updates.
-  - Right now you'll just get a HashMap of object id -> [`serde_json::Value`]
+- Parsing room visuals in room socket updates.
 
 ## Testing
 
