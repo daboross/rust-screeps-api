@@ -50,6 +50,8 @@ pub enum Channel<'a> {
     /// Room overview updates. Updates at the end of every tick with all room positions for each nondescript
     /// type of structure (road, wall, energy, or player owned).
     RoomMapView {
+        /// The shard the room is in, if any.
+        shard_name: Option<Cow<'a, str>>,
         /// The room name of the subscription.
         room_name: RoomName,
     },
@@ -60,6 +62,8 @@ pub enum Channel<'a> {
     /// it is random which 2 will received updates on any given ticks. Rooms which are not updated do receive an error
     /// message on "off" ticks.
     RoomDetail {
+        /// The shard the room is in, if any.
+        shard_name: Option<Cow<'a, str>>,
         /// The room name of the subscription.
         room_name: RoomName,
     },
@@ -76,26 +80,60 @@ impl Channel<'static> {
         Channel::ServerMessages
     }
 
-    /// Creates a channel subscribing to map-view updates of a room.
-    pub fn room_map_view(room_name: RoomName) -> Self {
+    /// Creates a channel subscribing to map-view updates of a room, with no shard.
+    ///
+    /// Warning: creating a channel with a shard name when the server does not have any shards or creating a channel
+    /// without a shard name on a sharded server will both result in the subscribe silently failing.
+    pub fn room_map_view_ps(room_name: RoomName) -> Self {
         Channel::RoomMapView {
+            shard_name: None,
             room_name: room_name,
         }
     }
 
-    /// Creates a channel subscribing to detailed updates of a room's contents.
+    /// Creates a channel subscribing to detailed updates of a room's contents, with no shard.
     ///
     /// Note: this is limited to 2 per user account at a time, and if there are more than 2 room subscriptions active,
     /// it is random which 2 will received updates on any given ticks. Rooms which are not updated do receive an error
     /// message on "off" ticks.
-    pub fn room_detail(room_name: RoomName) -> Self {
+    ///
+    /// Warning: creating a channel with a shard name when the server does not have any shards or creating a channel
+    /// without a shard name on a sharded server will both result in the subscribe silently failing.
+    pub fn room_detail_ps(room_name: RoomName) -> Self {
         Channel::RoomDetail {
+            shard_name: None,
             room_name: room_name,
         }
     }
 }
 
 impl<'a> Channel<'a> {
+    /// Creates a channel subscribing to map-view updates of a room.
+    ///
+    /// Warning: creating a channel with a shard name when the server does not have any shards or creating a channel
+    /// without a shard name on a sharded server will both result in the subscribe silently failing.
+    pub fn room_map_view<T: Into<Cow<'a, str>>>(room_name: RoomName, shard_name: Option<T>) -> Self {
+        Channel::RoomMapView {
+            shard_name: shard_name.map(Into::into),
+            room_name: room_name,
+        }
+    }
+
+    /// Creates a channel subscribing to detailed updates of a room's contents.
+    ///
+    /// Warning: creating a channel with a shard name when the server does not have any shards or creating a channel
+    /// without a shard name on a sharded server will both result in the subscribe silently failing.
+    ///
+    /// Note: this is limited to 2 per user account at a time, and if there are more than 2 room subscriptions active,
+    /// it is random which 2 will received updates on any given ticks. Rooms which are not updated do receive an error
+    /// message on "off" ticks.
+    pub fn room_detail<T: Into<Cow<'a, str>>>(room_name: RoomName, shard_name: Option<T>) -> Self {
+        Channel::RoomDetail {
+            shard_name: shard_name.map(Into::into),
+            room_name: room_name,
+        }
+    }
+
     /// Creates a channel subscribing to a user's CPU and memory.
     pub fn user_cpu<T: Into<Cow<'a, str>>>(user_id: T) -> Self {
         Channel::UserCpu {
@@ -180,8 +218,20 @@ impl<'a> fmt::Display for Channel<'a> {
             } => write!(f, "user:{}/memory/{}", user_id, path),
             Channel::UserConsole { ref user_id } => write!(f, "user:{}/console", user_id),
             Channel::UserActiveBranch { ref user_id } => write!(f, "user:{}/set-active-branch", user_id),
-            Channel::RoomMapView { ref room_name } => write!(f, "roomMap2:{}", room_name),
-            Channel::RoomDetail { ref room_name } => write!(f, "room:{}", room_name),
+            Channel::RoomMapView {
+                ref room_name,
+                ref shard_name,
+            } => match *shard_name {
+                Some(ref shard_name) => write!(f, "roomMap2:{}/{}", shard_name, room_name),
+                None => write!(f, "roomMap2:{}", room_name),
+            },
+            Channel::RoomDetail {
+                ref room_name,
+                ref shard_name,
+            } => match *shard_name {
+                Some(ref shard_name) => write!(f, "room:{}/{}", shard_name, room_name),
+                None => write!(f, "room:{}", room_name),
+            },
             Channel::Other { ref channel } => write!(f, "{}", channel),
         }
     }

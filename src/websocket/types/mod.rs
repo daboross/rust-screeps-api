@@ -31,6 +31,8 @@ pub enum ChannelUpdate<'a> {
     RoomMapView {
         /// The name of the room this is an update for.
         room_name: RoomName,
+        /// The shard the room is in, if any.
+        shard_name: Option<String>,
         /// The data: the positions and nondescript types of entities in this room.
         update: RoomMapViewUpdate,
     },
@@ -39,6 +41,8 @@ pub enum ChannelUpdate<'a> {
     RoomDetail {
         /// The name of the room this is an update for.
         room_name: RoomName,
+        /// The shard the room is in, if any.
+        shard_name: Option<String>,
         /// The data: all properties of all objects in this room that have changed since the last tick.
         update: RoomUpdate,
     },
@@ -51,6 +55,8 @@ pub enum ChannelUpdate<'a> {
     NoRoomDetail {
         /// The name of the room this is a notification for.
         room_name: RoomName,
+        /// The shard the room is in, if any.
+        shard_name: Option<String>,
     },
     /// An update on the last tick's CPU and memory usage. Sent once per tick.
     UserCpu {
@@ -110,6 +116,15 @@ pub enum ChannelUpdate<'a> {
 
 impl<'a> ChannelUpdate<'a> {
     /// If this update is directly associated with a room, gets the room name.
+    pub fn shard_name(&self) -> Option<&str> {
+        match *self {
+            ChannelUpdate::RoomMapView { ref shard_name, .. } |
+            ChannelUpdate::RoomDetail { ref shard_name, .. } |
+            ChannelUpdate::NoRoomDetail { ref shard_name, .. } => shard_name.as_ref().map(AsRef::as_ref),
+            _ => None,
+        }
+    }
+    /// If this update is directly associated with a room, gets the room name.
     pub fn room_name(&self) -> Option<&RoomName> {
         match *self {
             ChannelUpdate::RoomMapView { ref room_name, .. } |
@@ -141,10 +156,21 @@ impl<'a> ChannelUpdate<'a> {
     /// This channel specification can be used to subscribe or unsubscribe from this channel if needed.
     pub fn channel(&self) -> Channel {
         match *self {
-            ChannelUpdate::RoomMapView { room_name, .. } => Channel::room_map_view(room_name),
-            ChannelUpdate::RoomDetail { room_name, .. } | ChannelUpdate::NoRoomDetail { room_name, .. } => {
-                Channel::room_detail(room_name)
-            }
+            ChannelUpdate::RoomMapView {
+                room_name,
+                ref shard_name,
+                ..
+            } => Channel::room_map_view(room_name, shard_name.as_ref().map(AsRef::as_ref)),
+            ChannelUpdate::RoomDetail {
+                room_name,
+                ref shard_name,
+                ..
+            } |
+            ChannelUpdate::NoRoomDetail {
+                room_name,
+                ref shard_name,
+                ..
+            } => Channel::room_detail(room_name, shard_name.as_ref().map(AsRef::as_ref)),
             ChannelUpdate::UserCpu { ref user_id, .. } => Channel::user_cpu(user_id.as_ref()),
             ChannelUpdate::UserConsole { ref user_id, .. } => Channel::user_console(user_id.as_ref()),
             ChannelUpdate::UserCredits { ref user_id, .. } => Channel::user_credits(user_id.as_ref()),
@@ -205,19 +231,37 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
         }
 
         if channel.starts_with(ROOM_MAP_VIEW_PREFIX) {
-            let room_name = &channel[ROOM_MAP_VIEW_PREFIX.len()..];
+            let room_name_and_shard = &channel[ROOM_MAP_VIEW_PREFIX.len()..];
 
+            let (shard_name, room_name) = {
+                let mut split = room_name_and_shard.splitn(2, "/");
+                match (split.next(), split.next()) {
+                    (Some(shard), Some(room)) => (Some(shard), room),
+                    (Some(room), None) => (None, room),
+                    _ => finish_other!(),
+                }
+            };
             let room_name = RoomName::new(room_name).map_err(|_| {
                 de::Error::invalid_value(Unexpected::Str(room_name), &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
             })?;
 
             return Ok(ChannelUpdate::RoomMapView {
                 room_name: room_name,
+                shard_name: shard_name.map(ToOwned::to_owned),
                 update: seq.next_element()?
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
         } else if channel.starts_with(ROOM_PREFIX) {
-            let room_name = &channel[ROOM_PREFIX.len()..];
+            let room_name_and_shard = &channel[ROOM_PREFIX.len()..];
+
+            let (shard_name, room_name) = {
+                let mut split = room_name_and_shard.splitn(2, "/");
+                match (split.next(), split.next()) {
+                    (Some(shard), Some(room)) => (Some(shard), room),
+                    (Some(room), None) => (None, room),
+                    _ => finish_other!(),
+                }
+            };
 
             let room_name = RoomName::new(room_name).map_err(|_| {
                 de::Error::invalid_value(Unexpected::Str(room_name), &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
@@ -225,11 +269,21 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
 
             return Ok(ChannelUpdate::RoomDetail {
                 room_name: room_name,
+                shard_name: shard_name.map(ToOwned::to_owned),
                 update: seq.next_element()?
                     .ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
         } else if channel.starts_with(ROOM_ERR_PREFIX) {
-            let room_name = &channel[ROOM_ERR_PREFIX.len()..];
+            let room_name_and_shard = &channel[ROOM_ERR_PREFIX.len()..];
+
+            let (shard_name, room_name) = {
+                let mut split = room_name_and_shard.splitn(2, "/");
+                match (split.next(), split.next()) {
+                    (Some(shard), Some(room)) => (Some(shard), room),
+                    (Some(room), None) => (None, room),
+                    _ => finish_other!(),
+                }
+            };
 
             let room_name = RoomName::new(room_name).map_err(|_| {
                 de::Error::invalid_value(Unexpected::Str(room_name), &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
@@ -249,6 +303,7 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             if err_message == "subscribe limit reached" {
                 return Ok(ChannelUpdate::NoRoomDetail {
                     room_name: room_name,
+                    shard_name: shard_name.map(ToOwned::to_owned),
                 });
             }
         } else if channel.starts_with(USER_PREFIX) {

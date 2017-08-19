@@ -73,6 +73,7 @@ struct Config {
     messages: bool,
     credits: bool,
     console: bool,
+    shard: Option<Cow<'static, str>>,
     rooms: Vec<RoomName>,
     map_view: Vec<RoomName>,
     url: Cow<'static, str>,
@@ -80,11 +81,19 @@ struct Config {
 
 impl Config {
     fn new<'a>(args: &'a clap::ArgMatches) -> Result<Self, screeps_api::data::room_name::RoomNameParseError<'a>> {
+        use std::ascii::AsciiExt;
         Ok(Config {
             cpu: args.is_present("cpu"),
             messages: args.is_present("messages"),
             credits: args.is_present("credits"),
             console: args.is_present("console"),
+            shard: args.value_of("shard")
+                .map(|v| if "none".eq_ignore_ascii_case(v) {
+                    None
+                } else {
+                    Some(v.to_owned().into())
+                })
+                .unwrap_or_else(|| Some("shard0".into())),
             rooms: args.values_of("room")
                 .map(|it| it.map(|v| RoomName::new(v)).collect::<Result<_, _>>())
                 .unwrap_or_else(|| Ok(Vec::new()))?,
@@ -125,11 +134,11 @@ impl Config {
         }
 
         for room_name in &self.rooms {
-            messages.push(subscribe(&Channel::room_detail(*room_name)));
+            messages.push(subscribe(&Channel::room_detail(*room_name, self.shard.as_ref().map(AsRef::as_ref))));
         }
 
         for room_name in &self.map_view {
-            messages.push(subscribe(&Channel::room_map_view(*room_name)));
+            messages.push(subscribe(&Channel::room_map_view(*room_name, self.shard.as_ref().map(AsRef::as_ref))));
         }
 
         Box::new(stream::iter(
@@ -172,6 +181,14 @@ fn setup() -> Config {
                 .short("e")
                 .long("messages")
                 .help("Subscribe to user message alerts"),
+        )
+        .arg(
+            clap::Arg::with_name("shard")
+                .short("s")
+                .long("shard")
+                .value_name("SHARD_NAME")
+                .help("Sets the shard (default shard0, use 'None' for no shard)")
+                .takes_value(true),
         )
         .arg(
             clap::Arg::with_name("room")
@@ -369,20 +386,42 @@ where
     fn handle_update(&self, update: ChannelUpdate) {
         match update {
             ChannelUpdate::UserCpu { user_id, update } => info!("CPU: [{}] {:#?}", user_id, update),
-            ChannelUpdate::RoomMapView { room_name, update } => {
-                info!("Map View: [{}] {:?}", room_name, update);
-            }
-            ChannelUpdate::RoomDetail { room_name, update } => {
-                debug!("Room Detail: [{}] {:?}", room_name, update);
+            ChannelUpdate::RoomMapView {
+                room_name,
+                shard_name,
+                update,
+            } => {
                 info!(
-                    "Room {}: {}",
+                    "Map View: [{}/{}] {:?}",
+                    shard_name.as_ref().map(AsRef::as_ref).unwrap_or("<None>"),
+                    room_name,
+                    update
+                );
+            }
+            ChannelUpdate::RoomDetail {
+                room_name,
+                shard_name,
+                update,
+            } => {
+                debug!(
+                    "Room Detail: [{}/{}] {:?}",
+                    shard_name.as_ref().map(AsRef::as_ref).unwrap_or("<None>"),
+                    room_name,
+                    update
+                );
+                info!(
+                    "Room {}/{}: {}",
+                    shard_name.as_ref().map(AsRef::as_ref).unwrap_or("<None>"),
                     room_name,
                     serde_json::to_string_pretty(&serde_json::Value::Object(update.objects.iter().cloned().collect()))
                         .expect("expected to_string to succeed on plain map.")
                 );
             }
-            ChannelUpdate::NoRoomDetail { room_name } => {
-                info!("Room Skipped: {}", room_name);
+            ChannelUpdate::NoRoomDetail {
+                room_name,
+                shard_name,
+            } => {
+                info!("Room Skipped: {}/{}", shard_name.as_ref().map(AsRef::as_ref).unwrap_or("<None>"), room_name);
             }
             ChannelUpdate::UserConsole { user_id, update } => {
                 info!("Console: [{}] {:#?}", user_id, update);
