@@ -66,7 +66,6 @@ mod test {
             id: "55c34a6b5be41a0a6e80c325".to_owned(),
             next_spawn_time: Some(20000000),
         });
-
     }
 
     #[test]

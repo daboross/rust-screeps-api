@@ -153,7 +153,6 @@ pub mod timespec_seconds {
                     .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
 
                 Ok(Timespec::new(seconds, 0))
-
             }
             #[inline]
             fn visit_i64<E>(self, value: i64) -> Result<Self::Value, E>
@@ -233,7 +232,6 @@ pub mod optional_timespec_seconds {
                     .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
 
                 Ok(Some(Timespec::new(seconds, 0)))
-
             }
 
             #[inline]
@@ -318,7 +316,6 @@ pub mod double_optional_timespec_seconds {
                     .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?;
 
                 Ok(Some(Some(Timespec::new(seconds, 0))))
-
             }
 
             #[inline]

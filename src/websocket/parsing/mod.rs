@@ -135,7 +135,6 @@ impl<'de> Visitor<'de> for MultipleMessagesVisitor {
     where
         A: SeqAccess<'de>,
     {
-
         let mut values = Vec::with_capacity(cmp::min(seq.size_hint().unwrap_or(0), 4069));
 
         while let Some(string) = seq.next_element::<String>()? {

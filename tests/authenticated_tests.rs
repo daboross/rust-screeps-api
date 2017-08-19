@@ -185,5 +185,4 @@ fn test_auth_leaderboard_limit_parameter_error() {
             panic!("expected InvalidParameters error, found success: {:?}", other);
         }
     }
-
 }

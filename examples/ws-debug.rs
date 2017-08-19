@@ -264,7 +264,6 @@ fn main() {
                         .flatten()),
                 )
             })
-
     })).expect("expected websocket connection to complete successfully, but an error occurred");
 }
 
