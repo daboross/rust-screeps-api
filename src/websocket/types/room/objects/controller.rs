@@ -56,6 +56,7 @@ with_structure_fields_and_update_struct! {
         /// Game time at which the current safemode will end, if any.
         pub safe_mode: Option<u32>,
         /// How many more safemodes are available.
+        #[serde(default)]
         pub safe_mode_available: u32,
         /// The game time that must be reached before safe mode can be used on the controller.
         ///
