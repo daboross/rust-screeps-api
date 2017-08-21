@@ -10,6 +10,7 @@ pub mod room_terrain;
 pub mod recent_pvp;
 pub mod leaderboard;
 pub mod world_start_room;
+pub mod shards;
 
 // don't compile this endpoint template file with regular output, but still compile w/ tests to test for correctness.
 #[cfg(test)]
@@ -22,3 +23,4 @@ pub use self::room_status::RoomStatus;
 pub use self::room_terrain::RoomTerrain;
 pub use self::map_stats::MapStats;
 pub use self::world_start_room::WorldStartRoom;
+pub use self::shards::ShardInfo;

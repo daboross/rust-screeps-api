@@ -77,7 +77,7 @@ pub mod sync;
 
 pub use error::{Error, ErrorKind, NoToken};
 pub use data::RoomName;
-pub use endpoints::{MapStats, MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, WorldStartRoom};
+pub use endpoints::{MapStats, MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, ShardInfo, WorldStartRoom};
 pub use endpoints::leaderboard::LeaderboardType;
 pub use endpoints::room_terrain::TerrainGrid;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
@@ -447,6 +447,14 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
                 ("encoded", true.to_string()),
             ])
             .send()
+    }
+
+    /// Gets a list of shards available on this server. Errors with a `404` error when connected to a
+    /// non-sharded server.
+    ///
+    /// Does not require authentication.
+    pub fn shard_list(&self) -> FutureResponse<Vec<ShardInfo>> {
+        self.get("game/shards/info").send()
     }
 
     /// Gets the "status" of a room: if it is open, if it is in a novice area, if it exists.

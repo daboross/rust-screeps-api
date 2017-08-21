@@ -26,6 +26,14 @@ fn test_room_terrain() {
 }
 
 #[test]
+fn test_shard_list() {
+    let mut api = SyncApi::new().unwrap();
+
+    let list = api.shard_list().unwrap();
+    assert!(list.len() >= 2);
+}
+
+#[test]
 fn test_room_terrain_invalid_room() {
     let mut api = SyncApi::new().unwrap();
 

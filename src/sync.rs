@@ -18,7 +18,7 @@ use error::Error;
 use {Api, RcTokenStorage, TokenStorage, DEFAULT_OFFICIAL_API_URL};
 
 use {FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType, MapStats, MyInfo, RecentPvp,
-     RecentPvpDetails, RoomOverview, RoomStatus, RoomTerrain, WorldStartRoom};
+     RecentPvpDetails, RoomOverview, RoomStatus, RoomTerrain, ShardInfo, WorldStartRoom};
 
 mod error {
     use std::{fmt, io};
@@ -327,6 +327,14 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
         V: Into<Cow<'b, str>>,
     {
         self.core.run(self.client.room_terrain(shard, room_name))
+    }
+
+    /// Gets a list of shards available on this server. Errors with a `404` error when connected to a
+    /// non-sharded server.
+    ///
+    /// See [`Api::shard_list`](../struct.Api.html#method.shard_list) for more information.
+    pub fn shard_list(&mut self) -> Result<Vec<ShardInfo>, Error> {
+        self.core.run(self.client.shard_list())
     }
 
     /// Gets the "status" of a room: if it is open, if it is in a novice area, if it exists.
