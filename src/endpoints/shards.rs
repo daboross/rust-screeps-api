@@ -32,6 +32,12 @@ pub struct ShardInfo {
     _phantom: PhantomData<()>,
 }
 
+impl AsRef<str> for ShardInfo {
+    fn as_ref(&self) -> &str {
+        &self.name
+    }
+}
+
 impl EndpointResult for Vec<ShardInfo> {
     type RequestResult = Response;
     type ErrorResult = data::ApiError;
