@@ -24,10 +24,14 @@ struct ShardResponse {
 /// Structure describing information about a single game shard.
 #[derive(Clone, Debug)]
 pub struct ShardInfo {
-    name: String,
-    room_count: u32,
-    user_count: u32,
-    tick_avg_milliseconds: f64,
+    /// The name of this shard, useful for all shard-specific API calls.
+    pub name: String,
+    /// The total number of open rooms in this shard.
+    pub room_count: u32,
+    /// The total number of users spawned in this shard (TODO: confirm this is what this is).
+    pub user_count: u32,
+    /// The average millisecond tick this shard has for some past period of time (TODO: more detail).
+    pub tick_avg_milliseconds: f64,
     /// Phantom data in order to allow adding any additional fields in the future.
     _phantom: PhantomData<()>,
 }
