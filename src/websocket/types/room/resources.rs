@@ -199,6 +199,32 @@ impl ResourceType {
     }
 }
 
+pub(crate) mod null_is_default {
+    use serde::de::{Deserialize, Deserializer};
+
+    pub fn deserialize<'de, T, D>(d: D) -> Result<T, D::Error>
+    where
+        T: Default + Deserialize<'de>,
+        D: Deserializer<'de>,
+    {
+        Deserialize::deserialize(d).map(|x: Option<T>| x.unwrap_or(T::default()))
+    }
+}
+
+pub(crate) mod null_is_default_and_always_some {
+    use serde::de::{Deserialize, Deserializer};
+
+    pub fn deserialize<'de, T, D>(d: D) -> Result<Option<T>, D::Error>
+    where
+        T: Default + Deserialize<'de>,
+        D: Deserializer<'de>,
+    {
+        Deserialize::deserialize(d)
+            .map(|x: Option<T>| x.unwrap_or(T::default()))
+            .map(Some)
+    }
+}
+
 /// This macro creates the struct described within the invocation, but with an additional 2 fields common to all
 /// Structures, with everything provided by `with_base_fields_and_update_struct!`, and with one field per in-game
 /// resource type.
@@ -284,7 +310,8 @@ macro_rules! with_resource_fields_and_update_struct {
                 pub hits_max: i32,
                 $(
                     /// The current amount of this resource held in this structure.
-                    #[serde(default, rename = $serde_ident)]
+                    #[serde(default, rename = $serde_ident,
+                        with = "::websocket::types::room::resources::null_is_default")]
                     pub $field_ident: i32,
                 )*
                 $( $struct_field )*
@@ -297,7 +324,9 @@ macro_rules! with_resource_fields_and_update_struct {
                 #[serde(rename = "hitsMax")]
                 - hits_max: i32,
                 $(
-                    #[serde(rename = $serde_ident)]
+                    #[serde(default, rename = $serde_ident,
+                        with = "::websocket::types::room::resources::null_is_default_and_always_some")]
+                    (no_extra_meta)
                     - $field_ident: i32,
                 )*
                 $( $update_field )*

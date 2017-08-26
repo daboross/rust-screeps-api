@@ -3,11 +3,12 @@ use time;
 
 use data::{optional_timespec_seconds, RoomName, RoomSign};
 
-implement_update_for_no_extra_meta! {
+implement_update_for! {
     RoomSign;
 
     /// Update for room signs
     #[derive(Deserialize, Clone, Debug)]
+    (no_extra_meta)
     pub struct RoomSignUpdate {
         /// The game time when the sign was set.
         #[serde(rename = "time")]

@@ -41,13 +41,11 @@ with_base_fields_and_update_struct! {
     /// The update structure for a portal object.
     #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
-    (no_extra_meta)
     pub struct StructurePortalUpdate {
         #[serde(default, with = "double_optional_timespec_seconds")]
+        (no_extra_meta)
         - unstable_date: Option<time::Timespec>,
-        #[serde(default, with = "::websocket::types::room::room_object_macros::always_some")]
         - decay_time: Option<u32>,
-        #[serde(default, with = "::websocket::types::room::room_object_macros::always_some")]
         - destination: PortalDestination,
     }
 }

@@ -274,7 +274,9 @@ where
 
 /// Mostly an implementation detail of `with_update_struct`, but can be used independently to
 /// implement Updatable on external structures.
-macro_rules! implement_update_for_no_extra_meta {
+///
+/// Adds a few extra meta attributes for serde deserialization to make "null" correctly erase values in an update.
+macro_rules! implement_update_for {
     (
         $name:ident;
 
@@ -282,16 +284,21 @@ macro_rules! implement_update_for_no_extra_meta {
         pub struct $update_name:ident {
             $(
                 $( #[$field_attr:meta] )*
+                $( ($field_extra:tt) )*
                 priv $field:ident : $type:ty,
             )*
         }
     ) => (
-        $( #[$struct_attr] )*
-        pub struct $update_name {
-            $(
-                $( #[$field_attr] )*
-                $field: $type,
-            )*
+        add_metadata!{
+            $( #[$struct_attr] )*
+            pub struct $update_name {
+                <<>>
+                $(
+                    $( #[$field_attr] )*
+                    $( ($field_extra) )*
+                    priv $field: $type,
+                )*
+            }
         }
 
         impl ::websocket::types::room::room_object_macros::Updatable for $name {
@@ -319,6 +326,34 @@ macro_rules! implement_update_for_no_extra_meta {
                 Some(finished)
             }
         }
+    );
+    (
+        $name:ident;
+
+        $(
+            #[$struct_attr:meta]
+        )*
+        (no_extra_meta)
+        pub struct $update_name:ident {
+            $(
+                $(#[$field_attr:meta])*
+                $( ($field_extra:tt) )*
+                priv $field:ident : $type:ty,
+            )*
+        }
+    ) => (
+        implement_update_for! {
+            $name;
+
+            $( #[$struct_attr] )*
+            pub struct $update_name {
+                $(
+                    $( #[$field_attr] )*
+                    (no_extra_meta)
+                    priv $field: $type,
+                )*
+            }
+        }
     )
 }
 
@@ -339,63 +374,74 @@ pub(crate) mod always_some {
     }
 }
 
-/// Mostly an implementation detail of `with_update_struct`, but can be used independently to
-/// implement Updatable on external structures.
-///
-/// Adds a few extra meta attributes for serde deserialization to make "null" correctly erase values in an update.
-macro_rules! implement_update_for {
+/// Rule about adding metadata to a single field...
+macro_rules! add_metadata {
     (
-        $name:ident;
-
-        $(
-            #[$struct_attr:meta]
-        )*
+        $( #[$struct_attr:meta] )*
         pub struct $update_name:ident {
-            $(
-                $(#[$field_attr:meta])*
-                priv $field:ident : $type:ty,
-            )*
+            <<$( $( #[$built_field_attr:meta] )* priv $built_field:ident: $built_type:ty, )*>>
+            $(#[$field_attr:meta])*
+            priv $field:ident : $type:ty,
+            $($rest:tt)*
         }
     ) => (
-        implement_update_for_no_extra_meta! {
-            $name;
-
-            $( #[$struct_attr] )*
+        add_metadata!{
+            $(#[$struct_attr])*
             pub struct $update_name {
-                $(
+                <<
+                    $(
+                        $( #[$built_field_attr] )*
+                        priv $built_field: $built_type,
+                    )*
+
                     #[serde(default, with = "::websocket::types::room::room_object_macros::always_some")]
                     $( #[$field_attr] )*
                     priv $field: $type,
-                )*
+                >>
+                $($rest)*
             }
         }
     );
     (
-        $name:ident;
-
-        $(
-            #[$struct_attr:meta]
-        )*
-        (no_extra_meta)
+        $( #[$struct_attr:meta] )*
         pub struct $update_name:ident {
-            $(
-                $(#[$field_attr:meta])*
-                priv $field:ident : $type:ty,
-            )*
+            <<$( $( #[$built_field_attr:meta] )* priv $built_field:ident: $built_type:ty, )*>>
+            $(#[$field_attr:meta])*
+            (no_extra_meta)
+            priv $field:ident : $type:ty,
+            $($rest:tt)*
         }
     ) => (
-        implement_update_for_no_extra_meta! {
-            $name;
-
-            $( #[$struct_attr] )*
+        add_metadata!{
+            $(#[$struct_attr])*
             pub struct $update_name {
-                $(
+                <<
+                    $(
+                        $( #[$built_field_attr] )*
+                        priv $built_field: $built_type,
+                    )*
+
                     $( #[$field_attr] )*
                     priv $field: $type,
-                )*
+                >>
+                $($rest)*
             }
         }
-    )
+    );
+    (
+        $( #[$struct_attr:meta] )*
+        pub struct $update_name:ident {
+            <<$( $( #[$built_field_attr:meta] )* priv $built_field:ident: $built_type:ty, )*>>
+        }
+    ) => (
+        $(#[$struct_attr])*
+        pub struct $update_name {
+            $(
+                $( #[$built_field_attr] )*
+                $built_field: $built_type,
+            )*
+        }
+    );
 }
 
 /// This creates the structure described within the macro invocation, and then creates another "update"
@@ -409,6 +455,7 @@ macro_rules! with_update_struct {
         pub struct $name:ident {
             $(
                 $( #[$field_attr:meta] )*
+                $( ($field_extra:tt) )*
                 pub $field:ident : $type:ty,
             )*
         }
@@ -431,6 +478,7 @@ macro_rules! with_update_struct {
             pub struct $update_name {
                 $(
                     $( #[$field_attr] )*
+                    $( ($field_extra) )*
                     - $field : $type,
                 )*
             }
@@ -450,6 +498,7 @@ macro_rules! with_update_struct {
         pub struct $update_name:ident {
             $(
                 $( #[$update_field_attr:meta] )*
+                $( ($update_field_extra:tt) )*
                 - $update_field:ident : $update_type:ty,
             )*
         }
@@ -470,6 +519,7 @@ macro_rules! with_update_struct {
             pub struct $update_name {
                 $(
                     $( #[$update_field_attr] )*
+                    $( ($update_field_extra) )*
                     priv $update_field:
                         Option<<$update_type as ::websocket::types::room::room_object_macros::Updatable>::Update>,
                 )*
@@ -493,6 +543,7 @@ macro_rules! with_base_fields_and_update_struct {
         pub struct $name:ident {
             $(
                 $(#[$field_attr:meta])*
+                $( ($field_extra:tt) )*
                 pub $field:ident : $type:ty,
             )*
         }
@@ -506,6 +557,7 @@ macro_rules! with_base_fields_and_update_struct {
             pub struct $name {
                 $(
                     $( #[$field_attr] )*
+                    $( ($field_extra:tt) )*
                     pub $field : $type,
                 )*
             }
