@@ -261,7 +261,7 @@ fn main() {
     let connection = websocket::ClientBuilder::from_url(&ws_url).async_connect(None, &handle);
 
     core.run(connection.then(|result| {
-        let (client, _) = result.expect("expected successful connection to official server, found error");
+        let (client, _) = result.expect("connecting to server failed");
 
         let (sink, stream) = client.split();
 

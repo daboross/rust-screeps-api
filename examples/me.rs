@@ -16,11 +16,11 @@ fn env(var: &str) -> String {
     }
 }
 
-fn opt_env(var: &str, default: &str) -> String {
+fn opt_env(var: &str, default: &'static str) -> Cow<'static, str> {
     dotenv::dotenv().ok();
     match ::std::env::var(var) {
-        Ok(value) => value,
-        Err(_) => default.to_owned(),
+        Ok(value) => value.into(),
+        Err(_) => default.into(),
     }
 }
 
