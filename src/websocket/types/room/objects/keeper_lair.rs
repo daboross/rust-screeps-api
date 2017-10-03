@@ -45,13 +45,16 @@ mod test {
 
         let mut obj = StructureKeeperLair::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureKeeperLair {
-            room: RoomName::new("E4N4").unwrap(),
-            x: 16,
-            y: 1,
-            id: "55c34a6b5be41a0a6e80c325".to_owned(),
-            next_spawn_time: None,
-        });
+        assert_eq!(
+            obj,
+            StructureKeeperLair {
+                room: RoomName::new("E4N4").unwrap(),
+                x: 16,
+                y: 1,
+                id: "55c34a6b5be41a0a6e80c325".to_owned(),
+                next_spawn_time: None,
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -59,13 +62,16 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructureKeeperLair {
-            room: RoomName::new("E4N4").unwrap(),
-            x: 16,
-            y: 1,
-            id: "55c34a6b5be41a0a6e80c325".to_owned(),
-            next_spawn_time: Some(20000000),
-        });
+        assert_eq!(
+            obj,
+            StructureKeeperLair {
+                room: RoomName::new("E4N4").unwrap(),
+                x: 16,
+                y: 1,
+                id: "55c34a6b5be41a0a6e80c325".to_owned(),
+                next_spawn_time: Some(20000000),
+            }
+        );
     }
 
     #[test]
@@ -82,13 +88,16 @@ mod test {
 
         let mut obj = StructureKeeperLair::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureKeeperLair {
-            room: RoomName::new("W14S5").unwrap(),
-            x: 22,
-            y: 13,
-            id: "55c34a6b5be41a0a6e80c6ce".to_owned(),
-            next_spawn_time: Some(20184048),
-        });
+        assert_eq!(
+            obj,
+            StructureKeeperLair {
+                room: RoomName::new("W14S5").unwrap(),
+                x: 22,
+                y: 13,
+                id: "55c34a6b5be41a0a6e80c6ce".to_owned(),
+                next_spawn_time: Some(20184048),
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -96,12 +105,15 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructureKeeperLair {
-            room: RoomName::new("W14S5").unwrap(),
-            x: 22,
-            y: 13,
-            id: "55c34a6b5be41a0a6e80c6ce".to_owned(),
-            next_spawn_time: None,
-        });
+        assert_eq!(
+            obj,
+            StructureKeeperLair {
+                room: RoomName::new("W14S5").unwrap(),
+                x: 22,
+                y: 13,
+                id: "55c34a6b5be41a0a6e80c6ce".to_owned(),
+                next_spawn_time: None,
+            }
+        );
     }
 }

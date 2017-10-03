@@ -133,30 +133,33 @@ mod test {
 
         let mut obj = StructureController::deserialize(&json).unwrap();
 
-        assert_eq!(obj, StructureController {
-            id: "57ef9dba86f108ae6e60e2fd".to_owned(),
-            room: RoomName::new("E4S61").unwrap(),
-            x: 16,
-            y: 39,
-            hits: 0,
-            hits_max: 0,
-            level: 8,
-            progress: 0,
-            progress_total: 0,
-            reservation: None,
-            safe_mode: None,
-            safe_mode_available: 7,
-            safe_mode_cooldown: 17083195,
-            downgrade_time: Some(20020430),
-            sign: Some(RoomSign {
-                text: "◯".to_owned(),
-                game_time_set: 19869070,
-                time_set: time::Timespec::new(1498254694977, 0),
-                user_id: "57874d42d0ae911e3bd15bbc".to_owned(),
-            }),
-            upgrade_blocked: None,
-            user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
-        });
+        assert_eq!(
+            obj,
+            StructureController {
+                id: "57ef9dba86f108ae6e60e2fd".to_owned(),
+                room: RoomName::new("E4S61").unwrap(),
+                x: 16,
+                y: 39,
+                hits: 0,
+                hits_max: 0,
+                level: 8,
+                progress: 0,
+                progress_total: 0,
+                reservation: None,
+                safe_mode: None,
+                safe_mode_available: 7,
+                safe_mode_cooldown: 17083195,
+                downgrade_time: Some(20020430),
+                sign: Some(RoomSign {
+                    text: "◯".to_owned(),
+                    game_time_set: 19869070,
+                    time_set: time::Timespec::new(1498254694977, 0),
+                    user_id: "57874d42d0ae911e3bd15bbc".to_owned(),
+                }),
+                upgrade_blocked: None,
+                user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -164,30 +167,33 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructureController {
-            id: "57ef9dba86f108ae6e60e2fd".to_owned(),
-            room: RoomName::new("E4S61").unwrap(),
-            x: 16,
-            y: 39,
-            hits: 0,
-            hits_max: 0,
-            level: 8,
-            progress: 0,
-            progress_total: 0,
-            reservation: None,
-            safe_mode: None,
-            safe_mode_available: 8,
-            safe_mode_cooldown: 17083195,
-            downgrade_time: Some(20020430),
-            sign: Some(RoomSign {
-                text: "◯".to_owned(),
-                game_time_set: 19869070,
-                time_set: time::Timespec::new(1498254694977, 0),
-                user_id: "57874d42d0ae911e3bd15bbc".to_owned(),
-            }),
-            upgrade_blocked: None,
-            user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
-        });
+        assert_eq!(
+            obj,
+            StructureController {
+                id: "57ef9dba86f108ae6e60e2fd".to_owned(),
+                room: RoomName::new("E4S61").unwrap(),
+                x: 16,
+                y: 39,
+                hits: 0,
+                hits_max: 0,
+                level: 8,
+                progress: 0,
+                progress_total: 0,
+                reservation: None,
+                safe_mode: None,
+                safe_mode_available: 8,
+                safe_mode_cooldown: 17083195,
+                downgrade_time: Some(20020430),
+                sign: Some(RoomSign {
+                    text: "◯".to_owned(),
+                    game_time_set: 19869070,
+                    time_set: time::Timespec::new(1498254694977, 0),
+                    user_id: "57874d42d0ae911e3bd15bbc".to_owned(),
+                }),
+                upgrade_blocked: None,
+                user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
+            }
+        );
     }
 
     #[test]
@@ -217,28 +223,31 @@ mod test {
 
         let mut obj = StructureController::deserialize(&json).unwrap();
 
-        assert_eq!(obj, StructureController {
-            id: "579fa94c0700be0674d2f15a".to_owned(),
-            room: RoomName::new("W12S55").unwrap(),
-            x: 22,
-            y: 37,
-            downgrade_time: None,
-            hits: 0,
-            hits_max: 0,
-            level: 0,
-            progress: 0,
-            progress_total: 0,
-            reservation: Some(ControllerReservation {
-                user: "57874d42d0ae911e3bd15bbc".to_owned(),
-                end_time: 20158024,
-            }),
-            safe_mode: None,
-            safe_mode_available: 0,
-            safe_mode_cooldown: 16611615,
-            upgrade_blocked: None,
-            user: None,
-            sign: None,
-        });
+        assert_eq!(
+            obj,
+            StructureController {
+                id: "579fa94c0700be0674d2f15a".to_owned(),
+                room: RoomName::new("W12S55").unwrap(),
+                x: 22,
+                y: 37,
+                downgrade_time: None,
+                hits: 0,
+                hits_max: 0,
+                level: 0,
+                progress: 0,
+                progress_total: 0,
+                reservation: Some(ControllerReservation {
+                    user: "57874d42d0ae911e3bd15bbc".to_owned(),
+                    end_time: 20158024,
+                }),
+                safe_mode: None,
+                safe_mode_available: 0,
+                safe_mode_cooldown: 16611615,
+                upgrade_blocked: None,
+                user: None,
+                sign: None,
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -248,28 +257,31 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructureController {
-            id: "579fa94c0700be0674d2f15a".to_owned(),
-            room: RoomName::new("W12S55").unwrap(),
-            x: 22,
-            y: 37,
-            downgrade_time: None,
-            hits: 0,
-            hits_max: 0,
-            level: 0,
-            progress: 0,
-            progress_total: 0,
-            reservation: Some(ControllerReservation {
-                user: "57874d42d0ae911e3bd15bbc".to_owned(),
-                end_time: 20158029,
-            }),
-            safe_mode: None,
-            safe_mode_available: 0,
-            safe_mode_cooldown: 16611615,
-            upgrade_blocked: None,
-            user: None,
-            sign: None,
-        });
+        assert_eq!(
+            obj,
+            StructureController {
+                id: "579fa94c0700be0674d2f15a".to_owned(),
+                room: RoomName::new("W12S55").unwrap(),
+                x: 22,
+                y: 37,
+                downgrade_time: None,
+                hits: 0,
+                hits_max: 0,
+                level: 0,
+                progress: 0,
+                progress_total: 0,
+                reservation: Some(ControllerReservation {
+                    user: "57874d42d0ae911e3bd15bbc".to_owned(),
+                    end_time: 20158029,
+                }),
+                safe_mode: None,
+                safe_mode_available: 0,
+                safe_mode_cooldown: 16611615,
+                upgrade_blocked: None,
+                user: None,
+                sign: None,
+            }
+        );
     }
 
     #[test]
@@ -305,24 +317,28 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructureController {
-            id: "57ef9dba86f108ae6e60e2fd".to_owned(),
-            room: RoomName::new("E4S61").unwrap(),
-            x: 16,
-            y: 39,
-            hits: 0,
-            hits_max: 0,
-            level: 8,
-            progress: 0,
-            progress_total: 0,
-            reservation: None,
-            safe_mode: None,
-            safe_mode_available: 7,
-            safe_mode_cooldown: 17083195,
-            downgrade_time: Some(20020430),
-            sign: None,
-            upgrade_blocked: None,
-            user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
-        }, "signal failure text");
+        assert_eq!(
+            obj,
+            StructureController {
+                id: "57ef9dba86f108ae6e60e2fd".to_owned(),
+                room: RoomName::new("E4S61").unwrap(),
+                x: 16,
+                y: 39,
+                hits: 0,
+                hits_max: 0,
+                level: 8,
+                progress: 0,
+                progress_total: 0,
+                reservation: None,
+                safe_mode: None,
+                safe_mode_available: 7,
+                safe_mode_cooldown: 17083195,
+                downgrade_time: Some(20020430),
+                sign: None,
+                upgrade_blocked: None,
+                user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
+            },
+            "signal failure text"
+        );
     }
 }

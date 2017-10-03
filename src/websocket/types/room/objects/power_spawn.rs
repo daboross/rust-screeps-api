@@ -67,20 +67,23 @@ mod test {
 
         let obj = StructurePowerSpawn::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructurePowerSpawn {
-            id: "5825874e440f3fbd2caf30b5".to_owned(),
-            room: RoomName::new("E9N23").unwrap(),
-            x: 19,
-            y: 14,
-            energy: 4944,
-            energy_capacity: 5000,
-            power: 94,
-            power_capacity: 100,
-            hits: 5000,
-            hits_max: 5000,
-            notify_when_attacked: true,
-            disabled: false,
-            user: "561e4d4645f3f7244a7622e8".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructurePowerSpawn {
+                id: "5825874e440f3fbd2caf30b5".to_owned(),
+                room: RoomName::new("E9N23").unwrap(),
+                x: 19,
+                y: 14,
+                energy: 4944,
+                energy_capacity: 5000,
+                power: 94,
+                power_capacity: 100,
+                hits: 5000,
+                hits_max: 5000,
+                notify_when_attacked: true,
+                disabled: false,
+                user: "561e4d4645f3f7244a7622e8".to_owned(),
+            }
+        );
     }
 }

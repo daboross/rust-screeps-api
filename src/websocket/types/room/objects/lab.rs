@@ -118,26 +118,27 @@ mod test {
 
         let mut obj = StructureLab::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureLab {
-            room: RoomName::new("E9N23").unwrap(),
-            x: 17,
-            y: 8,
-            id: "58228250580b9e752863fd95".to_owned(),
-            energy: 2000,
-            energy_capacity: 2000,
-            mineral_amount: 155,
-            mineral_capacity: 3000,
-            mineral_type: Some(ResourceType::KeaniumAlkalide),
-            hits: 500,
-            hits_max: 500,
-            notify_when_attacked: true,
-            disabled: false,
-            cooldown: 6,
-            action_log: StructureLabActions {
-                run_reaction: None,
-            },
-            user: "561e4d4645f3f7244a7622e8".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureLab {
+                room: RoomName::new("E9N23").unwrap(),
+                x: 17,
+                y: 8,
+                id: "58228250580b9e752863fd95".to_owned(),
+                energy: 2000,
+                energy_capacity: 2000,
+                mineral_amount: 155,
+                mineral_capacity: 3000,
+                mineral_type: Some(ResourceType::KeaniumAlkalide),
+                hits: 500,
+                hits_max: 500,
+                notify_when_attacked: true,
+                disabled: false,
+                cooldown: 6,
+                action_log: StructureLabActions { run_reaction: None },
+                user: "561e4d4645f3f7244a7622e8".to_owned(),
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -191,14 +192,17 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj.action_log, StructureLabActions {
-            run_reaction: Some(LabActionTarget {
-                x1: 18,
-                y1: 9,
-                x2: 17,
-                y2: 10,
-            })
-        });
+        assert_eq!(
+            obj.action_log,
+            StructureLabActions {
+                run_reaction: Some(LabActionTarget {
+                    x1: 18,
+                    y1: 9,
+                    x2: 17,
+                    y2: 10,
+                }),
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -209,26 +213,27 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructureLab {
-            room: RoomName::new("E9N23").unwrap(),
-            x: 17,
-            y: 8,
-            id: "58228250580b9e752863fd95".to_owned(),
-            energy: 2000,
-            energy_capacity: 2000,
-            mineral_amount: 160,
-            mineral_capacity: 3000,
-            mineral_type: Some(ResourceType::KeaniumAlkalide),
-            hits: 500,
-            hits_max: 500,
-            notify_when_attacked: true,
-            disabled: false,
-            cooldown: 8,
-            action_log: StructureLabActions {
-                run_reaction: None,
-            },
-            user: "561e4d4645f3f7244a7622e8".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureLab {
+                room: RoomName::new("E9N23").unwrap(),
+                x: 17,
+                y: 8,
+                id: "58228250580b9e752863fd95".to_owned(),
+                energy: 2000,
+                energy_capacity: 2000,
+                mineral_amount: 160,
+                mineral_capacity: 3000,
+                mineral_type: Some(ResourceType::KeaniumAlkalide),
+                hits: 500,
+                hits_max: 500,
+                notify_when_attacked: true,
+                disabled: false,
+                cooldown: 8,
+                action_log: StructureLabActions { run_reaction: None },
+                user: "561e4d4645f3f7244a7622e8".to_owned(),
+            }
+        );
     }
 
     #[test]
@@ -256,25 +261,26 @@ mod test {
 
         let obj = StructureLab::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureLab {
-            room: RoomName::new("W65N19").unwrap(),
-            x: 32,
-            y: 34,
-            id: "5968055177adbb592b9c2e4e".to_owned(),
-            energy: 2000,
-            energy_capacity: 2000,
-            mineral_amount: 0,
-            mineral_capacity: 3000,
-            mineral_type: None,
-            hits: 500,
-            hits_max: 500,
-            notify_when_attacked: true,
-            disabled: false,
-            cooldown: 0,
-            action_log: StructureLabActions {
-                run_reaction: None,
-            },
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureLab {
+                room: RoomName::new("W65N19").unwrap(),
+                x: 32,
+                y: 34,
+                id: "5968055177adbb592b9c2e4e".to_owned(),
+                energy: 2000,
+                energy_capacity: 2000,
+                mineral_amount: 0,
+                mineral_capacity: 3000,
+                mineral_type: None,
+                hits: 500,
+                hits_max: 500,
+                notify_when_attacked: true,
+                disabled: false,
+                cooldown: 0,
+                action_log: StructureLabActions { run_reaction: None },
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            }
+        );
     }
 }

@@ -50,15 +50,18 @@ mod test {
 
         let obj = Mineral::deserialize(json).unwrap();
 
-        assert_eq!(obj, Mineral {
-            id: "57efa010195b160f02c752d6".to_owned(),
-            room: RoomName::new("E4S61").unwrap(),
-            x: 14,
-            y: 21,
-            density: 3,
-            mineral_amount: 65590.0,
-            mineral_type: ResourceType::Hydrogen,
-            next_regeneration_time: None,
-        });
+        assert_eq!(
+            obj,
+            Mineral {
+                id: "57efa010195b160f02c752d6".to_owned(),
+                room: RoomName::new("E4S61").unwrap(),
+                x: 14,
+                y: 21,
+                density: 3,
+                mineral_amount: 65590.0,
+                mineral_type: ResourceType::Hydrogen,
+                next_regeneration_time: None,
+            }
+        );
     }
 }

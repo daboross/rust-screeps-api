@@ -46,16 +46,19 @@ mod test {
 
         let mut obj = StructureRoad::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureRoad {
-            room: RoomName::new("E4S61").unwrap(),
-            x: 14,
-            y: 20,
-            id: "58a1ec36947c6c2d324a2d39".to_owned(),
-            hits: 2600,
-            hits_max: 5000,
-            next_decay_time: 19894066,
-            notify_when_attacked: true,
-        });
+        assert_eq!(
+            obj,
+            StructureRoad {
+                room: RoomName::new("E4S61").unwrap(),
+                x: 14,
+                y: 20,
+                id: "58a1ec36947c6c2d324a2d39".to_owned(),
+                hits: 2600,
+                hits_max: 5000,
+                next_decay_time: 19894066,
+                notify_when_attacked: true,
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -65,15 +68,18 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructureRoad {
-            room: RoomName::new("E4S61").unwrap(),
-            x: 14,
-            y: 20,
-            id: "58a1ec36947c6c2d324a2d39".to_owned(),
-            hits: 2000,
-            hits_max: 5000,
-            next_decay_time: 20000000,
-            notify_when_attacked: true,
-        });
+        assert_eq!(
+            obj,
+            StructureRoad {
+                room: RoomName::new("E4S61").unwrap(),
+                x: 14,
+                y: 20,
+                id: "58a1ec36947c6c2d324a2d39".to_owned(),
+                hits: 2000,
+                hits_max: 5000,
+                next_decay_time: 20000000,
+                notify_when_attacked: true,
+            }
+        );
     }
 }

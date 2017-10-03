@@ -299,16 +299,17 @@ mod test {
             other => panic!("expected pre-set StructureTerminal to match, found {:#?}", other),
         }
 
-        assert_eq!({
-            let mut contents = obj.resources().collect::<Vec<_>>();
-            contents.sort();
-            contents
-        }, {
-            let mut expected = vec![
-                (ResourceType::Energy, 1321),
-            ];
-            expected.sort();
-            expected
-        });
+        assert_eq!(
+            {
+                let mut contents = obj.resources().collect::<Vec<_>>();
+                contents.sort();
+                contents
+            },
+            {
+                let mut expected = vec![(ResourceType::Energy, 1321)];
+                expected.sort();
+                expected
+            }
+        );
     }
 }

@@ -110,8 +110,8 @@ impl Config {
         use screeps_api::websocket::subscribe;
 
         let mut messages = Vec::with_capacity(
-            1 + self.cpu as usize + self.messages as usize + self.credits as usize + self.console as usize +
-                self.rooms.len() + self.map_view.len(),
+            1 + self.cpu as usize + self.messages as usize + self.credits as usize + self.console as usize
+                + self.rooms.len() + self.map_view.len(),
         );
 
         messages.push(subscribe(&Channel::ServerMessages));
@@ -275,8 +275,8 @@ fn main() {
                         .or_else(|err| {
                             warn!("error occurred: {}", err);
 
-                            future::ok::<_, websocket::WebSocketError>(Box::new(stream::empty()) as
-                                Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>)
+                            future::ok::<_, websocket::WebSocketError>(Box::new(stream::empty())
+                                as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>)
                         })
                         .flatten()),
                 )
@@ -326,7 +326,6 @@ where
 
                         return Box::new(stream::iter::<_, _, websocket::WebSocketError>(results).flatten());
                     }
-
                 }
             }
             OwnedMessage::Binary(data) => warn!("ignoring binary data from websocket: {:?}", data),

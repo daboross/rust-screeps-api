@@ -330,13 +330,16 @@ mod test {
 
         let obj = Resource::deserialize(json).unwrap();
 
-        assert_eq!(obj, Resource {
-            id: "596990a3165c8c77de71ecf1".to_owned(),
-            room: RoomName::new("W65N19").unwrap(),
-            x: 8,
-            y: 34,
-            resource_type: ResourceType::Energy,
-            amount: 7,
-        });
+        assert_eq!(
+            obj,
+            Resource {
+                id: "596990a3165c8c77de71ecf1".to_owned(),
+                room: RoomName::new("W65N19").unwrap(),
+                x: 8,
+                y: 34,
+                resource_type: ResourceType::Energy,
+                amount: 7,
+            }
+        );
     }
 }

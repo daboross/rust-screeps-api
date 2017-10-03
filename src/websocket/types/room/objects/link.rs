@@ -86,23 +86,26 @@ mod test {
 
         let mut obj = StructureLink::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureLink {
-            room: RoomName::new("E17N55").unwrap(),
-            x: 9,
-            y: 6,
-            id: "57fdb3ea3dad49a17265ecea".to_owned(),
-            energy: 100,
-            energy_capacity: 800,
-            hits: 1000,
-            hits_max: 1000,
-            notify_when_attacked: true,
-            disabled: false,
-            cooldown: 3,
-            action_log: StructureLinkActions {
-                transfer_energy: None,
-            },
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureLink {
+                room: RoomName::new("E17N55").unwrap(),
+                x: 9,
+                y: 6,
+                id: "57fdb3ea3dad49a17265ecea".to_owned(),
+                energy: 100,
+                energy_capacity: 800,
+                hits: 1000,
+                hits_max: 1000,
+                notify_when_attacked: true,
+                disabled: false,
+                cooldown: 3,
+                action_log: StructureLinkActions {
+                    transfer_energy: None,
+                },
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -137,12 +140,12 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj.action_log, StructureLinkActions {
-            transfer_energy: Some(ActionLogTarget {
-                x: 9,
-                y: 18,
-            })
-        });
+        assert_eq!(
+            obj.action_log,
+            StructureLinkActions {
+                transfer_energy: Some(ActionLogTarget { x: 9, y: 18 }),
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -154,22 +157,25 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructureLink {
-            room: RoomName::new("E17N55").unwrap(),
-            x: 9,
-            y: 6,
-            id: "57fdb3ea3dad49a17265ecea".to_owned(),
-            energy: 50,
-            energy_capacity: 800,
-            hits: 1000,
-            hits_max: 1000,
-            notify_when_attacked: true,
-            disabled: false,
-            cooldown: 10,
-            action_log: StructureLinkActions {
-                transfer_energy: None,
-            },
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureLink {
+                room: RoomName::new("E17N55").unwrap(),
+                x: 9,
+                y: 6,
+                id: "57fdb3ea3dad49a17265ecea".to_owned(),
+                energy: 50,
+                energy_capacity: 800,
+                hits: 1000,
+                hits_max: 1000,
+                notify_when_attacked: true,
+                disabled: false,
+                cooldown: 10,
+                action_log: StructureLinkActions {
+                    transfer_energy: None,
+                },
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            }
+        );
     }
 }

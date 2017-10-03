@@ -93,25 +93,28 @@ mod test {
 
         let mut obj = StructureSpawn::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureSpawn {
-            id: "58a23b6c4370e6302d758099".to_owned(),
-            room: RoomName::new("E4S61").unwrap(),
-            x: 24,
-            y: 6,
-            energy: 300,
-            energy_capacity: 300,
-            hits: 5000,
-            hits_max: 5000,
-            name: "Spawn36".to_owned(),
-            notify_when_attacked: true,
-            disabled: false,
-            spawning: Some(SpawningCreep {
-                name: "5599".to_owned(),
-                total_time: 126,
-                remaining_time: 5,
-            }),
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureSpawn {
+                id: "58a23b6c4370e6302d758099".to_owned(),
+                room: RoomName::new("E4S61").unwrap(),
+                x: 24,
+                y: 6,
+                energy: 300,
+                energy_capacity: 300,
+                hits: 5000,
+                hits_max: 5000,
+                name: "Spawn36".to_owned(),
+                notify_when_attacked: true,
+                disabled: false,
+                spawning: Some(SpawningCreep {
+                    name: "5599".to_owned(),
+                    total_time: 126,
+                    remaining_time: 5,
+                }),
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -145,11 +148,14 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj.spawning, Some(SpawningCreep {
-            name: "5599".to_owned(),
-            total_time: 126,
-            remaining_time: 1,
-        }));
+        assert_eq!(
+            obj.spawning,
+            Some(SpawningCreep {
+                name: "5599".to_owned(),
+                total_time: 126,
+                remaining_time: 1,
+            })
+        );
 
         obj.update(
             serde_json::from_value(json!({

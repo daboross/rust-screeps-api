@@ -44,15 +44,18 @@ mod test {
 
         let obj = StructurePowerBank::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructurePowerBank {
-            room: RoomName::new("W66N20").unwrap(),
-            x: 24,
-            y: 40,
-            id: "59695d5c09c7343d8a4192fd".to_owned(),
-            decay_time: 20238724,
-            hits: 2000000,
-            hits_max: 2000000,
-            power: 3186,
-        });
+        assert_eq!(
+            obj,
+            StructurePowerBank {
+                room: RoomName::new("W66N20").unwrap(),
+                x: 24,
+                y: 40,
+                id: "59695d5c09c7343d8a4192fd".to_owned(),
+                decay_time: 20238724,
+                hits: 2000000,
+                hits_max: 2000000,
+                power: 3186,
+            }
+        );
     }
 }

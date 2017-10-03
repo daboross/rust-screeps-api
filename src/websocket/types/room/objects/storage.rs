@@ -295,21 +295,24 @@ mod test {
             other => panic!("expected pre-set StructureStorage to match, found {:#?}", other),
         }
 
-        assert_eq!({
-            let mut contents = obj.resources().collect::<Vec<_>>();
-            contents.sort();
-            contents
-        }, {
-            let mut expected = vec![
-                (ResourceType::Utrium, 33581),
-                (ResourceType::CatalyzedGhodiumAlkalide, 5400),
-                (ResourceType::CatalyzedKeaniumAlkalide, 4249),
-                (ResourceType::CatalyzedLemergiumAlkalide, 2554),
-                (ResourceType::CatalyzedZynthiumAcid, 2660),
-                (ResourceType::Energy, 631112),
-            ];
-            expected.sort();
-            expected
-        });
+        assert_eq!(
+            {
+                let mut contents = obj.resources().collect::<Vec<_>>();
+                contents.sort();
+                contents
+            },
+            {
+                let mut expected = vec![
+                    (ResourceType::Utrium, 33581),
+                    (ResourceType::CatalyzedGhodiumAlkalide, 5400),
+                    (ResourceType::CatalyzedKeaniumAlkalide, 4249),
+                    (ResourceType::CatalyzedLemergiumAlkalide, 2554),
+                    (ResourceType::CatalyzedZynthiumAcid, 2660),
+                    (ResourceType::Energy, 631112),
+                ];
+                expected.sort();
+                expected
+            }
+        );
     }
 }

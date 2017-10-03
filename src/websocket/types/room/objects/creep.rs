@@ -542,49 +542,50 @@ mod test {
                 ref name,
                 notify_when_attacked: true,
                 spawning: false,
-                action_log: CreepActions {
-                    attack: None,
-                    attacked: None,
-                    build: None,
-                    harvest: None,
-                    heal: None,
-                    healed: None,
-                    ranged_attack: None,
-                    ranged_heal: None,
-                    ranged_mass_attack: None,
-                    repair: None,
-                    reserve_controller: None,
-                    say: None,
-                    upgrade_controller: None,
-                },
+                action_log:
+                    CreepActions {
+                        attack: None,
+                        attacked: None,
+                        build: None,
+                        harvest: None,
+                        heal: None,
+                        healed: None,
+                        ranged_attack: None,
+                        ranged_heal: None,
+                        ranged_mass_attack: None,
+                        repair: None,
+                        reserve_controller: None,
+                        say: None,
+                        upgrade_controller: None,
+                    },
                 ref body,
                 ref user,
                 ..
-            } => if user != "57874d42d0ae911e3bd15bbc" || id != "5969704a55d1b111cbe6b150" ||
-                *room != RoomName::new("W65N19").unwrap() || name != "b873" ||
-                body.iter()
+            } => if user != "57874d42d0ae911e3bd15bbc" || id != "5969704a55d1b111cbe6b150"
+                || *room != RoomName::new("W65N19").unwrap() || name != "b873"
+                || body.iter()
                     .map(|part| if part.part_type == CreepPartType::Carry {
                         1
                     } else {
                         0
                     })
-                    .sum::<i32>() != 2 ||
-                body.iter()
+                    .sum::<i32>() != 2
+                || body.iter()
                     .map(|part| if part.part_type == CreepPartType::Work {
                         1
                     } else {
                         0
                     })
-                    .sum::<i32>() != 17 ||
-                body.iter()
+                    .sum::<i32>() != 17
+                || body.iter()
                     .map(|part| if part.part_type == CreepPartType::Move {
                         1
                     } else {
                         0
                     })
                     .sum::<i32>() != 10 || !body.iter().all(|part| {
-                part.part_type == CreepPartType::Move || part.part_type == CreepPartType::Work ||
-                    part.part_type == CreepPartType::Carry
+                part.part_type == CreepPartType::Move || part.part_type == CreepPartType::Work
+                    || part.part_type == CreepPartType::Carry
             }) {
                 panic!("some fields wrong from pre-set Creep: {:#?}", obj);
             },

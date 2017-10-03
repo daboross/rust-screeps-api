@@ -79,19 +79,22 @@ mod test {
 
         let obj = StructurePortal::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructurePortal {
-            room: RoomName::new("W5N35").unwrap(),
-            x: 13,
-            y: 30,
-            id: "59570dde2d46c88436d2ab7e".to_owned(),
-            unstable_date: None,
-            decay_time: Some(20197693),
-            destination: PortalDestination {
-                room: RoomName::new("E95S15").unwrap(),
-                x: 31,
-                y: 26,
+        assert_eq!(
+            obj,
+            StructurePortal {
+                room: RoomName::new("W5N35").unwrap(),
+                x: 13,
+                y: 30,
+                id: "59570dde2d46c88436d2ab7e".to_owned(),
+                unstable_date: None,
+                decay_time: Some(20197693),
+                destination: PortalDestination {
+                    room: RoomName::new("E95S15").unwrap(),
+                    x: 31,
+                    y: 26,
+                },
             }
-        });
+        );
     }
 
     #[test]
@@ -112,19 +115,22 @@ mod test {
 
         let mut obj = StructurePortal::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructurePortal {
-            room: RoomName::new("W5N85").unwrap(),
-            x: 22,
-            y: 37,
-            id: "595fc9cd28a6884ac973e390".to_owned(),
-            unstable_date: Some(time::Timespec::new(1500313804391, 0)),
-            decay_time: None,
-            destination: PortalDestination {
-                room: RoomName::new("W25N35").unwrap(),
-                x: 16,
-                y: 41,
+        assert_eq!(
+            obj,
+            StructurePortal {
+                room: RoomName::new("W5N85").unwrap(),
+                x: 22,
+                y: 37,
+                id: "595fc9cd28a6884ac973e390".to_owned(),
+                unstable_date: Some(time::Timespec::new(1500313804391, 0)),
+                decay_time: None,
+                destination: PortalDestination {
+                    room: RoomName::new("W25N35").unwrap(),
+                    x: 16,
+                    y: 41,
+                },
             }
-        });
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -133,18 +139,21 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructurePortal {
-            room: RoomName::new("W5N85").unwrap(),
-            x: 22,
-            y: 37,
-            id: "595fc9cd28a6884ac973e390".to_owned(),
-            unstable_date: None,
-            decay_time: Some(20197693),
-            destination: PortalDestination {
-                room: RoomName::new("W25N35").unwrap(),
-                x: 16,
-                y: 41,
+        assert_eq!(
+            obj,
+            StructurePortal {
+                room: RoomName::new("W5N85").unwrap(),
+                x: 22,
+                y: 37,
+                id: "595fc9cd28a6884ac973e390".to_owned(),
+                unstable_date: None,
+                decay_time: Some(20197693),
+                destination: PortalDestination {
+                    room: RoomName::new("W25N35").unwrap(),
+                    x: 16,
+                    y: 41,
+                },
             }
-        });
+        );
     }
 }

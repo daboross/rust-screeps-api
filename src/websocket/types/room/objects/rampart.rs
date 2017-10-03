@@ -55,18 +55,21 @@ mod test {
 
         let obj = StructureRampart::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureRampart {
-            room: RoomName::new("W73N43").unwrap(),
-            x: 29,
-            y: 35,
-            id: "58e5ae786dace5c319d5b7ee".to_owned(),
-            hits: 7181701,
-            hits_max: 10000000,
-            next_decay_time: 20179250,
-            notify_when_attacked: true,
-            user: "576b572e366187105908ad57".to_owned(),
-            public: false,
-        });
+        assert_eq!(
+            obj,
+            StructureRampart {
+                room: RoomName::new("W73N43").unwrap(),
+                x: 29,
+                y: 35,
+                id: "58e5ae786dace5c319d5b7ee".to_owned(),
+                hits: 7181701,
+                hits_max: 10000000,
+                next_decay_time: 20179250,
+                notify_when_attacked: true,
+                user: "576b572e366187105908ad57".to_owned(),
+                public: false,
+            }
+        );
     }
 
     #[test]
@@ -87,17 +90,20 @@ mod test {
 
         let obj = StructureRampart::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureRampart {
-            room: RoomName::new("E4S61").unwrap(),
-            x: 20,
-            y: 14,
-            id: "58a2895a578de3836ea89fbb".to_owned(),
-            hits: 97490601,
-            hits_max: 300000000,
-            public: true,
-            next_decay_time: 19894001,
-            notify_when_attacked: true,
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureRampart {
+                room: RoomName::new("E4S61").unwrap(),
+                x: 20,
+                y: 14,
+                id: "58a2895a578de3836ea89fbb".to_owned(),
+                hits: 97490601,
+                hits_max: 300000000,
+                public: true,
+                next_decay_time: 19894001,
+                notify_when_attacked: true,
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            }
+        );
     }
 }

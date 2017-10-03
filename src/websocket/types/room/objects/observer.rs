@@ -58,18 +58,21 @@ mod test {
 
         let mut obj = StructureObserver::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureObserver {
-            room: RoomName::new("E9N23").unwrap(),
-            x: 20,
-            y: 18,
-            id: "582587dd871f73007b177b0f".to_owned(),
-            hits: 500,
-            hits_max: 500,
-            notify_when_attacked: true,
-            disabled: false,
-            observed: Some(RoomName::new("E5N20").unwrap()),
-            user: "561e4d4645f3f7244a7622e8".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureObserver {
+                room: RoomName::new("E9N23").unwrap(),
+                x: 20,
+                y: 18,
+                id: "582587dd871f73007b177b0f".to_owned(),
+                hits: 500,
+                hits_max: 500,
+                notify_when_attacked: true,
+                disabled: false,
+                observed: Some(RoomName::new("E5N20").unwrap()),
+                user: "561e4d4645f3f7244a7622e8".to_owned(),
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -77,36 +80,38 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructureObserver {
-            room: RoomName::new("E9N23").unwrap(),
-            x: 20,
-            y: 18,
-            id: "582587dd871f73007b177b0f".to_owned(),
-            hits: 500,
-            hits_max: 500,
-            notify_when_attacked: true,
-            disabled: false,
-            observed: Some(RoomName::new("E4N20").unwrap()),
-            user: "561e4d4645f3f7244a7622e8".to_owned(),
-        });
-
-        obj.update(
-            serde_json::from_value(json!({
-            "observeRoom": null
-        })).unwrap(),
+        assert_eq!(
+            obj,
+            StructureObserver {
+                room: RoomName::new("E9N23").unwrap(),
+                x: 20,
+                y: 18,
+                id: "582587dd871f73007b177b0f".to_owned(),
+                hits: 500,
+                hits_max: 500,
+                notify_when_attacked: true,
+                disabled: false,
+                observed: Some(RoomName::new("E4N20").unwrap()),
+                user: "561e4d4645f3f7244a7622e8".to_owned(),
+            }
         );
 
-        assert_eq!(obj, StructureObserver {
-            room: RoomName::new("E9N23").unwrap(),
-            x: 20,
-            y: 18,
-            id: "582587dd871f73007b177b0f".to_owned(),
-            hits: 500,
-            hits_max: 500,
-            notify_when_attacked: true,
-            disabled: false,
-            observed: None,
-            user: "561e4d4645f3f7244a7622e8".to_owned(),
-        });
+        obj.update(serde_json::from_value(json!({ "observeRoom": null })).unwrap());
+
+        assert_eq!(
+            obj,
+            StructureObserver {
+                room: RoomName::new("E9N23").unwrap(),
+                x: 20,
+                y: 18,
+                id: "582587dd871f73007b177b0f".to_owned(),
+                hits: 500,
+                hits_max: 500,
+                notify_when_attacked: true,
+                disabled: false,
+                observed: None,
+                user: "561e4d4645f3f7244a7622e8".to_owned(),
+            }
+        );
     }
 }

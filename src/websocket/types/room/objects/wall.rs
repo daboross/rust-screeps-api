@@ -41,14 +41,17 @@ mod test {
 
         let obj = StructureWall::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureWall {
-            room: RoomName::new("W73N43").unwrap(),
-            x: 47,
-            y: 24,
-            id: "584a5d89cbe27a302e4ba889".to_owned(),
-            hits: 7222461,
-            hits_max: 300000000,
-            notify_when_attacked: true,
-        });
+        assert_eq!(
+            obj,
+            StructureWall {
+                room: RoomName::new("W73N43").unwrap(),
+                x: 47,
+                y: 24,
+                id: "584a5d89cbe27a302e4ba889".to_owned(),
+                hits: 7222461,
+                hits_max: 300000000,
+                notify_when_attacked: true,
+            }
+        );
     }
 }

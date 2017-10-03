@@ -75,21 +75,24 @@ mod test {
 
         let obj = StructureNuker::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureNuker {
-            room: RoomName::new("E9N23").unwrap(),
-            x: 19,
-            y: 13,
-            id: "582582913105cae9690e9cb6".to_owned(),
-            hits: 1000,
-            hits_max: 1000,
-            energy: 300000,
-            energy_capacity: 300000,
-            ghodium: 5000,
-            ghodium_capacity: 5000,
-            cooldown_time: 19516631,
-            notify_when_attacked: true,
-            disabled: false,
-            user: "561e4d4645f3f7244a7622e8".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureNuker {
+                room: RoomName::new("E9N23").unwrap(),
+                x: 19,
+                y: 13,
+                id: "582582913105cae9690e9cb6".to_owned(),
+                hits: 1000,
+                hits_max: 1000,
+                energy: 300000,
+                energy_capacity: 300000,
+                ghodium: 5000,
+                ghodium_capacity: 5000,
+                cooldown_time: 19516631,
+                notify_when_attacked: true,
+                disabled: false,
+                user: "561e4d4645f3f7244a7622e8".to_owned(),
+            }
+        );
     }
 }

@@ -53,17 +53,20 @@ mod test {
 
         let mut obj = Source::deserialize(&json).unwrap();
 
-        assert_eq!(obj, Source {
-            id: "57ef9dba86f108ae6e60e2fc".to_owned(),
-            room: RoomName::new("E4S61").unwrap(),
-            x: 26,
-            y: 9,
-            energy: 260,
-            energy_capacity: 3000,
-            invader_harvested: 29240,
-            next_regeneration_time: Some(19894026),
-            ticks_to_regeneration: 300,
-        });
+        assert_eq!(
+            obj,
+            Source {
+                id: "57ef9dba86f108ae6e60e2fc".to_owned(),
+                room: RoomName::new("E4S61").unwrap(),
+                x: 26,
+                y: 9,
+                energy: 260,
+                energy_capacity: 3000,
+                invader_harvested: 29240,
+                next_regeneration_time: Some(19894026),
+                ticks_to_regeneration: 300,
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -73,16 +76,19 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, Source {
-            id: "57ef9dba86f108ae6e60e2fc".to_owned(),
-            room: RoomName::new("E4S61").unwrap(),
-            x: 40,
-            y: 50,
-            energy: 0,
-            energy_capacity: 3000,
-            invader_harvested: 29240,
-            next_regeneration_time: Some(19894026),
-            ticks_to_regeneration: 300,
-        });
+        assert_eq!(
+            obj,
+            Source {
+                id: "57ef9dba86f108ae6e60e2fc".to_owned(),
+                room: RoomName::new("E4S61").unwrap(),
+                x: 40,
+                y: 50,
+                energy: 0,
+                energy_capacity: 3000,
+                invader_harvested: 29240,
+                next_regeneration_time: Some(19894026),
+                ticks_to_regeneration: 300,
+            }
+        );
     }
 }

@@ -60,19 +60,22 @@ mod test {
 
         let mut obj = StructureExtension::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureExtension {
-            room: RoomName::new("E4S61").unwrap(),
-            x: 27,
-            y: 3,
-            id: "594cac66e1dd5c8d2eb7df9d".to_owned(),
-            energy: 200,
-            energy_capacity: 200,
-            hits: 1000,
-            hits_max: 1000,
-            notify_when_attacked: true,
-            disabled: false,
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureExtension {
+                room: RoomName::new("E4S61").unwrap(),
+                x: 27,
+                y: 3,
+                id: "594cac66e1dd5c8d2eb7df9d".to_owned(),
+                energy: 200,
+                energy_capacity: 200,
+                hits: 1000,
+                hits_max: 1000,
+                notify_when_attacked: true,
+                disabled: false,
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -81,18 +84,21 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj, StructureExtension {
-            room: RoomName::new("E4S61").unwrap(),
-            x: 27,
-            y: 3,
-            id: "594cac66e1dd5c8d2eb7df9d".to_owned(),
-            energy: 0,
-            energy_capacity: 200,
-            hits: 1000,
-            hits_max: 1000,
-            notify_when_attacked: false,
-            disabled: false,
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureExtension {
+                room: RoomName::new("E4S61").unwrap(),
+                x: 27,
+                y: 3,
+                id: "594cac66e1dd5c8d2eb7df9d".to_owned(),
+                energy: 0,
+                energy_capacity: 200,
+                hits: 1000,
+                hits_max: 1000,
+                notify_when_attacked: false,
+                disabled: false,
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            }
+        );
     }
 }

@@ -88,24 +88,27 @@ mod test {
 
         let mut obj = StructureTower::deserialize(json).unwrap();
 
-        assert_eq!(obj, StructureTower {
-            room: RoomName::new("E17N55").unwrap(),
-            x: 9,
-            y: 19,
-            id: "57f1cc9d27e2c0520e93ba95".to_owned(),
-            energy: 920,
-            energy_capacity: 1000,
-            hits: 3000,
-            hits_max: 3000,
-            notify_when_attacked: true,
-            disabled: false,
-            action_log: StructureTowerActions {
-                attack: None,
-                heal: None,
-                repair: None,
-            },
-            user: "57874d42d0ae911e3bd15bbc".to_owned(),
-        });
+        assert_eq!(
+            obj,
+            StructureTower {
+                room: RoomName::new("E17N55").unwrap(),
+                x: 9,
+                y: 19,
+                id: "57f1cc9d27e2c0520e93ba95".to_owned(),
+                energy: 920,
+                energy_capacity: 1000,
+                hits: 3000,
+                hits_max: 3000,
+                notify_when_attacked: true,
+                disabled: false,
+                action_log: StructureTowerActions {
+                    attack: None,
+                    heal: None,
+                    repair: None,
+                },
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            }
+        );
 
         obj.update(
             serde_json::from_value(json!({
@@ -119,13 +122,13 @@ mod test {
         })).unwrap(),
         );
 
-        assert_eq!(obj.action_log, StructureTowerActions {
-            attack: Some(ActionLogTarget {
-                x: 10,
-                y: 10,
-            }),
-            heal: None,
-            repair: None,
-        });
+        assert_eq!(
+            obj.action_log,
+            StructureTowerActions {
+                attack: Some(ActionLogTarget { x: 10, y: 10 }),
+                heal: None,
+                repair: None,
+            }
+        );
     }
 }
