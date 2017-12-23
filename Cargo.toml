@@ -37,7 +37,7 @@ tokio-core = { version = "0.1", optional = true }
 hyper-tls = { version = "0.1", optional = true }
 native-tls = { version = "0.1", optional = true }
 # Websockets
-rand = "0.3"
+rand = "0.4"
 
 [features]
 sync = ["tokio-core", "hyper-tls", "native-tls"]
