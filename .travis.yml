@@ -5,12 +5,11 @@ rust:
 - stable
 - beta
 - nightly
-env:
-- COMPILE_ARGS=("--no-default-features")
-- COMPILE_ARGS=()
 os:
 - linux
 - osx
 script:
-- cargo build --verbose "${COMPILE_ARGS[@]}"
-- cargo test --verbose "${COMPILE_ARGS[@]}" -- --skip auth
+- cargo build --verbose
+- cargo test --verbose -- --skip auth
+- cargo build --verbose --no-default-features
+- cargo test --verbose --no-default-features -- --skip auth

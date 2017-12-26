@@ -29,11 +29,9 @@ install:
 
 test_script:
 - cargo build --verbose --target %TARGET%
-# TODO: this doesn't test authenticated access, only parsing and non-auth calls.
-# We're probably OK not testing logging in on windows since it is tested on linux,
-# and we do test at least making HTTPS calls to the server with this, but it might
-# still be nice for completeness.
 - cargo test --verbose --target %TARGET% -- --skip auth
+- cargo build --verbose --target %TARGET% --no-default-features
+- cargo test --verbose --target %TARGET% --no-default-features -- --skip auth
 
 cache:
 - target
