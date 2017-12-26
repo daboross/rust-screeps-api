@@ -44,14 +44,14 @@ fn env(var: &str) -> String {
 
 fn setup_logging(verbosity: u64) {
     let log_level = match verbosity {
-        0 => log::LogLevelFilter::Warn,
-        1 => log::LogLevelFilter::Info,
-        _ => log::LogLevelFilter::Debug,
+        0 => log::LevelFilter::Warn,
+        1 => log::LevelFilter::Info,
+        _ => log::LevelFilter::Debug,
     };
     fern::Dispatch::new()
         .level(log_level)
-        .level_for("rustls", log::LogLevelFilter::Warn)
-        .level_for("hyper", log::LogLevelFilter::Warn)
+        .level_for("rustls", log::LevelFilter::Warn)
+        .level_for("hyper", log::LevelFilter::Warn)
         .format(|out, message, record| {
             let now = chrono::Local::now();
 

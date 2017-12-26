@@ -51,7 +51,7 @@ fn print_ranks(result: &LeaderboardPage) {
 
 fn main() {
     fern::Dispatch::new()
-        .level(log::LogLevelFilter::Warn)
+        .level(log::LevelFilter::Warn)
         .chain(std::io::stdout())
         .apply()
         .unwrap();

@@ -52,16 +52,16 @@ fn opt_env(var: &str, default: &'static str) -> Cow<'static, str> {
 
 fn setup_logging() {
     fern::Dispatch::new()
-        .level(log::LogLevelFilter::Info)
-        .level_for("rustls", log::LogLevelFilter::Warn)
-        .level_for("hyper", log::LogLevelFilter::Warn)
-        .level_for("screeps_api::connecting", log::LogLevelFilter::Error)
+        .level(log::LevelFilter::Info)
+        .level_for("rustls", log::LevelFilter::Warn)
+        .level_for("hyper", log::LevelFilter::Warn)
+        .level_for("screeps_api::connecting", log::LevelFilter::Error)
         .format(|out, message, record| {
             let now = chrono::Local::now();
 
-            if record.level() == log::LogLevel::Info && record.target() == CONSOLE_LOG_TARGET {
+            if record.level() == log::Level::Info && record.target() == CONSOLE_LOG_TARGET {
                 out.finish(format_args!("[{}]{}", now.format("%H:%M:%S"), message));
-            } else if record.level() == log::LogLevel::Info && record.target() == CONSOLE_RAW_OUTPUT_TARGET {
+            } else if record.level() == log::Level::Info && record.target() == CONSOLE_RAW_OUTPUT_TARGET {
                 out.finish(format_args!("{}", message));
             } else {
                 out.finish(

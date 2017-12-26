@@ -28,7 +28,7 @@ fn opt_env(var: &str, default: &'static str) -> Cow<'static, str> {
 
 fn main() {
     fern::Dispatch::new()
-        .level(log::LogLevelFilter::Warn)
+        .level(log::LevelFilter::Warn)
         .chain(std::io::stdout())
         .apply()
         .unwrap();
