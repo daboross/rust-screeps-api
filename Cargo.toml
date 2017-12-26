@@ -69,3 +69,7 @@ required-features = ["sync"]
 [[example]]
 name = "top10"
 required-features = ["sync"]
+
+[[example]]
+name = "ws-console"
+required-features = ["sync"]
