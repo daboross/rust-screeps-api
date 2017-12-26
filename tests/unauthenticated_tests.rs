@@ -1,3 +1,4 @@
+#![cfg(feature = "sync")]
 extern crate dotenv;
 extern crate screeps_api;
 

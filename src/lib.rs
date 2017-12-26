@@ -16,11 +16,13 @@
 //! ```
 //! extern crate screeps_api;
 //!
+//! # #[cfg(feature = "sync")]
+//! # fn main() {
 //! use screeps_api::SyncApi;
 //!
-//! # fn main() {
 //! let mut api = SyncApi::new().expect("expected starting screeps http client to suceed");
 //! # }
+//! # #[cfg(not(feature = "sync"))] fn main() {}
 //! ```
 //!
 //! This API object can then be used to make any number of API calls. Each will return a `Result` with a typed response
@@ -29,9 +31,10 @@
 //! ```no_run
 //! # extern crate screeps_api;
 //! #
+//! # #[cfg(feature = "sync")]
+//! # fn main() {
 //! # use screeps_api::SyncApi;
 //! #
-//! # fn main() {
 //! # let mut api = SyncApi::new().unwrap();
 //! #
 //! api.login("username", "password").unwrap();
@@ -40,6 +43,7 @@
 //!
 //! println!("Logged in with user ID {}!", my_info.user_id);
 //! # }
+//! # #[cfg(not(feature = "sync"))] fn main() {}
 //! ```
 //!
 //! [`Api`]: struct.Api.html
