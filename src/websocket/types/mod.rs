@@ -118,18 +118,18 @@ impl<'a> ChannelUpdate<'a> {
     /// If this update is directly associated with a room, gets the room name.
     pub fn shard_name(&self) -> Option<&str> {
         match *self {
-            ChannelUpdate::RoomMapView { ref shard_name, .. } |
-            ChannelUpdate::RoomDetail { ref shard_name, .. } |
-            ChannelUpdate::NoRoomDetail { ref shard_name, .. } => shard_name.as_ref().map(AsRef::as_ref),
+            ChannelUpdate::RoomMapView { ref shard_name, .. }
+            | ChannelUpdate::RoomDetail { ref shard_name, .. }
+            | ChannelUpdate::NoRoomDetail { ref shard_name, .. } => shard_name.as_ref().map(AsRef::as_ref),
             _ => None,
         }
     }
     /// If this update is directly associated with a room, gets the room name.
     pub fn room_name(&self) -> Option<&RoomName> {
         match *self {
-            ChannelUpdate::RoomMapView { ref room_name, .. } |
-            ChannelUpdate::RoomDetail { ref room_name, .. } |
-            ChannelUpdate::NoRoomDetail { ref room_name, .. } => Some(room_name),
+            ChannelUpdate::RoomMapView { ref room_name, .. }
+            | ChannelUpdate::RoomDetail { ref room_name, .. }
+            | ChannelUpdate::NoRoomDetail { ref room_name, .. } => Some(room_name),
             _ => None,
         }
     }
@@ -142,11 +142,11 @@ impl<'a> ChannelUpdate<'a> {
     /// notification, *not* the user id of the sender.
     pub fn user_id(&self) -> Option<&str> {
         match *self {
-            ChannelUpdate::UserCpu { ref user_id, .. } |
-            ChannelUpdate::UserConsole { ref user_id, .. } |
-            ChannelUpdate::UserMessage { ref user_id, .. } |
-            ChannelUpdate::UserConversation { ref user_id, .. } |
-            ChannelUpdate::UserCredits { ref user_id, .. } => Some(user_id.as_ref()),
+            ChannelUpdate::UserCpu { ref user_id, .. }
+            | ChannelUpdate::UserConsole { ref user_id, .. }
+            | ChannelUpdate::UserMessage { ref user_id, .. }
+            | ChannelUpdate::UserConversation { ref user_id, .. }
+            | ChannelUpdate::UserCredits { ref user_id, .. } => Some(user_id.as_ref()),
             _ => None,
         }
     }
@@ -165,8 +165,8 @@ impl<'a> ChannelUpdate<'a> {
                 room_name,
                 ref shard_name,
                 ..
-            } |
-            ChannelUpdate::NoRoomDetail {
+            }
+            | ChannelUpdate::NoRoomDetail {
                 room_name,
                 ref shard_name,
                 ..
@@ -242,7 +242,10 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                 }
             };
             let room_name = RoomName::new(room_name).map_err(|_| {
-                de::Error::invalid_value(Unexpected::Str(room_name), &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
+                de::Error::invalid_value(
+                    Unexpected::Str(room_name),
+                    &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`",
+                )
             })?;
 
             return Ok(ChannelUpdate::RoomMapView {
@@ -264,7 +267,10 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             };
 
             let room_name = RoomName::new(room_name).map_err(|_| {
-                de::Error::invalid_value(Unexpected::Str(room_name), &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
+                de::Error::invalid_value(
+                    Unexpected::Str(room_name),
+                    &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`",
+                )
             })?;
 
             return Ok(ChannelUpdate::RoomDetail {
@@ -286,7 +292,10 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             };
 
             let room_name = RoomName::new(room_name).map_err(|_| {
-                de::Error::invalid_value(Unexpected::Str(room_name), &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`")
+                de::Error::invalid_value(
+                    Unexpected::Str(room_name),
+                    &"room name formatted `(E|W)[0-9]+(N|S)[0-9]+`",
+                )
             })?;
 
             let err_message = seq.next_element::<&str>()?

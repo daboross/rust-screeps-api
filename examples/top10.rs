@@ -37,7 +37,10 @@ fn print_ranks(result: &LeaderboardPage) {
             .find(|x| x.0 == ranked_user.user_id)
         {
             Some(&(_, ref details)) => {
-                println!("\t[{}] {} (GCL {})", ranked_user.rank, details.username, details.gcl_points);
+                println!(
+                    "\t[{}] {} (GCL {})",
+                    ranked_user.rank, details.username, details.gcl_points
+                );
             }
             None => {
                 println!("\t[{}] {}", ranked_user.rank, ranked_user.user_id);
@@ -55,7 +58,10 @@ fn main() {
 
     let mut client = screeps_api::SyncConfig::new()
         .unwrap()
-        .url(&opt_env("SCREEPS_API_URL", screeps_api::DEFAULT_OFFICIAL_API_URL))
+        .url(&opt_env(
+            "SCREEPS_API_URL",
+            screeps_api::DEFAULT_OFFICIAL_API_URL,
+        ))
         .build()
         .unwrap();
 

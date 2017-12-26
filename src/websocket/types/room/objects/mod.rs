@@ -201,16 +201,16 @@ mod test {
                 } else {
                     match id_to_thing.entry(id.clone()) {
                         Occupied(entry) => {
-                            entry
-                                .into_mut()
-                                .update(value)
-                                .expect(&format!("expected {} in update #{} to succeed", id, update_index));
+                            entry.into_mut().update(value).expect(&format!(
+                                "expected {} in update #{} to succeed",
+                                id, update_index
+                            ));
                         }
                         Vacant(entry) => {
-                            entry.insert(
-                                serde_json::from_value(value)
-                                    .expect(&format!("expected {} in update #{} to succeed", id, update_index)),
-                            );
+                            entry.insert(serde_json::from_value(value).expect(&format!(
+                                "expected {} in update #{} to succeed",
+                                id, update_index
+                            )));
                         }
                     }
                 }

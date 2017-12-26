@@ -292,7 +292,10 @@ mod test {
                 y: 16,
                 ..
             } => (),
-            other => panic!("expected pre-set StructureStorage to match, found {:#?}", other),
+            other => panic!(
+                "expected pre-set StructureStorage to match, found {:#?}",
+                other
+            ),
         }
 
         assert_eq!(

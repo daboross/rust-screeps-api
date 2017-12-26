@@ -165,7 +165,9 @@ impl<'de> Deserialize<'de> for Resource {
                         }
                         FieldName::Other(resource) => {
                             if Option::is_some(&resource_amount) {
-                                return Err(A::Error::duplicate_field("<dynamic ResourceType-named amount field>"));
+                                return Err(A::Error::duplicate_field(
+                                    "<dynamic ResourceType-named amount field>",
+                                ));
                             }
                             resource_amount = Some((resource, access.next_value::<i32>()?));
                         }
@@ -192,13 +194,15 @@ impl<'de> Deserialize<'de> for Resource {
                                 "this structure expects both a resourceType field declaring a name, and a field \
                                  named by that name; found that resourceType field's value ({:?}) and name of \
                                  amount field ({:?}) did not match.",
-                                self.0,
-                                self.1
+                                self.0, self.1
                             )
                         }
                     }
 
-                    return Err(A::Error::custom(ResourceTypeMismatchError(resource_type, found_resource_type)));
+                    return Err(A::Error::custom(ResourceTypeMismatchError(
+                        resource_type,
+                        found_resource_type,
+                    )));
                 }
                 Ok(Resource {
                     id: id,
@@ -282,7 +286,9 @@ impl<'de> Deserialize<'de> for ResourceUpdate {
                             }
                             if let CanBeNullI32(Some(value)) = access.next_value::<CanBeNullI32>()? {
                                 if amount.is_some() {
-                                    return Err(A::Error::duplicate_field("<dynamic ResourceType-named amount field>"));
+                                    return Err(A::Error::duplicate_field(
+                                        "<dynamic ResourceType-named amount field>",
+                                    ));
                                 }
                                 amount = Some(value);
                             }
@@ -304,7 +310,12 @@ impl<'de> Deserialize<'de> for ResourceUpdate {
             }
         }
         const FIELDS: &'static [&'static str] = &["id", "room", "x", "y", "resourceType"];
-        Deserializer::deserialize_struct(deserializer, "ResourceUpdate", FIELDS, ResourceUpdateVisitor)
+        Deserializer::deserialize_struct(
+            deserializer,
+            "ResourceUpdate",
+            FIELDS,
+            ResourceUpdateVisitor,
+        )
     }
 }
 

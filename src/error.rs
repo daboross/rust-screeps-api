@@ -340,12 +340,12 @@ impl fmt::Display for ApiError {
             ApiError::MissingField(field) => write!(f, "missing field from api result: {}", field),
             ApiError::MalformedResponse(ref desc) => write!(f, "malformed field from api result: {}", desc),
             ApiError::GenericError(ref err) => write!(f, "api call resulted in error: {}", err),
-            ApiError::InvalidRoom |
-            ApiError::InvalidShard |
-            ApiError::ResultNotFound |
-            ApiError::UserNotFound |
-            ApiError::InvalidParameters |
-            ApiError::ServerDown => write!(f, "{}", self.description()),
+            ApiError::InvalidRoom
+            | ApiError::InvalidShard
+            | ApiError::ResultNotFound
+            | ApiError::UserNotFound
+            | ApiError::InvalidParameters
+            | ApiError::ServerDown => write!(f, "{}", self.description()),
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }

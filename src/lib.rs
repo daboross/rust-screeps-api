@@ -346,7 +346,6 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
         self.request(endpoint)
     }
 
-
     /// Makes a POST request to the given endpoint URL, with the given data encoded as JSON in the body of the request.
     #[inline]
     fn post<'a, U, R>(

@@ -35,7 +35,10 @@ fn main() {
 
     let mut client = screeps_api::SyncConfig::new()
         .unwrap()
-        .url(&opt_env("SCREEPS_API_URL", screeps_api::DEFAULT_OFFICIAL_API_URL))
+        .url(&opt_env(
+            "SCREEPS_API_URL",
+            screeps_api::DEFAULT_OFFICIAL_API_URL,
+        ))
         .build()
         .unwrap();
 

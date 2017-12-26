@@ -88,8 +88,6 @@ where
     }
 }
 
-
-
 /// Map stats raw result.
 #[derive(Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
@@ -213,14 +211,11 @@ impl EndpointResult for MapStats {
                         // return an empty "out of bounds" status.
                         return Ok(None);
                     } else if status != "normal" {
-                        return Err(
-                            ApiError::MalformedResponse(format!(
-                                "expected room status for \"{}\" to be \
-                                 \"normal\", found \"{}\"",
-                                room_name,
-                                status
-                            )).into(),
-                        );
+                        return Err(ApiError::MalformedResponse(format!(
+                            "expected room status for \"{}\" to be \
+                             \"normal\", found \"{}\"",
+                            room_name, status
+                        )).into());
                     }
 
                     let info = RoomInfo {
@@ -250,14 +245,11 @@ impl EndpointResult for MapStats {
                         username,
                     } = user_data;
                     if user_id != user_id2 {
-                        return Err(
-                            ApiError::MalformedResponse(format!(
-                                "expected user id object key to match user \
-                                 id, {} != {}",
-                                user_id,
-                                user_id2
-                            )).into(),
-                        );
+                        return Err(ApiError::MalformedResponse(format!(
+                            "expected user id object key to match user \
+                             id, {} != {}",
+                            user_id, user_id2
+                        )).into());
                     }
 
                     let info = UserInfo {

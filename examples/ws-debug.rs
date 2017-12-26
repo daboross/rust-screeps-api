@@ -87,10 +87,12 @@ impl Config {
             credits: args.is_present("credits"),
             console: args.is_present("console"),
             shard: args.value_of("shard")
-                .map(|v| if "none".eq_ignore_ascii_case(v) {
-                    None
-                } else {
-                    Some(v.to_owned().into())
+                .map(|v| {
+                    if "none".eq_ignore_ascii_case(v) {
+                        None
+                    } else {
+                        Some(v.to_owned().into())
+                    }
                 })
                 .unwrap_or_else(|| Some("shard0".into())),
             rooms: args.values_of("room")
@@ -121,7 +123,10 @@ impl Config {
 
         if self.messages {
             messages.push(subscribe(&Channel::user_messages(id)));
-            messages.push(subscribe(&Channel::user_conversation(id, "57fb16b6e4dd183b746435b0")));
+            messages.push(subscribe(&Channel::user_conversation(
+                id,
+                "57fb16b6e4dd183b746435b0",
+            )));
         }
 
         if self.credits {
@@ -133,11 +138,17 @@ impl Config {
         }
 
         for room_name in &self.rooms {
-            messages.push(subscribe(&Channel::room_detail(*room_name, self.shard.as_ref().map(AsRef::as_ref))));
+            messages.push(subscribe(&Channel::room_detail(
+                *room_name,
+                self.shard.as_ref().map(AsRef::as_ref),
+            )));
         }
 
         for room_name in &self.map_view {
-            messages.push(subscribe(&Channel::room_map_view(*room_name, self.shard.as_ref().map(AsRef::as_ref))));
+            messages.push(subscribe(&Channel::room_map_view(
+                *room_name,
+                self.shard.as_ref().map(AsRef::as_ref),
+            )));
         }
 
         Box::new(stream::iter_ok(
@@ -248,7 +259,10 @@ fn main() {
 
     let my_info = client.my_info().unwrap();
 
-    info!("Logged in as {}, attempting to connect to stream.", my_info.username);
+    info!(
+        "Logged in as {}, attempting to connect to stream.",
+        my_info.username
+    );
 
     let mut core = tokio_core::reactor::Core::new().expect("expected IO core to start up without issue.");
 
@@ -264,22 +278,23 @@ fn main() {
 
         let (sink, stream) = client.split();
 
-        sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(&token_storage.take_token().unwrap())))
-            .and_then(|sink| {
-                let handler = Handler::new(token_storage, my_info, config);
+        sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(
+            &token_storage.take_token().unwrap(),
+        ))).and_then(|sink| {
+            let handler = Handler::new(token_storage, my_info, config);
 
-                sink.send_all(
-                    (stream
-                        .and_then(move |data| future::ok(handler.handle_data(data)))
-                        .or_else(|err| {
-                            warn!("error occurred: {}", err);
+            sink.send_all(
+                (stream
+                    .and_then(move |data| future::ok(handler.handle_data(data)))
+                    .or_else(|err| {
+                        warn!("error occurred: {}", err);
 
-                            future::ok::<_, websocket::WebSocketError>(Box::new(stream::empty())
-                                as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>)
-                        })
-                        .flatten()),
-                )
-            })
+                        future::ok::<_, websocket::WebSocketError>(Box::new(stream::empty())
+                            as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>)
+                    })
+                    .flatten()),
+            )
+        })
     })).expect("expected websocket connection to complete successfully, but an error occurred");
 }
 
@@ -343,7 +358,10 @@ where
         match message {
             ScreepsMessage::AuthFailed => panic!("authentication with stored token failed!"),
             ScreepsMessage::AuthOk { new_token } => {
-                info!("authentication succeeded, now authenticated as {}.", self.info.username);
+                info!(
+                    "authentication succeeded, now authenticated as {}.",
+                    self.info.username
+                );
                 // return the token to the token storage in case we need it again - we won't in this example
                 // program, but this is a good practice
                 //
@@ -411,15 +429,20 @@ where
                     "Room {}/{}: {}",
                     shard_name.as_ref().map(AsRef::as_ref).unwrap_or("<None>"),
                     room_name,
-                    serde_json::to_string_pretty(&serde_json::Value::Object(update.objects.iter().cloned().collect()))
-                        .expect("expected to_string to succeed on plain map.")
+                    serde_json::to_string_pretty(&serde_json::Value::Object(
+                        update.objects.iter().cloned().collect()
+                    )).expect("expected to_string to succeed on plain map.")
                 );
             }
             ChannelUpdate::NoRoomDetail {
                 room_name,
                 shard_name,
             } => {
-                info!("Room Skipped: {}/{}", shard_name.as_ref().map(AsRef::as_ref).unwrap_or("<None>"), room_name);
+                info!(
+                    "Room Skipped: {}/{}",
+                    shard_name.as_ref().map(AsRef::as_ref).unwrap_or("<None>"),
+                    room_name
+                );
             }
             ChannelUpdate::UserConsole { user_id, update } => {
                 info!("Console: [{}] {:#?}", user_id, update);
@@ -435,7 +458,10 @@ where
                 target_user_id,
                 update,
             } => {
-                info!("Conversation update: [{}->{}] {:#?}", user_id, target_user_id, update);
+                info!(
+                    "Conversation update: [{}->{}] {:#?}",
+                    user_id, target_user_id, update
+                );
             }
             ChannelUpdate::Other { channel, update } => {
                 warn!(

@@ -44,7 +44,6 @@ macro_rules! basic_updatable {
 basic_updatable!(bool, u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
 basic_updatable!(String, Timespec, RoomName);
 
-
 pub(crate) mod vec_update {
     use std::marker::PhantomData;
 
@@ -94,13 +93,11 @@ pub(crate) mod vec_update {
                     "data did not match any variant of \
                      untagged enum VecUpdate (error for \
                      Array: {}, error for PartialObj: {})",
-                    err1,
-                    err2
+                    err1, err2
                 )))
             }
         }
     };
-
 
     #[derive(Debug, Clone)]
     pub struct VecPartialUpdate<T>(Vec<(u32, T)>);
@@ -158,9 +155,9 @@ pub(crate) mod vec_update {
                         where
                             E: Error,
                         {
-                            Ok(StringKeyAsInt(value
-                                .parse()
-                                .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))?))
+                            Ok(StringKeyAsInt(value.parse().map_err(|_| {
+                                E::invalid_value(Unexpected::Str(value), &self)
+                            })?))
                         }
                     }
                     deserializer.deserialize_str(StringKeyAsIntVisitor)

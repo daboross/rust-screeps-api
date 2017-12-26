@@ -52,11 +52,14 @@ mod error {
                 Error::WrongScheme {
                     ref scheme,
                     ref url,
-                } => write!(f, "expected HTTP or HTTPS url, found {} | url: {}", scheme, url),
+                } => write!(
+                    f,
+                    "expected HTTP or HTTPS url, found {} | url: {}",
+                    scheme, url
+                ),
             }
         }
     }
-
 
     impl error::Error for Error {
         fn description(&self) -> &str {
@@ -109,7 +112,6 @@ pub fn transform_url<U: AsRef<str> + ?Sized>(url: &U) -> Result<Url, UrlError> {
 
     url.set_scheme(new_scheme)
         .expect("expected `ws` and `wss` to be valid url schemes.");
-
 
     // we could probably just use gen_ascii_chars for the session ID, but to be safe
     // we just use the subset that `sockjs-client` does.

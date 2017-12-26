@@ -98,26 +98,24 @@ impl EndpointResult for Vec<FoundUserRank> {
             return Err(ApiError::NotOk(ok).into());
         }
 
-        Ok(
-            season_ranks
-                .into_iter()
-                .map(|raw_rank| {
-                    let InnerAllSeasonsResponse {
-                        rank,
-                        score,
-                        season,
-                        user,
-                    } = raw_rank;
-                    FoundUserRank {
-                        season_id: season,
-                        user_id: user,
-                        rank: rank,
-                        raw_score: score,
-                        _phantom: PhantomData,
-                    }
-                })
-                .collect(),
-        )
+        Ok(season_ranks
+            .into_iter()
+            .map(|raw_rank| {
+                let InnerAllSeasonsResponse {
+                    rank,
+                    score,
+                    season,
+                    user,
+                } = raw_rank;
+                FoundUserRank {
+                    season_id: season,
+                    user_id: user,
+                    rank: rank,
+                    raw_score: score,
+                    _phantom: PhantomData,
+                }
+            })
+            .collect())
     }
 }
 

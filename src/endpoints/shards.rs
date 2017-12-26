@@ -53,26 +53,24 @@ impl EndpointResult for Vec<ShardInfo> {
             return Err(ApiError::NotOk(ok).into());
         }
 
-        Ok(
-            shards
-                .into_iter()
-                .map(|response| {
-                    let ShardResponse {
-                        users,
-                        name,
-                        tick,
-                        rooms,
-                    } = response;
-                    ShardInfo {
-                        name: name,
-                        room_count: rooms,
-                        user_count: users,
-                        tick_avg_milliseconds: tick,
-                        _phantom: PhantomData,
-                    }
-                })
-                .collect(),
-        )
+        Ok(shards
+            .into_iter()
+            .map(|response| {
+                let ShardResponse {
+                    users,
+                    name,
+                    tick,
+                    rooms,
+                } = response;
+                ShardInfo {
+                    name: name,
+                    room_count: rooms,
+                    user_count: users,
+                    tick_avg_milliseconds: tick,
+                    _phantom: PhantomData,
+                }
+            })
+            .collect())
     }
 }
 

@@ -19,7 +19,10 @@ fn logged_in() -> SyncApi {
     let mut api = SyncApi::new().unwrap();
 
     if let Err(err) = api.login(username, password) {
-        panic!("Error logging in: {:?}\nTo disable login tests, use `cargo test -- --skip auth`", err);
+        panic!(
+            "Error logging in: {:?}\nTo disable login tests, use `cargo test -- --skip auth`",
+            err
+        );
     }
 
     api
@@ -122,8 +125,11 @@ fn test_auth_leaderboard_seasons() {
 fn test_auth_retrieve_single_rank() {
     let mut api = logged_in();
 
-    api.find_season_leaderboard_rank(screeps_api::LeaderboardType::GlobalControl, "daboross", "2017-02")
-        .unwrap();
+    api.find_season_leaderboard_rank(
+        screeps_api::LeaderboardType::GlobalControl,
+        "daboross",
+        "2017-02",
+    ).unwrap();
 
     match api.find_season_leaderboard_rank(
         screeps_api::LeaderboardType::GlobalControl,
@@ -137,7 +143,11 @@ fn test_auth_retrieve_single_rank() {
         Ok(other) => panic!("expected UserNotFound error, found success: {:?}", other),
     }
     // "daboross" did not process any power during the 2017-02 season of the official server.
-    match api.find_season_leaderboard_rank(screeps_api::LeaderboardType::PowerProcessed, "daboross", "2017-02") {
+    match api.find_season_leaderboard_rank(
+        screeps_api::LeaderboardType::PowerProcessed,
+        "daboross",
+        "2017-02",
+    ) {
         Err(err) => match *err.kind() {
             ErrorKind::Api(ApiError::ResultNotFound) => (),
             _ => panic!("expected ResultNotFound error, found other error {}", err),
@@ -159,8 +169,12 @@ fn test_auth_retrieve_all_ranks() {
 fn test_auth_retrieve_leaderboard() {
     let mut api = logged_in();
 
-    let result = api.leaderboard_page(screeps_api::LeaderboardType::GlobalControl, "2017-02", 10, 0)
-        .unwrap();
+    let result = api.leaderboard_page(
+        screeps_api::LeaderboardType::GlobalControl,
+        "2017-02",
+        10,
+        0,
+    ).unwrap();
 
     for ranked_user in result.ranks {
         if result
@@ -171,8 +185,7 @@ fn test_auth_retrieve_leaderboard() {
         {
             panic!(
                 "expected user_details to contain ranked_user user_id, but found {:?} did not contain {:?}",
-                result.user_details,
-                ranked_user.user_id
+                result.user_details, ranked_user.user_id
             );
         }
     }
@@ -183,15 +196,26 @@ fn test_auth_retrieve_leaderboard() {
 fn test_auth_leaderboard_limit_parameter_error() {
     let mut api = logged_in();
 
-    match api.leaderboard_page(screeps_api::LeaderboardType::GlobalControl, "2017-02", 21, 0) {
+    match api.leaderboard_page(
+        screeps_api::LeaderboardType::GlobalControl,
+        "2017-02",
+        21,
+        0,
+    ) {
         Err(err) => match *err.kind() {
             ErrorKind::Api(ApiError::InvalidParameters) => (),
             _ => {
-                panic!("expected InvalidParameters error, found other error {}", err);
+                panic!(
+                    "expected InvalidParameters error, found other error {}",
+                    err
+                );
             }
         },
         Ok(other) => {
-            panic!("expected InvalidParameters error, found success: {:?}", other);
+            panic!(
+                "expected InvalidParameters error, found success: {:?}",
+                other
+            );
         }
     }
 }

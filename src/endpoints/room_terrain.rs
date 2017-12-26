@@ -97,23 +97,19 @@ impl EndpointResult for RoomTerrain {
         } = terrain_data;
 
         if terrain.len() != 2500 {
-            return Err(
-                ApiError::MalformedResponse(format!(
-                    "expected response.terrain[0].\
-                     terrain to be a 2500 byte string, found a {} byte string.",
-                    terrain.len()
-                )).into(),
-            );
+            return Err(ApiError::MalformedResponse(format!(
+                "expected response.terrain[0].\
+                 terrain to be a 2500 byte string, found a {} byte string.",
+                terrain.len()
+            )).into());
         }
 
         if response_type != "terrain" {
-            return Err(
-                ApiError::MalformedResponse(format!(
-                    "expected response.terrain[0].type \
-                     to be 'terrain', found {:?}",
-                    response_type
-                )).into(),
-            );
+            return Err(ApiError::MalformedResponse(format!(
+                "expected response.terrain[0].type \
+                 to be 'terrain', found {:?}",
+                response_type
+            )).into());
         }
 
         Ok(RoomTerrain {
@@ -132,15 +128,11 @@ impl EndpointResult for RoomTerrain {
                             b'1' => Ok(TerrainType::Wall),
                             b'2' => Ok(TerrainType::Swamp),
                             b'3' => Ok(TerrainType::SwampyWall),
-                            other => Err(
-                                ApiError::MalformedResponse(format!(
-                                    "expected terrain data to contain \
-                                     only characters 0,1,2,3, found byte {} at x,y {},{}.",
-                                    other,
-                                    x,
-                                    y
-                                )).into(),
-                            ),
+                            other => Err(ApiError::MalformedResponse(format!(
+                                "expected terrain data to contain \
+                                 only characters 0,1,2,3, found byte {} at x,y {},{}.",
+                                other, x, y
+                            )).into()),
                         })
                         .collect::<Result<_>>()
                 })

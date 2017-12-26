@@ -19,7 +19,6 @@ with_structure_fields_and_update_struct! {
     pub struct StructurePowerBankUpdate { ... }
 }
 
-
 #[cfg(test)]
 mod test {
     use serde::Deserialize;

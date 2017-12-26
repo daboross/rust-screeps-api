@@ -70,7 +70,6 @@ pub struct ShardRecentPvp {
     _phantom: PhantomData<()>,
 }
 
-
 impl EndpointResult for RecentPvp {
     type RequestResult = Response;
     type ErrorResult = data::ApiError;

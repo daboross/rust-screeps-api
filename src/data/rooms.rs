@@ -2,7 +2,6 @@
 use time;
 use error;
 
-
 /// A room state, returned by room status.
 ///
 /// Note that the API itself will return timestamps for "novice end" and "open time" even when the room is no longer
@@ -111,7 +110,6 @@ pub struct HardSign {
     /// The hard sign text.
     pub text: String,
 }
-
 
 /// Serialization / deserialization of `time::Timespec`.
 pub mod timespec_seconds {
@@ -380,7 +378,11 @@ mod tests {
     #[test]
     fn parse_room_state_novice_never_closed() {
         // Current time is 4, novice area ends at 10.
-        let state = RoomState::from_data(time::Timespec::new(4, 0), Some(time::Timespec::new(10, 0)), None).unwrap();
+        let state = RoomState::from_data(
+            time::Timespec::new(4, 0),
+            Some(time::Timespec::new(10, 0)),
+            None,
+        ).unwrap();
         assert_eq!(
             state,
             RoomState::Novice {

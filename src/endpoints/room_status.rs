@@ -72,13 +72,11 @@ impl EndpointResult for RoomStatus {
         };
 
         if status != "normal" {
-            return Err(
-                ApiError::MalformedResponse(format!(
-                    "expected room status to be \"normal\", \
-                     found \"{}\".",
-                    &status
-                )).into(),
-            );
+            return Err(ApiError::MalformedResponse(format!(
+                "expected room status to be \"normal\", \
+                 found \"{}\".",
+                &status
+            )).into());
         }
 
         let state = RoomState::from_data(time::get_time(), novice, open_time)?;

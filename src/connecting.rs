@@ -8,7 +8,6 @@ use url::Url;
 
 use {EndpointType, Error, Token, TokenStorage};
 
-
 /// Struct mirroring `hyper`'s FutureResponse, but with parsing that happens after the request is finished.
 #[must_use = "futures do nothing unless polled"]
 pub struct FutureResponse<R: EndpointType>(Box<Future<Item = R, Error = Error>>);
@@ -102,29 +101,31 @@ where
                     Err(e) => Err(Error::with_url(e, Some(url))),
                 })
             })
-            .and_then(|(status, url, data): (hyper::StatusCode, _, hyper::Chunk)| {
-                let json_result = serde_json::from_slice(&data);
+            .and_then(
+                |(status, url, data): (hyper::StatusCode, _, hyper::Chunk)| {
+                    let json_result = serde_json::from_slice(&data);
 
-                // insert this check here so we can include response body in status errors.
-                if !status.is_success() {
-                    if let Ok(json) = json_result {
-                        return Err(Error::with_json(status, Some(url), Some(json)));
-                    } else {
-                        return Err(Error::with_body(status, Some(url), Some(data)));
+                    // insert this check here so we can include response body in status errors.
+                    if !status.is_success() {
+                        if let Ok(json) = json_result {
+                            return Err(Error::with_json(status, Some(url), Some(json)));
+                        } else {
+                            return Err(Error::with_body(status, Some(url), Some(data)));
+                        }
                     }
-                }
 
-                let json = match json_result {
-                    Ok(v) => v,
-                    Err(e) => return Err(Error::with_body(e, Some(url), Some(data))),
-                };
-                let parsed = match deserialize_with_warnings::<R>(&json, &url) {
-                    Ok(v) => v,
-                    Err(e) => return Err(Error::with_json(e, Some(url), Some(json))),
-                };
+                    let json = match json_result {
+                        Ok(v) => v,
+                        Err(e) => return Err(Error::with_body(e, Some(url), Some(data))),
+                    };
+                    let parsed = match deserialize_with_warnings::<R>(&json, &url) {
+                        Ok(v) => v,
+                        Err(e) => return Err(Error::with_json(e, Some(url), Some(json))),
+                    };
 
-                R::from_raw(parsed).map_err(|e| Error::with_json(e, Some(url), Some(json)))
-            }),
+                    R::from_raw(parsed).map_err(|e| Error::with_json(e, Some(url), Some(json)))
+                },
+            ),
     ))
 }
 
@@ -142,7 +143,6 @@ fn deserialize_with_warnings<T: EndpointType>(input: &serde_json::Value, url: &U
             }
         }
     };
-
 
     if !unused.is_empty() {
         warn!(

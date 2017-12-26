@@ -80,7 +80,10 @@ impl FlagColor {
             8 => Ok(FlagColor::Brown),
             9 => Ok(FlagColor::Grey),
             10 => Ok(FlagColor::White),
-            other => Err(E::invalid_value(Unexpected::Unsigned(other as u64), &"an integer between 1 and 10")),
+            other => Err(E::invalid_value(
+                Unexpected::Unsigned(other as u64),
+                &"an integer between 1 and 10",
+            )),
         }
     }
 }

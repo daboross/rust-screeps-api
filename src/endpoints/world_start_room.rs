@@ -6,7 +6,6 @@ use EndpointResult;
 use data;
 use error::{ApiError, Result};
 
-
 /// World start room raw result.
 #[derive(Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
@@ -37,20 +36,20 @@ impl EndpointResult for WorldStartRoom {
             return Err(ApiError::NotOk(ok).into());
         }
 
-
         if room.len() < 1 {
-            return Err(
-                ApiError::MalformedResponse(format!(
-                    "expected response.room to be an array of \
-                     length 1 or greater, found empty array"
-                )).into(),
-            );
+            return Err(ApiError::MalformedResponse(format!(
+                "expected response.room to be an array of \
+                 length 1 or greater, found empty array"
+            )).into());
         }
 
         let room_string = room.swap_remove(0);
 
         let (room_name, shard) = match room_string.find('/') {
-            Some(split_at) => (room_string[(split_at + 1)..].to_owned(), Some(room_string[..split_at].to_owned())),
+            Some(split_at) => (
+                room_string[(split_at + 1)..].to_owned(),
+                Some(room_string[..split_at].to_owned()),
+            ),
             None => (room_string, None),
         };
 

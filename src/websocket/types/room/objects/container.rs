@@ -281,7 +281,10 @@ mod test {
             {
                 ()
             }
-            other => panic!("expected pre-set StructureContainer to match, found {:#?}", other),
+            other => panic!(
+                "expected pre-set StructureContainer to match, found {:#?}",
+                other
+            ),
         }
 
         assert_eq!(

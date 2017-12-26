@@ -296,7 +296,10 @@ mod test {
             {
                 ()
             }
-            other => panic!("expected pre-set StructureTerminal to match, found {:#?}", other),
+            other => panic!(
+                "expected pre-set StructureTerminal to match, found {:#?}",
+                other
+            ),
         }
 
         assert_eq!(

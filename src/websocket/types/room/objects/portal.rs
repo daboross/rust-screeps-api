@@ -50,7 +50,6 @@ with_base_fields_and_update_struct! {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use {serde_json, time};

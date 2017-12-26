@@ -78,7 +78,10 @@ fn setup_logging() {
 fn subscribe_with(id: &str) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
     use screeps_api::websocket::subscribe;
 
-    let messages = vec![subscribe(&Channel::ServerMessages), subscribe(&Channel::user_console(id))];
+    let messages = vec![
+        subscribe(&Channel::ServerMessages),
+        subscribe(&Channel::user_console(id)),
+    ];
 
     Box::new(stream::iter_ok(
         messages
@@ -127,22 +130,23 @@ fn main() {
 
         let (sink, stream) = client.split();
 
-        sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(&token_storage.take_token().unwrap())))
-            .and_then(|sink| {
-                let handler = Handler::new(token_storage, my_info);
+        sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(
+            &token_storage.take_token().unwrap(),
+        ))).and_then(|sink| {
+            let handler = Handler::new(token_storage, my_info);
 
-                sink.send_all(
-                    (stream
-                        .and_then(move |data| future::ok(handler.handle_data(data)))
-                        .or_else(|err| {
-                            warn!("IO error: {}", err);
+            sink.send_all(
+                (stream
+                    .and_then(move |data| future::ok(handler.handle_data(data)))
+                    .or_else(|err| {
+                        warn!("IO error: {}", err);
 
-                            future::ok::<_, websocket::WebSocketError>(Box::new(stream::empty())
-                                as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>)
-                        })
-                        .flatten()),
-                )
-            })
+                        future::ok::<_, websocket::WebSocketError>(Box::new(stream::empty())
+                            as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>)
+                    })
+                    .flatten()),
+            )
+        })
     })).expect("websocket connection exited with failure");
 }
 

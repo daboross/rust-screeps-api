@@ -564,24 +564,30 @@ mod test {
             } => if user != "57874d42d0ae911e3bd15bbc" || id != "5969704a55d1b111cbe6b150"
                 || *room != RoomName::new("W65N19").unwrap() || name != "b873"
                 || body.iter()
-                    .map(|part| if part.part_type == CreepPartType::Carry {
-                        1
-                    } else {
-                        0
+                    .map(|part| {
+                        if part.part_type == CreepPartType::Carry {
+                            1
+                        } else {
+                            0
+                        }
                     })
                     .sum::<i32>() != 2
                 || body.iter()
-                    .map(|part| if part.part_type == CreepPartType::Work {
-                        1
-                    } else {
-                        0
+                    .map(|part| {
+                        if part.part_type == CreepPartType::Work {
+                            1
+                        } else {
+                            0
+                        }
                     })
                     .sum::<i32>() != 17
                 || body.iter()
-                    .map(|part| if part.part_type == CreepPartType::Move {
-                        1
-                    } else {
-                        0
+                    .map(|part| {
+                        if part.part_type == CreepPartType::Move {
+                            1
+                        } else {
+                            0
+                        }
                     })
                     .sum::<i32>() != 10 || !body.iter().all(|part| {
                 part.part_type == CreepPartType::Move || part.part_type == CreepPartType::Work

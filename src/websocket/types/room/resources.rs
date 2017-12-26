@@ -136,7 +136,6 @@ pub enum ResourceType {
 
 basic_updatable!(ResourceType);
 
-
 impl ResourceType {
     // created by replacing:
     // `s#/// [A-Z_]+: "(\w+)",\n            (\w+),#ResourceType::$2 => "$1",#g`

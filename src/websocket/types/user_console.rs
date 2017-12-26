@@ -74,10 +74,14 @@ impl<'de> Deserialize<'de> for UserConsoleUpdate {
                 shard: shard,
             },
             (Some(_), Some(_)) => {
-                return Err(D::Error::custom("expected either 'messages' property or 'error' property, not both"));
+                return Err(D::Error::custom(
+                    "expected either 'messages' property or 'error' property, not both",
+                ));
             }
             (None, None) => {
-                return Err(D::Error::custom("expected either 'messages' property or 'error' property, neither found"));
+                return Err(D::Error::custom(
+                    "expected either 'messages' property or 'error' property, neither found",
+                ));
             }
         };
 

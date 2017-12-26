@@ -40,7 +40,11 @@ impl fmt::Display for ParseError {
                 ref error_desc,
                 ref full_string,
                 ref err,
-            } => write!(f, "error parsing `{}`: {}: {}", full_string, error_desc, err),
+            } => write!(
+                f,
+                "error parsing `{}`: {}: {}",
+                full_string, error_desc, err
+            ),
             ParseError::__Nonexhaustive => unreachable!(),
         }
     }

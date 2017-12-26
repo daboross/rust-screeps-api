@@ -74,7 +74,13 @@ impl<'a> SockjsMessage<'a> {
                         code: code,
                         reason: reason.into(),
                     },
-                    Err(e) => return Err(ParseError::serde("error parsing closed json message", rest.to_owned(), e)),
+                    Err(e) => {
+                        return Err(ParseError::serde(
+                            "error parsing closed json message",
+                            rest.to_owned(),
+                            e,
+                        ))
+                    }
                 }
             }
             'm' => {
@@ -85,7 +91,13 @@ impl<'a> SockjsMessage<'a> {
                 // We have to parse into `String` since it contains json escapes.
                 match serde_json::from_str::<String>(rest) {
                     Ok(message) => SockjsMessage::Message(ScreepsMessage::parse(&message)),
-                    Err(e) => return Err(ParseError::serde("error parsing single message", rest.to_owned(), e)),
+                    Err(e) => {
+                        return Err(ParseError::serde(
+                            "error parsing single message",
+                            rest.to_owned(),
+                            e,
+                        ))
+                    }
                 }
             }
             'a' => {
@@ -93,15 +105,20 @@ impl<'a> SockjsMessage<'a> {
 
                 match from_str_with_warning::<MultipleMessagesIntermediate>(rest, "set of screeps update messages") {
                     Ok(messages) => SockjsMessage::Messages(messages.0),
-                    Err(e) => return Err(ParseError::serde("error parsing array of messages", rest.to_owned(), e)),
+                    Err(e) => {
+                        return Err(ParseError::serde(
+                            "error parsing array of messages",
+                            rest.to_owned(),
+                            e,
+                        ))
+                    }
                 }
             }
             other => {
                 return Err(ParseError::Other(format!(
                     "Error parsing message, unknown start character: {} (full \
                      message: {})",
-                    other,
-                    message
+                    other, message
                 )))
             }
         };
@@ -188,14 +205,12 @@ pub enum ScreepsMessage<'a> {
     Other(Cow<'a, str>),
 }
 
-
 const AUTH_PREFIX: &'static str = "auth ";
 const TIME_PREFIX: &'static str = "time ";
 const PROTOCOL_PREFIX: &'static str = "protocol ";
 const PACKAGE_PREFIX: &'static str = "package ";
 const AUTH_OK: &'static str = "ok ";
 const AUTH_FAILED: &'static str = "failed";
-
 
 impl ScreepsMessage<'static> {
     /// Parses the internal message from a SockJS message into a meaningful type.
@@ -229,7 +244,10 @@ impl ScreepsMessage<'static> {
                 match rest.parse::<u64>() {
                     Ok(v) => return ScreepsMessage::ServerTime { time: v },
                     Err(_) => {
-                        warn!("expected \"time <integer>\", found \"{}\". Ignoring inconsistent message!", rest);
+                        warn!(
+                            "expected \"time <integer>\", found \"{}\". Ignoring inconsistent message!",
+                            rest
+                        );
                     }
                 }
             } else if message.starts_with(PROTOCOL_PREFIX) {
@@ -238,7 +256,10 @@ impl ScreepsMessage<'static> {
                 match rest.parse::<u32>() {
                     Ok(v) => return ScreepsMessage::ServerProtocol { protocol: v },
                     Err(_) => {
-                        warn!("expected \"protocol <integer>\", found \"{}\". Ignoring inconsistent message!", rest);
+                        warn!(
+                            "expected \"protocol <integer>\", found \"{}\". Ignoring inconsistent message!",
+                            rest
+                        );
                     }
                 }
             } else if message.starts_with(PACKAGE_PREFIX) {
@@ -247,7 +268,10 @@ impl ScreepsMessage<'static> {
                 match rest.parse::<u32>() {
                     Ok(v) => return ScreepsMessage::ServerPackage { package: v },
                     Err(_) => {
-                        warn!("expected \"package <integer>\", found \"{}\". Ignoring inconsistent message!", rest);
+                        warn!(
+                            "expected \"package <integer>\", found \"{}\". Ignoring inconsistent message!",
+                            rest
+                        );
                     }
                 }
             }

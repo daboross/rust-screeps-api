@@ -56,7 +56,6 @@ pub struct RoomUpdate {
     _phantom: PhantomData<()>,
 }
 
-
 /// "info" struct to go with room update.
 ///
 /// TODO: find all variants and parse into enum.

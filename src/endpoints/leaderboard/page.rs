@@ -86,14 +86,12 @@ impl EndpointResult for LeaderboardPage {
         Ok(LeaderboardPage {
             total_count: total_count,
             ranks: list.into_iter()
-                .map(|info| {
-                    RankedUser {
-                        season_id: info.season,
-                        user_id: info.user,
-                        rank: info.rank,
-                        raw_score: info.score,
-                        _phantom: PhantomData,
-                    }
+                .map(|info| RankedUser {
+                    season_id: info.season,
+                    user_id: info.user,
+                    rank: info.rank,
+                    raw_score: info.score,
+                    _phantom: PhantomData,
                 })
                 .collect(),
             user_details: user_details

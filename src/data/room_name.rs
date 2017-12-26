@@ -242,7 +242,11 @@ impl<'a> error::Error for RoomNameParseError<'a> {
 
 impl<'a> fmt::Display for RoomNameParseError<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "expected room name formatted `(E|W)[0-9]+(N|S)[0-9]+`, found `{}`", self.0.as_ref())
+        write!(
+            f,
+            "expected room name formatted `(E|W)[0-9]+(N|S)[0-9]+`, found `{}`",
+            self.0.as_ref()
+        )
     }
 }
 
