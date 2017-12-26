@@ -36,10 +36,19 @@ fn test_auth_my_info() {
 fn test_auth_map_stats() {
     let mut api = logged_in();
 
-    let result = api.map_stats("shard0", &["E15N52", "E22S78", "E3S69", "E19S81", "W6S67", "InvalidRoomName"])
-        .unwrap();
+    let result = api.map_stats(
+        "shard2",
+        &[
+            "W13S21",
+            "W12S20",
+            "E32N29",
+            "E50N35",
+            "E90N90",
+            "InvalidRoomName",
+        ],
+    ).unwrap();
 
-    assert_eq!(result.rooms.len(), 5);
+    assert_eq!(result.rooms.len(), 4);
 }
 
 #[test]

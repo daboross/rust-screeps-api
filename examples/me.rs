@@ -7,6 +7,8 @@ extern crate hyper;
 extern crate log;
 extern crate screeps_api;
 
+use std::borrow::Cow;
+
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
 fn env(var: &str) -> String {
     dotenv::dotenv().ok();

@@ -81,7 +81,6 @@ struct Config {
 
 impl Config {
     fn new<'a>(args: &'a clap::ArgMatches) -> Result<Self, screeps_api::data::room_name::RoomNameParseError<'a>> {
-        use std::ascii::AsciiExt;
         Ok(Config {
             cpu: args.is_present("cpu"),
             messages: args.is_present("messages"),
@@ -141,10 +140,10 @@ impl Config {
             messages.push(subscribe(&Channel::room_map_view(*room_name, self.shard.as_ref().map(AsRef::as_ref))));
         }
 
-        Box::new(stream::iter(
+        Box::new(stream::iter_ok(
             messages
                 .into_iter()
-                .map(|string| Ok(OwnedMessage::Text(string))),
+                .map(|string| OwnedMessage::Text(string)),
         ))
     }
 }
@@ -324,7 +323,7 @@ where
                             .map(|message| Ok(self.handle_parsed_message(message)))
                             .collect::<Vec<_>>();
 
-                        return Box::new(stream::iter::<_, _, websocket::WebSocketError>(results).flatten());
+                        return Box::new(stream::iter_result::<_, _, websocket::WebSocketError>(results).flatten());
                     }
                 }
             }

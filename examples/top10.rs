@@ -6,6 +6,8 @@ extern crate fern;
 extern crate log;
 extern crate screeps_api;
 
+use std::borrow::Cow;
+
 use screeps_api::LeaderboardType::*;
 use screeps_api::endpoints::leaderboard::page::LeaderboardPage;
 
