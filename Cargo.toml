@@ -15,6 +15,9 @@ categories = ["api-bindings"]
 
 include = ["Cargo.toml", "src/**/*", "tests/**/*", "examples/**/*", "LICENSE", "README.md"]
 
+[package.metadata.docs.rs]
+all-features = true
+
 [badges]
 travis-ci = { repository = "daboross/rust-screeps-api", branch = "master" }
 appveyor = { service = "github", repository = "daboross/rust-screeps-api", branch = "master" }
