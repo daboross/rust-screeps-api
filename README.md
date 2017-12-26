@@ -27,7 +27,7 @@ let my_info = api.my_info().unwrap();
 println!("Logged in with user ID {}!", my_info.user_id);
 ```
 
-More comprehensive examples and documentation at https://dabo.guru/rust/screeps-api/.
+Documentation is located at https://dabo.guru/rust/screeps-api/.
 
 Unofficial documentation for HTTP endpoints can be found at https://github.com/screepers/python-screeps/blob/master/docs/Endpoints.md.
 
@@ -66,6 +66,7 @@ Unofficial documentation for HTTP endpoints can be found at https://github.com/s
 Environmental variables used when testing:
 - SCREEPS_API_USERNAME: the username to log in with for doing authenticated tests
 - SCREEPS_API_PASSWORD: the password to login with for doing authenticated tests
+- All variables can also be placed into a `.env` file (parsed using the `dotenv` crate)
 
 Use:
 - `cargo test` to perform all tests, including calls to https://screeps.com with provided login details.

@@ -1,6 +1,10 @@
-//! Rust wrapper for the Screeps public API.
+//! Rust library for using the [Screeps] HTTP API.
 //!
-//! Allows rust programs to retrieve game information from https://screeps.com and any private Screeps server.
+//! Screeps is a true programming MMO where users uploading JavaScript code to power their online empires.
+//! `rust-screeps-api` can connect to the [official server][screeps], and any [private server][screeps-os] instances
+//! run by users.
+//!
+//! `rust-screeps-api` uses [hyper] to run http requests and [serde] to parse json results.
 //!
 //! # Usage
 //!
@@ -40,6 +44,10 @@
 //!
 //! [`Api`]: struct.Api.html
 //! [`SyncApi`]: sync/struct.SyncApi.html
+//! [screeps]: https://screeps.com
+//! [screeps-os]: https://github.com/screeps/screeps/
+//! [hyper]: https://github.com/hyperium/hyper/
+//! [serde]: https://github.com/serde-rs/json/
 #![deny(missing_docs)]
 #![recursion_limit = "512"]
 // Logging
