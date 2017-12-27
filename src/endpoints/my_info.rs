@@ -1,16 +1,22 @@
 //! Interpreting user self information.
 
+use std::collections::HashMap;
+use std::marker::PhantomData;
+
+use time::Timespec;
+
 use EndpointResult;
 use data::{self, Badge};
+use data::{optional_timespec_seconds, timespec_seconds};
 use error::{ApiError, Result};
-use std::marker::PhantomData;
 
 /// User info raw result.
 #[derive(Deserialize, Clone, Debug)]
 #[doc(hidden)]
+#[serde(rename_all = "camelCase")]
 pub struct Response {
     ok: i32,
-    _id: String,
+    #[serde(rename = "_id")] user_id: String,
     username: String,
     password: bool,
     cpu: i32,
@@ -24,6 +30,10 @@ pub struct Response {
     // notifyPrefs: Option<serde_json::Value>,
     // steam: Option<serde_json::Value>,
     badge: Badge,
+    cpu_shard: Option<HashMap<String, u32>>,
+    #[serde(default)]
+    #[serde(with = "optional_timespec_seconds")]
+    cpu_shard_updated_time: Option<Timespec>,
 }
 
 /// Result of a call to get the information for the logged in user.
@@ -41,9 +51,21 @@ pub struct MyInfo {
     pub gcl_points: u64,
     /// This user's current credit balance.
     pub credits: f64,
+    /// Information on per-shard allocation. Unavailable on non-sharded servers.
+    pub shard_allocations: Option<CpuShardAllocations>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
     _phantom: PhantomData<()>,
+}
+
+/// Information on a user's per-shard CPU allocations.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CpuShardAllocations {
+    /// CPU allocated to each shard in the server.
+    pub allocations: HashMap<String, u32>,
+    /// The last time the CPU was updated. Unknown unit.
+    #[serde(with = "timespec_seconds")]
+    pub last_update: Timespec,
 }
 
 impl EndpointResult for MyInfo {
@@ -53,12 +75,14 @@ impl EndpointResult for MyInfo {
     fn from_raw(raw: Response) -> Result<MyInfo> {
         let Response {
             ok,
-            _id: user_id,
+            user_id,
             username,
             password,
             cpu,
             gcl,
             money,
+            cpu_shard,
+            cpu_shard_updated_time,
             ..
         } = raw;
 
@@ -72,6 +96,12 @@ impl EndpointResult for MyInfo {
             cpu: cpu,
             gcl_points: gcl,
             credits: money,
+            shard_allocations: cpu_shard.and_then(|allocations| {
+                cpu_shard_updated_time.map(|last_update| CpuShardAllocations {
+                    allocations,
+                    last_update,
+                })
+            }),
             _phantom: PhantomData,
         })
     }
