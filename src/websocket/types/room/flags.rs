@@ -106,6 +106,22 @@ impl<'de> Visitor<'de> for FlagStringVisitor {
     }
 
     #[inline]
+    fn visit_none<E>(self) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
+        Ok(Vec::new())
+    }
+
+    #[inline]
+    fn visit_some<D>(self, d: D) -> Result<Self::Value, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        d.deserialize_str(self)
+    }
+
+    #[inline]
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
     where
         E: Error,
@@ -158,5 +174,5 @@ pub(super) fn deserialize_flags<'de, D>(deserializer: D) -> Result<Vec<Flag>, D:
 where
     D: Deserializer<'de>,
 {
-    deserializer.deserialize_str(FlagStringVisitor)
+    deserializer.deserialize_option(FlagStringVisitor)
 }
