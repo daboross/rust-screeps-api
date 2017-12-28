@@ -45,7 +45,11 @@ fn env(var: &str) -> String {
 fn opt_env(var: &str, default: &'static str) -> Cow<'static, str> {
     dotenv::dotenv().ok();
     match ::std::env::var(var) {
-        Ok(value) => value.into(),
+        Ok(value) => if !value.is_empty() {
+            value.into()
+        } else {
+            default.into()
+        },
         Err(_) => default.into(),
     }
 }
