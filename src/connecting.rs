@@ -148,9 +148,9 @@ fn deserialize_with_warnings<T: EndpointType>(input: &serde_json::Value, url: &U
         warn!(
             "screeps API lib didn't parse some data retrieved from: {}\n\
              full data: {}\n\
-             unparsed fields: {:?}",
+             unparsed fields: {:#?}",
             url,
-            serde_json::to_string(input).unwrap(),
+            serde_json::to_string_pretty(input).unwrap(),
             unused
         );
     }

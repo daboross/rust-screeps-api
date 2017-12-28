@@ -70,4 +70,5 @@ fn main() {
         my_info.gcl_points,
         my_info.credits
     );
+    println!("{:#?}", my_info);
 }
