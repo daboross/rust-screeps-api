@@ -27,7 +27,7 @@ let my_info = api.my_info().unwrap();
 println!("Logged in with user ID {}!", my_info.user_id);
 ```
 
-Documentation is located at https://dabo.guru/rust/screeps-api/.
+Documentation is located at https://docs.rs/screeps-api/.
 
 Unofficial documentation for HTTP endpoints can be found at https://github.com/screepers/python-screeps/blob/master/docs/Endpoints.md.
 
