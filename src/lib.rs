@@ -446,18 +446,26 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     /// Gets the terrain of a room, returning a 2d array of 50x50 points.
     ///
     /// Does not require authentication.
-    pub fn room_terrain<'b, U, V>(&self, shard: U, room_name: V) -> FutureResponse<RoomTerrain>
+    pub fn room_terrain<'b, U, V>(&self, shard: Option<U>, room_name: V) -> FutureResponse<RoomTerrain>
     where
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
     {
-        self.get("game/room-terrain")
-            .params(&[
-                ("shard", shard.into().into_owned()),
-                ("room", room_name.into().into_owned()),
-                ("encoded", true.to_string()),
-            ])
-            .send()
+        match shard {
+            Some(shard) => self.get("game/room-terrain")
+                .params(&[
+                    ("shard", shard.into().into_owned()),
+                    ("room", room_name.into().into_owned()),
+                    ("encoded", true.to_string()),
+                ])
+                .send(),
+            None => self.get("game/room-terrain")
+                .params(&[
+                    ("room", room_name.into().into_owned()),
+                    ("encoded", true.to_string()),
+                ])
+                .send(),
+        }
     }
 
     /// Gets a list of shards available on this server. Errors with a `404` error when connected to a

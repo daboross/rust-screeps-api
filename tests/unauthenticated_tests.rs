@@ -22,8 +22,8 @@ fn test_login_failure() {
 fn test_room_terrain() {
     let mut api = SyncApi::new().unwrap();
 
-    api.room_terrain("shard0", "W0N0").unwrap();
-    api.room_terrain("shard0", "W3N9").unwrap();
+    api.room_terrain(Some("shard0"), "W0N0").unwrap();
+    api.room_terrain(Some("shard0"), "W3N9").unwrap();
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn test_shard_list() {
 fn test_room_terrain_invalid_room() {
     let mut api = SyncApi::new().unwrap();
 
-    match api.room_terrain("shard0", "asdffdsa") {
+    match api.room_terrain(Some("shard0"), "asdffdsa") {
         Err(err) => match *err.kind() {
             ErrorKind::Api(ApiError::InvalidRoom) => (),
             _ => panic!("expected invalid room api error, found {}", err),
@@ -51,7 +51,7 @@ fn test_room_terrain_invalid_room() {
 fn test_room_terrain_invalid_shard() {
     let mut api = SyncApi::new().unwrap();
 
-    match api.room_terrain("sharasdfd0", "asdffdsa") {
+    match api.room_terrain(Some("sharasdfd0"), "asdffdsa") {
         Err(err) => match *err.kind() {
             ErrorKind::Api(ApiError::InvalidShard) => (),
             _ => panic!("expected invalid shard api error, found {}", err),

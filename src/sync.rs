@@ -321,7 +321,7 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     /// Gets the terrain of a room, returning a 2d array of 50x50 points.
     ///
     /// See [`Api::room_terrain`](../struct.Api.html#method.room_terrain) for more information.
-    pub fn room_terrain<'b, U, V>(&mut self, shard: U, room_name: V) -> Result<RoomTerrain, Error>
+    pub fn room_terrain<'b, U, V>(&mut self, shard: Option<U>, room_name: V) -> Result<RoomTerrain, Error>
     where
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
