@@ -18,6 +18,7 @@ pub struct Response {
     ok: i32,
     #[serde(rename = "_id")] user_id: String,
     username: String,
+    #[serde(default)] email: Option<String>,
     password: bool,
     cpu: i32,
     gcl: u64,
@@ -29,7 +30,7 @@ pub struct Response {
     // twitter: Option<serde_json::Value>,
     // notifyPrefs: Option<serde_json::Value>,
     // steam: Option<serde_json::Value>,
-    badge: Badge,
+    #[serde(default)] badge: Option<Badge>,
     cpu_shard: Option<HashMap<String, u32>>,
     #[serde(default)]
     #[serde(with = "optional_timespec_seconds")]
