@@ -78,3 +78,7 @@ required-features = ["sync"]
 [[example]]
 name = "ws-console"
 required-features = ["sync"]
+
+[[example]]
+name = "register"
+required-features = ["sync"]

@@ -2,6 +2,7 @@
 //!
 //! Each sub-module contains code for interpreting the result of calling a specific API endpoint.
 pub mod login;
+pub mod register;
 pub mod map_stats;
 pub mod my_info;
 pub mod room_overview;

@@ -94,6 +94,7 @@ pub use endpoints::leaderboard::LeaderboardType;
 pub use endpoints::room_terrain::TerrainGrid;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use endpoints::login::LoggedIn;
+pub use endpoints::register::{Details as RegistrationDetails, RegistrationSuccess};
 pub use endpoints::leaderboard::season_list::LeaderboardSeason;
 pub use endpoints::leaderboard::find_rank::FoundUserRank;
 pub use endpoints::leaderboard::page::LeaderboardPage;
@@ -382,6 +383,17 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     {
         self.post("auth/signin", login::Details::new(username, password))
             .send()
+    }
+
+    /// Registers a new account with the given username, password and optional email and returns a
+    /// result. Successful results contain no information other than that of success.
+    ///
+    /// This is primarily for private servers with [screepsmod-auth] installed. Unknown if this
+    /// works on the official server.
+    ///
+    /// [screepsmod-auth]: https://github.com/ScreepsMods/screepsmod-auth
+    pub fn register(&self, details: RegistrationDetails) -> FutureResponse<RegistrationSuccess> {
+        self.post("register/submit", details).send()
     }
 
     /// Gets user information on the user currently logged in, including username and user id.

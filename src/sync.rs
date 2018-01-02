@@ -18,7 +18,8 @@ use error::Error;
 use {Api, RcTokenStorage, TokenStorage, DEFAULT_OFFICIAL_API_URL};
 
 use {FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType, MapStats, MyInfo, RecentPvp,
-     RecentPvpDetails, RoomOverview, RoomStatus, RoomTerrain, ShardInfo, WorldStartRoom};
+     RecentPvpDetails, RegistrationDetails, RegistrationSuccess, RoomOverview, RoomStatus, RoomTerrain, ShardInfo,
+     WorldStartRoom};
 
 mod error {
     use std::{fmt, io};
@@ -263,6 +264,17 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
         result.return_to(&self.client.tokens);
 
         Ok(())
+    }
+
+    /// Registers a new account with the given username, password and optional email and returns a
+    /// result. Successful results contain no information other than that of success.
+    ///
+    /// This is primarily for private servers with [screepsmod-auth] installed. Unknown if this
+    /// works on the official server.
+    ///
+    /// [screepsmod-auth]: https://github.com/ScreepsMods/screepsmod-auth
+    pub fn register(&mut self, details: RegistrationDetails) -> Result<RegistrationSuccess, Error> {
+        self.core.run(self.client.register(details))
     }
 
     /// Gets user information on the user currently logged in, including username and user id.

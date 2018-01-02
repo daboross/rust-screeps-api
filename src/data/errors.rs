@@ -16,6 +16,9 @@ impl Into<error::Error> for ApiError {
             "result not found" => error::ApiError::ResultNotFound,
             "invalid params" => error::ApiError::InvalidParameters,
             "user not found" => error::ApiError::UserNotFound,
+            "User already exists" => error::ApiError::UsernameAlreadyExists,
+            "Registration is automatically disabled. \
+             A server password has been set." => error::ApiError::RegistrationNotAllowed,
             "server down" => error::ApiError::ServerDown,
             _ => error::ApiError::GenericError(self.error),
         };

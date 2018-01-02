@@ -320,6 +320,10 @@ pub enum ApiError {
     ResultNotFound,
     /// The user whose data was being requested was not found.
     UserNotFound,
+    /// Registration is not allowed.
+    RegistrationNotAllowed,
+    /// The username that was attempted to register already existed.
+    UsernameAlreadyExists,
     /// The API returned that invalid parameters were passed.
     InvalidParameters,
     /// An error found from the API. Data is the raw error string reported by the server.
@@ -345,7 +349,9 @@ impl fmt::Display for ApiError {
             | ApiError::ResultNotFound
             | ApiError::UserNotFound
             | ApiError::InvalidParameters
-            | ApiError::ServerDown => write!(f, "{}", self.description()),
+            | ApiError::ServerDown
+            | ApiError::RegistrationNotAllowed
+            | ApiError::UsernameAlreadyExists => write!(f, "{}", self.description()),
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }
@@ -362,6 +368,11 @@ impl StdError for ApiError {
             ApiError::InvalidShard => "malformed apic all: invalid shard",
             ApiError::ResultNotFound => "specific data requested was not found",
             ApiError::UserNotFound => "the user requested was not found",
+            ApiError::RegistrationNotAllowed => {
+                "registering users via the API is disabled: \
+                 a server password has been set"
+            }
+            ApiError::UsernameAlreadyExists => "the username used already exists",
             ApiError::InvalidParameters => "one or more parameters to the function were invalid",
             ApiError::ServerDown => "the server requested is offline",
             ApiError::__Nonexhaustive => unreachable!(),
