@@ -18,7 +18,11 @@ pub struct Details<'a> {
 
 impl<'a> Details<'a> {
     /// Create a new login details with the given username and password
-    pub fn new<'b, T1: Into<Cow<'b, str>>, T2: Into<Cow<'b, str>>>(email: T1, password: T2) -> Details<'b> {
+    pub fn new<T, U>(email: T, password: U) -> Self
+    where
+        T: Into<Cow<'a, str>>,
+        U: Into<Cow<'a, str>>,
+    {
         Details {
             email: email.into(),
             password: password.into(),
