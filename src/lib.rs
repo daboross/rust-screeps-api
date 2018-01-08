@@ -52,7 +52,7 @@
 //! [screeps-os]: https://github.com/screeps/screeps/
 //! [hyper]: https://github.com/hyperium/hyper/
 //! [serde]: https://github.com/serde-rs/json/
-#![doc(html_root_url = "https://docs.rs/screeps-api/0.4")]
+#![doc(html_root_url = "https://docs.rs/screeps-api/0.4.1")]
 #![deny(missing_docs)]
 #![recursion_limit = "512"]
 

@@ -1,7 +1,7 @@
 [package]
 name = "screeps-api"
 # Ensure html_root_url in src/lib.rs is updated for each version.
-version = "0.4.0"
+version = "0.4.1"
 authors = ["David Ross <daboross@daboross.net>"]
 description = "Fully typed and tested wrapper over the Screeps Game's HTTP API"
 
