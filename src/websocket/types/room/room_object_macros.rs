@@ -591,8 +591,10 @@ macro_rules! with_base_fields_and_update_struct {
                 /// Room object is in.
                 pub room: RoomName,
                 /// X position within the room (0-50).
+                #[serde(with = "::decoders::u16_or_str_containing")]
                 pub x: u16,
                 /// Y position within the room (0-50).
+                #[serde(with = "::decoders::u16_or_str_containing")]
                 pub y: u16,
                 $( $struct_field )*
             }
@@ -604,7 +606,11 @@ macro_rules! with_base_fields_and_update_struct {
                 #[serde(rename = "_id")]
                 - id: String,
                 - room: RoomName,
+                #[serde(default, with = "::decoders::optional_u16_or_str_containing")]
+                (no_extra_meta)
                 - x: u16,
+                #[serde(default, with = "::decoders::optional_u16_or_str_containing")]
+                (no_extra_meta)
                 - y: u16,
                 $( $update_field )*
             }

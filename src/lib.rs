@@ -55,12 +55,12 @@
 #![doc(html_root_url = "https://docs.rs/screeps-api/0.4")]
 #![deny(missing_docs)]
 #![recursion_limit = "512"]
-// Logging
 
+// Logging
 #[macro_use]
 extern crate log;
-// Parsing
 
+// Parsing
 extern crate arrayvec;
 extern crate serde;
 #[macro_use]
@@ -70,14 +70,15 @@ extern crate serde_ignored;
 extern crate serde_json;
 extern crate time;
 extern crate tuple_vec_map;
-// HTTP
 
+// HTTP
 extern crate futures;
 #[macro_use]
 extern crate hyper;
 extern crate url;
-// Websockets
 
+// Websockets
+extern crate num;
 extern crate rand;
 
 pub mod error;
@@ -87,6 +88,7 @@ pub mod connecting;
 pub mod websocket;
 #[cfg(feature = "sync")]
 pub mod sync;
+mod decoders;
 
 pub use error::{Error, ErrorKind, NoToken};
 pub use data::RoomName;
