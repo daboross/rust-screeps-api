@@ -8,7 +8,7 @@ use url::Url;
 
 use {EndpointType, Error, Token, TokenStorage};
 
-/// Struct mirroring `hyper`'s FutureResponse, but with parsing that happens after the request is finished.
+/// Struct mirroring `hyper`'s `FutureResponse`, but with parsing that happens after the request is finished.
 #[must_use = "futures do nothing unless polled"]
 pub struct FutureResponse<R: EndpointType>(Box<Future<Item = R, Error = Error>>);
 
@@ -63,13 +63,9 @@ where
 {
     FutureResponse(Box::new(
         response
-            .then(move |result| {
-                let new_result = match result {
-                    Ok(v) => Ok((token_storage, used_token, url, v)),
-                    Err(e) => Err(Error::with_url(e, Some(url))),
-                };
-
-                new_result
+            .then(move |result| match result {
+                Ok(v) => Ok((token_storage, used_token, url, v)),
+                Err(e) => Err(Error::with_url(e, Some(url))),
             })
             .and_then(|(token_storage, used_token, url, mut response)| {
                 let token_to_return = {

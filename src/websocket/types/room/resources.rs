@@ -219,7 +219,7 @@ pub(crate) mod null_is_default_and_always_some {
         D: Deserializer<'de>,
     {
         Deserialize::deserialize(d)
-            .map(|x: Option<T>| x.unwrap_or(T::default()))
+            .map(|x: Option<T>| x.unwrap_or_default())
             .map(Some)
     }
 }
@@ -228,7 +228,7 @@ pub(crate) mod null_is_default_and_always_some {
 /// Structures, with everything provided by `with_base_fields_and_update_struct!`, and with one field per in-game
 /// resource type.
 ///
-/// Since defining nested macros is not allowed (https://github.com/rust-lang/rust/issues/35853), it's best,
+/// Since defining nested macros is not allowed (<https://github.com/rust-lang/rust/issues/35853>), it's best,
 /// unfortunately, to copy-paste all resource names into the macro.`
 macro_rules! with_resource_fields_and_update_struct {
     (

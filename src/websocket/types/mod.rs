@@ -208,15 +208,15 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
     where
         A: SeqAccess<'de>,
     {
-        const ROOM_MAP_VIEW_PREFIX: &'static str = "roomMap2:";
-        const ROOM_PREFIX: &'static str = "room:";
-        const ROOM_ERR_PREFIX: &'static str = "err@room:"; // TODO: generic error handling with this `err@` format.
-        const USER_PREFIX: &'static str = "user:";
-        const USER_CPU: &'static str = "cpu";
-        const USER_CONSOLE: &'static str = "console";
-        const USER_CREDITS: &'static str = "money";
-        const USER_MESSAGE: &'static str = "newMessage";
-        const USER_CONVERSATION_PREFIX: &'static str = "message:";
+        const ROOM_MAP_VIEW_PREFIX: &str = "roomMap2:";
+        const ROOM_PREFIX: &str = "room:";
+        const ROOM_ERR_PREFIX: &str = "err@room:"; // TODO: generic error handling with this `err@` format.
+        const USER_PREFIX: &str = "user:";
+        const USER_CPU: &str = "cpu";
+        const USER_CONSOLE: &str = "console";
+        const USER_CREDITS: &str = "money";
+        const USER_MESSAGE: &str = "newMessage";
+        const USER_CONVERSATION_PREFIX: &str = "message:";
 
         let channel: &str = seq.next_element()?
             .ok_or_else(|| de::Error::invalid_length(2, &self))?;
@@ -258,7 +258,7 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             let room_name_and_shard = &channel[ROOM_PREFIX.len()..];
 
             let (shard_name, room_name) = {
-                let mut split = room_name_and_shard.splitn(2, "/");
+                let mut split = room_name_and_shard.splitn(2, '/');
                 match (split.next(), split.next()) {
                     (Some(shard), Some(room)) => (Some(shard), room),
                     (Some(room), None) => (None, room),
@@ -283,7 +283,7 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             let room_name_and_shard = &channel[ROOM_ERR_PREFIX.len()..];
 
             let (shard_name, room_name) = {
-                let mut split = room_name_and_shard.splitn(2, "/");
+                let mut split = room_name_and_shard.splitn(2, '/');
                 match (split.next(), split.next()) {
                     (Some(shard), Some(room)) => (Some(shard), room),
                     (Some(room), None) => (None, room),
@@ -319,7 +319,7 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             let user_id_and_part = &channel[USER_PREFIX.len()..];
 
             let (user_id, sub_channel) = {
-                let mut split = user_id_and_part.splitn(2, "/");
+                let mut split = user_id_and_part.splitn(2, '/');
                 match (split.next(), split.next()) {
                     (Some(v1), Some(v2)) => (v1, v2),
                     _ => finish_other!(),

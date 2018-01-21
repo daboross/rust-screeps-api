@@ -124,7 +124,7 @@ pub mod timespec_seconds {
         serializer.serialize_i64(date.sec)
     }
 
-    /// Deserializes either a number or a string into a Timespec, interpreting both as the timespec's seconds.
+    /// Deserializes either a number or a string into a `Timespec`, interpreting both as the timespec's seconds.
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Timespec, D::Error>
     where
         D: Deserializer<'de>,
@@ -191,7 +191,7 @@ pub mod optional_timespec_seconds {
         }
     }
 
-    /// Deserializes either a string or a number into a time::Timespec.
+    /// Deserializes either a string or a number into a `time::Timespec`.
     ///
     /// Strings must be parsable as numbers.
     ///

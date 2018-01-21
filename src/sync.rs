@@ -26,7 +26,9 @@ mod error {
     use url;
     use super::native_tls;
 
-    /// Error that can occur from building a SyncApi.
+    /// Error that can occur from building a [`SyncApi`].
+    ///
+    /// [`SyncApi`]: struct.SyncApi.html
     #[derive(Debug)]
     pub enum SyncError {
         /// The tokio core failed to start.
@@ -183,7 +185,7 @@ impl<'a, C, T> Config<'a, C, T> {
     }
 
     /// Sets the url to connect to to the given url.
-    pub fn url<'b>(self, url: &'b AsRef<str>) -> Config<'b, C, T> {
+    pub fn url(self, url: &AsRef<str>) -> Config<C, T> {
         Config {
             core: self.core,
             hyper: self.hyper,
@@ -206,7 +208,7 @@ impl<'a, C, T> Config<'a, C, T> {
 impl<'a, T: TokenStorage> Config<'a, UseHttpsConnector, T> {
     /// Builds the config into a SyncApi.
     pub fn build(self) -> Result<SyncApi<HttpsConnector<HttpConnector>, T>, SyncError> {
-        self.try_connector(|handle| HttpsConnector::new(4, &handle))?
+        self.try_connector(|handle| HttpsConnector::new(4, handle))?
             .build()
             .map_err(Into::into)
     }
@@ -222,7 +224,7 @@ impl<'a, C: hyper::client::Connect> Config<'a, C, UseRcTokens> {
 impl<'a> Config<'a, UseHttpsConnector, UseRcTokens> {
     /// Builds the config into a SyncApi.
     pub fn build(self) -> Result<SyncApi<HttpsConnector<HttpConnector>, RcTokenStorage>, SyncError> {
-        self.try_connector(|handle| HttpsConnector::new(4, &handle))?
+        self.try_connector(|handle| HttpsConnector::new(4, handle))?
             .tokens(RcTokenStorage::default())
             .build()
             .map_err(Into::into)

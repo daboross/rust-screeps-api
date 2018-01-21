@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use std::{cmp, fmt};
 
 use serde::{Deserialize, Deserializer};
-use serde::de::{DeserializeSeed, MapAccess, SeqAccess, Visitor, Error};
+use serde::de::{DeserializeSeed, Error, MapAccess, SeqAccess, Visitor};
 
 /// "Map view" room status update. This contains all entities in a given room,
 /// organized by what type of thing they are, or who owns them.
@@ -212,7 +212,8 @@ mod test {
     // Sometimes it will give strings as coordinates rather than integers.
     #[test]
     fn string_coords_edge_case() {
-        let _: RoomMapViewUpdate = serde_json::from_str(r#"{
+        let _: RoomMapViewUpdate = serde_json::from_str(
+            r#"{
             "w":[[31,18],[9,8],[13,8],[26,2],[27,2],[28,2],[31,2],[32,2],[35,2],[38,2],[39,2],[40,2],[42,2],[43,2],
             [44,2],[45,2],[47,8],[47,9],[47,14],[47,15],[47,17],[47,19],[47,20],[47,21],[47,26],[47,27],[47,28],
             [47,29],[47,30],[47,31],[47,32],[47,33],[47,37],[47,38],[47,39],[47,40],[47,43],[2,28],[2,29],[2,31],
@@ -230,6 +231,7 @@ mod test {
             [25,30],[23,28],[24,30],[31,20],[25,21],[29,23],[30,24],[33,30],[23,21],[26,25],[25,20],[23,30],[24,20],
             [23,22],[31,24],[26,28],[25,27],[30,26],[29,27],[31,21],[32,22],[32,20],[25,23],[26,22],[27,25],[29,25],
             [29,12],[28,11],[35,17],["23","29"]]
-        }"#).expect("expected edge case parsing to succeed");
+        }"#,
+        ).expect("expected edge case parsing to succeed");
     }
 }

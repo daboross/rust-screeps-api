@@ -18,7 +18,7 @@ pub struct Flag {
     pub y: i8,
 }
 
-/// All possible colors a flag can have.test
+/// All possible colors a flag can have.
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub enum FlagColor {
@@ -44,7 +44,9 @@ pub enum FlagColor {
     White = 10,
 }
 
-/// An error resulting from trying to convert a FlagColor that's out of bounds.
+/// An error resulting from trying to convert a [`FlagColor`] that's out of bounds.
+///
+/// [`FlagColor`]: enum.FlagColor.html
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct FlagColorError;
 
@@ -131,9 +133,9 @@ impl<'de> Visitor<'de> for FlagStringVisitor {
         }
 
         // TODO: nocopy version of this maybe?
-        v.split("|")
+        v.split('|')
             .map(|flag_str| {
-                let mut iter = flag_str.split("~");
+                let mut iter = flag_str.split('~');
 
                 macro_rules! next {
                     () => ({

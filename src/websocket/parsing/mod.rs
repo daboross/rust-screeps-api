@@ -205,12 +205,12 @@ pub enum ScreepsMessage<'a> {
     Other(Cow<'a, str>),
 }
 
-const AUTH_PREFIX: &'static str = "auth ";
-const TIME_PREFIX: &'static str = "time ";
-const PROTOCOL_PREFIX: &'static str = "protocol ";
-const PACKAGE_PREFIX: &'static str = "package ";
-const AUTH_OK: &'static str = "ok ";
-const AUTH_FAILED: &'static str = "failed";
+const AUTH_PREFIX: &str = "auth ";
+const TIME_PREFIX: &str = "time ";
+const PROTOCOL_PREFIX: &str = "protocol ";
+const PACKAGE_PREFIX: &str = "package ";
+const AUTH_OK: &str = "ok ";
+const AUTH_FAILED: &str = "failed";
 
 impl ScreepsMessage<'static> {
     /// Parses the internal message from a SockJS message into a meaningful type.

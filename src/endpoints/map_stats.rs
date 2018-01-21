@@ -35,7 +35,8 @@ where
     &'a T: IntoIterator<Item = I>,
 {
     rooms: MapStatsArgsInner<'a, T, I>,
-    #[serde(rename = "statName")] stat: StatName,
+    #[serde(rename = "statName")]
+    stat: StatName,
     shard: &'a str,
 }
 
@@ -93,8 +94,10 @@ where
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
-    #[serde(with = "::tuple_vec_map")] stats: Vec<(String, RoomResponse)>,
-    #[serde(with = "::tuple_vec_map")] users: Vec<(String, UserResponse)>,
+    #[serde(with = "::tuple_vec_map")]
+    stats: Vec<(String, RoomResponse)>,
+    #[serde(with = "::tuple_vec_map")]
+    users: Vec<(String, UserResponse)>,
 }
 
 #[derive(Deserialize, Clone, Hash, Debug)]

@@ -231,7 +231,7 @@ impl fmt::Display for Error {
         }
         match self.data {
             AdditionalData::Json(ref json) => write!(f, " | return json: '{}'", json)?,
-            AdditionalData::Body(ref body) => match str::from_utf8(&body) {
+            AdditionalData::Body(ref body) => match str::from_utf8(body) {
                 Ok(v) => write!(f, " | return body: '{}'", v)?,
                 Err(_) => write!(f, " | return body: '{:?}'", &*body)?,
             },
@@ -291,7 +291,7 @@ impl StdError for Error {
 #[derive(Debug, Clone, Copy)]
 pub struct NoToken;
 
-const NO_TOKEN: &'static str = "token storage empty when attempting to make authenticated call.";
+const NO_TOKEN: &str = "token storage empty when attempting to make authenticated call.";
 
 impl fmt::Display for NoToken {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

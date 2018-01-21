@@ -88,9 +88,7 @@ fn subscribe_with(id: &str) -> Box<Stream<Item = OwnedMessage, Error = websocket
     ];
 
     Box::new(stream::iter_ok(
-        messages
-            .into_iter()
-            .map(|string| OwnedMessage::Text(string)),
+        messages.into_iter().map(OwnedMessage::Text),
     ))
 }
 
@@ -140,7 +138,7 @@ fn main() {
             let handler = Handler::new(token_storage, my_info);
 
             sink.send_all(
-                (stream
+                stream
                     .and_then(move |data| future::ok(handler.handle_data(data)))
                     .or_else(|err| {
                         warn!("IO error: {}", err);
@@ -148,7 +146,7 @@ fn main() {
                         future::ok::<_, websocket::WebSocketError>(Box::new(stream::empty())
                             as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>)
                     })
-                    .flatten()),
+                    .flatten(),
             )
         })
     })).expect("websocket connection exited with failure");

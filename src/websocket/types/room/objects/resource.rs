@@ -38,7 +38,7 @@ with_update_struct! {
     }
 }
 
-/// deserialize helper, shared between Resource and ResourceUpdate.
+/// deserialize helper, shared between `Resource` and `ResourceUpdate`.
 enum FieldName {
     Id,
     Room,
@@ -214,7 +214,7 @@ impl<'de> Deserialize<'de> for Resource {
                 })
             }
         }
-        const FIELDS: &'static [&'static str] = &["id", "room", "x", "y", "resourceType"];
+        const FIELDS: &[&str] = &["id", "room", "x", "y", "resourceType"];
         Deserializer::deserialize_struct(deserializer, "Resource", FIELDS, ResourceVisitor)
     }
 }

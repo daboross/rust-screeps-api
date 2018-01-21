@@ -20,10 +20,9 @@ impl LeaderboardType {
     ///
     /// Mostly for internal use, but if you can find a reason to call this, feel free.
     pub fn api_representation(&self) -> &'static str {
-        match self {
-            &LeaderboardType::GlobalControl => "world",
-            &LeaderboardType::PowerProcessed => "power",
-            &LeaderboardType::__Nonexhaustive => "world",
+        match *self {
+            LeaderboardType::GlobalControl | LeaderboardType::__Nonexhaustive => "world",
+            LeaderboardType::PowerProcessed => "power",
         }
     }
 }

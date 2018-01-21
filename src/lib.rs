@@ -201,7 +201,7 @@ where
     C: hyper::client::Connect,
 {
     fn client(&self) -> &hyper::Client<C> {
-        &self
+        self
     }
 }
 
@@ -210,7 +210,7 @@ where
     C: hyper::client::Connect,
 {
     fn client(&self) -> &hyper::Client<C> {
-        &self
+        self
     }
 }
 

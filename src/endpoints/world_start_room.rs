@@ -37,10 +37,11 @@ impl EndpointResult for WorldStartRoom {
         }
 
         if room.len() < 1 {
-            return Err(ApiError::MalformedResponse(format!(
+            return Err(ApiError::MalformedResponse(
                 "expected response.room to be an array of \
                  length 1 or greater, found empty array"
-            )).into());
+                    .into(),
+            ));
         }
 
         let room_string = room.swap_remove(0);

@@ -202,7 +202,7 @@ pub(crate) mod vec_update {
                     *self = vec;
                 },
                 VecUpdate::PartialObj(map) => {
-                    for (index, value) in map.0.into_iter() {
+                    for (index, value) in map.0 {
                         let index = index as usize;
                         if index > self.len() {
                             continue; // what to do here..?
@@ -358,7 +358,7 @@ macro_rules! implement_update_for {
 ///
 /// Implementation detail of `implement_update_for!()`.
 ///
-/// Thanks to @dtolnay, see https://github.com/serde-rs/serde/issues/984.
+/// Thanks to @dtolnay, see <https://github.com/serde-rs/serde/issues/984>.
 pub(crate) mod always_some {
     use serde::{Deserialize, Deserializer};
 
@@ -533,7 +533,7 @@ macro_rules! with_update_struct {
 }
 
 /// This macro creates the struct described within the invocation, but with an additional 4 fields common to all
-/// RoomObjects, and with `#[derive(Deserialize)]`. The structure definition is then passed on to `with_update_struct`.
+/// room objects, and with `#[derive(Deserialize)]`. The structure definition is then passed on to `with_update_struct`.
 macro_rules! with_base_fields_and_update_struct {
     (
         $( #[$struct_attr:meta] )*
