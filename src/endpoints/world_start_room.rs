@@ -41,7 +41,7 @@ impl EndpointResult for WorldStartRoom {
                 "expected response.room to be an array of \
                  length 1 or greater, found empty array"
                     .into(),
-            ));
+            ).into());
         }
 
         let room_string = room.swap_remove(0);
