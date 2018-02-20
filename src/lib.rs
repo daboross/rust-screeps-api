@@ -55,6 +55,7 @@
 #![doc(html_root_url = "https://docs.rs/screeps-api/0.4.1")]
 #![deny(missing_docs)]
 #![recursion_limit = "512"]
+#![cfg_attr(feature = "protocol-docs", feature(external_doc))]
 
 // Logging
 #[macro_use]
@@ -89,6 +90,8 @@ pub mod websocket;
 #[cfg(feature = "sync")]
 pub mod sync;
 mod decoders;
+#[cfg(feature = "protocol-docs")]
+pub mod docs;
 
 pub use error::{Error, ErrorKind, NoToken};
 pub use data::RoomName;

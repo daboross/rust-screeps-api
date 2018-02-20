@@ -29,7 +29,9 @@ println!("Logged in with user ID {}!", my_info.user_id);
 
 Documentation is located at https://docs.rs/screeps-api/.
 
-Unofficial documentation for HTTP endpoints can be found at https://github.com/screepers/python-screeps/blob/master/docs/Endpoints.md.
+Unofficial API documentation for:
+- HTTP endpoints at https://github.com/screepers/python-screeps/blob/master/docs/Endpoints.md.
+- Websocket endpoints at https://github.com/daboross/rust-screeps-api/blob/master/protocol-docs/websocket.md
 
 ## What's implemented
 

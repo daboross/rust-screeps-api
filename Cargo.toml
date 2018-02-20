@@ -48,6 +48,7 @@ num = { version = "0.1", default-features = false }
 
 [features]
 sync = ["tokio-core", "hyper-tls", "native-tls"]
+protocol-docs = []
 default = ["sync"]
 
 [dev-dependencies]
