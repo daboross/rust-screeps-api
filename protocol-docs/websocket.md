@@ -7,7 +7,7 @@ First, obtain an API token via http endpoints.
 Then, connect to a websocket, either via  SockJS client, or via a regular websocket client. It's a sockJS connection to  `wss://screeps.com/socket/`, which can be emulated in a regular connection by connecting to `wss://screeps.com/socket/<4 integers>/<8 ascii chars a-z0-5>/websocket`.
 
 Aside: if you don't have a sockjs libary, the format is roughly:
-```
+```text
 o
     open message, sent once
 h
@@ -117,7 +117,7 @@ The channel name will always be one you subscribed too, with one exception. The 
 
 Now: different types!
 
-```
+```text
 server-message
     unknown format (never sent/received while watching)
 user:{}/cpu
