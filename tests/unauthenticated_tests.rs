@@ -6,19 +6,6 @@ use screeps_api::error::{ApiError, ErrorKind};
 use screeps_api::SyncApi;
 
 #[test]
-fn test_login_failure() {
-    let mut api = SyncApi::new().unwrap();
-
-    match api.login("username", "password") {
-        Err(err) => match *err.kind() {
-            ErrorKind::Unauthorized => (),
-            _ => panic!("expected unauthorized error, found other error {}", err),
-        },
-        Ok(()) => panic!("expected unauthorized error, found success"),
-    }
-}
-
-#[test]
 fn test_room_terrain() {
     let mut api = SyncApi::new().unwrap();
 
