@@ -1,8 +1,7 @@
 Example channel messages
 ========================
 
-Initial messages:
-
+```
 room:W0S0
 {
   "flags": null,
@@ -1814,3 +1813,4 @@ user:57874d42d0ae911e3bd15bbc/message:57fb16b6e4dd183b746435b0
     "unread": false
   }
 }
+```

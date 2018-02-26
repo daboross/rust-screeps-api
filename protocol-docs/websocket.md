@@ -1,12 +1,25 @@
 Websocket Protocol Documentation!
+=====
 
-Here's a step-by-step process of what `screeps-api` does:
+Initial Connection Procedure:
 
-First, obtain an API token via http endpoints.
+- First, obtain an API token via http endpoints.
 
-Then, connect to a websocket, either via  SockJS client, or via a regular websocket client. It's a sockJS connection to  `wss://screeps.com/socket/`, which can be emulated in a regular connection by connecting to `wss://screeps.com/socket/<4 integers>/<8 ascii chars a-z0-5>/websocket`.
+  Alternatively: obtain an API token via the dedicated API auth page now added
 
-Aside: if you don't have a sockjs libary, the format is roughly:
+- Connect to the websocket via SockJS or normal WS client.
+  - SockJS: connect to `wss://screeps.com/socket/`
+  - WS: connect to `wss://screeps.com/socket/<4 integers>/<8 ascii chars a-z0-5>/websocket`
+- Perform SockJS initial handshake (I think this just involves receiving an 'open' message)
+- Send 'auth API_TOKEN_HERE' message (full format below)
+- Receive auth result
+- Subscribe to channels
+- Receive results from channels and/or subscribe/unsubscribe to channels, etc.
+
+SockJS shim / small details
+====
+
+if you don't have a sockjs libary, the format is roughly:
 ```text
 o
     open message, sent once
@@ -20,6 +33,8 @@ a["MSG1", "MSG2"]
     like 'm...', but for multiple messages. this can also include only one message
 ```
 
+Screeps Message Details
+=====
 
 Each "THE_INNER_MESSAGE" is a screeps message. It's a string in one of the following formats:
 
@@ -43,9 +58,8 @@ auth failed
 ["user:57874d42d0ae911e3bd15bbc/cpu",{"cpu":0,"memory":754}]
 ```
 
----
-
-Sending messages:
+Sending messages
+====
 
 Before we get to channels, there's one more thing: how to send stuff back.
 
@@ -70,9 +84,8 @@ Some examples, fully wrapped for sending to a raw websocket. Each of these lines
 ["unsubscribe user:57874d42d0ae911e3bd15bbc/money"]
 ```
 
----
-
-Channels
+Known Channels
+===
 
 Channels are how the websocket connection works: you subscribe to a number of them, and then the server sends you updates for each one for each tick. Each channel has a unique name which you use to subscribe, unsubscribe, and identify messages.
 
@@ -82,7 +95,7 @@ Here are known channel names:
 server-message                  | server announce messages alert
 user:{user id}/cpu              | user CPU / memory usage every tick
 user:{user id}/newMessage       | new message sent to user alert
-user:{user id|/message:{user2}  | new message sent to user from user id user2
+user:{user id}/message:{user2}  | new message sent to user from user id user2
 user:{user id}/memory/{p}       | updates on memory path 'p'
 user:{user id}/console          | updates with console messages every tick
 user:{user id}/set-active-branch| sends an update whenever the active branch changes
@@ -94,9 +107,9 @@ room:{room}                     | ^^ for servers without shard support
 
 TODO: I *think* there's a path for memory segment updates too, but haven't searched for it yet.
 
----
 
-The actual update formats
+Update Format
+===
 
 After you've subscribed to a channel by sending a subscribe message, you'll receive updates either every tick, or when something happens. Most are every tick.
 
@@ -174,3 +187,62 @@ roomMap2:{}
 # TODO: room:{}/{} updates
 
 ```
+
+room updates
+====
+
+This has its own section, as it is a complicated format. Each tick, you'll receive an update on either `room:{shard name}/{room name}` or `err@room:{shard name}/{room name}`. The err variation is for when you *don't* get an update that tick because you're being rate limited.
+
+The actual format is incremental - and built with the assumption that you're a JS client which is just merging data. The initial update will contain everything in the room, and each subsequent update will contain only changed properties of things. Things are set to `null` if they no longer exist.
+
+Example initial message:
+
+```json
+{
+  "flags": null,
+  "info": {
+    "mode": "world"
+  },
+  "objects": {
+    "57cd3a30c0551957424a1f38": {
+      "H": null,
+      "K": null,
+      "O": null,
+      "X": null,
+      "_id": "57cd3a30c0551957424a1f38",
+      "energy": 0,
+      "energyCapacity": 0,
+      "room": "W0S0",
+      "type": "terminal",
+      "x": 34,
+      "y": 35
+    }
+  },
+  "users": {
+    "2": {
+      "_id": "2",
+      "username": "Invader"
+    },
+    "3": {
+      "_id": "3",
+      "username": "Source Keeper"
+    }
+  }
+}
+```
+
+You'll only get users which exist in the room. Each objects properties are exactly the properties the server stores in MongoDB - even down to ones which are no longer used. You might see some extra properties on structures in the center rooms in `shard0`, for example, because those properties were used before and are now kept as legacy data.
+
+The subsequent updates will be in the exact same format, except with any properties which are the same missing. If, for example, someone added some "H" to that terminal and nothing else happened, the update would be:
+
+```
+{
+  "objects": {
+    "57cd3a30c0551957424a1f38": {
+      "H": 100
+    }
+  }
+}
+```
+
+A bunch more examples of updates are available in [websocket-examples.md].
