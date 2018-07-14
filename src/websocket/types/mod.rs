@@ -1,28 +1,27 @@
 //! Parsing inner Screeps websocket update messages.
 use std::borrow::Cow;
-use std::convert::AsRef;
-use std::marker::PhantomData;
 use std::fmt;
+use std::marker::PhantomData;
 
-use serde::{Deserialize, Deserializer};
 use serde::de::{self, SeqAccess, Unexpected, Visitor};
+use serde::{Deserialize, Deserializer};
 
 use serde_json;
 use websocket::Channel;
 
 use RoomName;
 
-use self::room_map_view::RoomMapViewUpdate;
-use self::user_cpu::UserCpuUpdate;
-use self::user_console::UserConsoleUpdate;
-use self::room::RoomUpdate;
 use self::messages::{ConversationUpdate, MessageUpdate};
+use self::room::RoomUpdate;
+use self::room_map_view::RoomMapViewUpdate;
+use self::user_console::UserConsoleUpdate;
+use self::user_cpu::UserCpuUpdate;
 
-pub mod room;
 pub mod messages;
+pub mod room;
 pub mod room_map_view;
-pub mod user_cpu;
 pub mod user_console;
+pub mod user_cpu;
 
 /// An update to a Screeps server 'channel' that has been subscribed to.
 #[derive(Clone, Debug)]
@@ -120,7 +119,7 @@ impl<'a> ChannelUpdate<'a> {
         match *self {
             ChannelUpdate::RoomMapView { ref shard_name, .. }
             | ChannelUpdate::RoomDetail { ref shard_name, .. }
-            | ChannelUpdate::NoRoomDetail { ref shard_name, .. } => shard_name.as_ref().map(AsRef::as_ref),
+            | ChannelUpdate::NoRoomDetail { ref shard_name, .. } => shard_name.as_ref().map(String::as_str),
             _ => None,
         }
     }
@@ -160,7 +159,7 @@ impl<'a> ChannelUpdate<'a> {
                 room_name,
                 ref shard_name,
                 ..
-            } => Channel::room_map_view(room_name, shard_name.as_ref().map(AsRef::as_ref)),
+            } => Channel::room_map_view(room_name, shard_name.as_ref().map(String::as_str)),
             ChannelUpdate::RoomDetail {
                 room_name,
                 ref shard_name,
@@ -170,7 +169,7 @@ impl<'a> ChannelUpdate<'a> {
                 room_name,
                 ref shard_name,
                 ..
-            } => Channel::room_detail(room_name, shard_name.as_ref().map(AsRef::as_ref)),
+            } => Channel::room_detail(room_name, shard_name.as_ref().map(String::as_str)),
             ChannelUpdate::UserCpu { ref user_id, .. } => Channel::user_cpu(user_id.as_ref()),
             ChannelUpdate::UserConsole { ref user_id, .. } => Channel::user_console(user_id.as_ref()),
             ChannelUpdate::UserCredits { ref user_id, .. } => Channel::user_credits(user_id.as_ref()),
@@ -191,9 +190,7 @@ struct ChannelUpdateVisitor<'a> {
 
 impl<'a> ChannelUpdateVisitor<'a> {
     fn new() -> Self {
-        ChannelUpdateVisitor {
-            marker: PhantomData,
-        }
+        ChannelUpdateVisitor { marker: PhantomData }
     }
 }
 
@@ -218,16 +215,15 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
         const USER_MESSAGE: &str = "newMessage";
         const USER_CONVERSATION_PREFIX: &str = "message:";
 
-        let channel: &str = seq.next_element()?
-            .ok_or_else(|| de::Error::invalid_length(2, &self))?;
+        let channel: &str = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
 
         macro_rules! finish_other {
-            () => ({
+            () => {{
                 return Ok(ChannelUpdate::Other {
                     channel: channel.to_owned().into(),
                     update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                 });
-            })
+            }};
         }
 
         if channel.starts_with(ROOM_MAP_VIEW_PREFIX) {
@@ -251,8 +247,7 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             return Ok(ChannelUpdate::RoomMapView {
                 room_name: room_name,
                 shard_name: shard_name.map(ToOwned::to_owned),
-                update: seq.next_element()?
-                    .ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
         } else if channel.starts_with(ROOM_PREFIX) {
             let room_name_and_shard = &channel[ROOM_PREFIX.len()..];
@@ -276,8 +271,7 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
             return Ok(ChannelUpdate::RoomDetail {
                 room_name: room_name,
                 shard_name: shard_name.map(ToOwned::to_owned),
-                update: seq.next_element()?
-                    .ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
             });
         } else if channel.starts_with(ROOM_ERR_PREFIX) {
             let room_name_and_shard = &channel[ROOM_ERR_PREFIX.len()..];
@@ -330,29 +324,25 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                 USER_CPU => {
                     return Ok(ChannelUpdate::UserCpu {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()?
-                            .ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     });
                 }
                 USER_CONSOLE => {
                     return Ok(ChannelUpdate::UserConsole {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()?
-                            .ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     });
                 }
                 USER_CREDITS => {
                     return Ok(ChannelUpdate::UserCredits {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()?
-                            .ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     })
                 }
                 USER_MESSAGE => {
                     return Ok(ChannelUpdate::UserMessage {
                         user_id: user_id.to_owned().into(),
-                        update: seq.next_element()?
-                            .ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     })
                 }
                 sub_channel => if sub_channel.starts_with(USER_CONVERSATION_PREFIX) {
@@ -361,8 +351,7 @@ impl<'de> Visitor<'de> for ChannelUpdateVisitor<'de> {
                     return Ok(ChannelUpdate::UserConversation {
                         user_id: user_id.to_owned().into(),
                         target_user_id: target_user_id.to_owned().into(),
-                        update: seq.next_element()?
-                            .ok_or_else(|| de::Error::invalid_length(2, &self))?,
+                        update: seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?,
                     });
                 } else {
                     finish_other!()
