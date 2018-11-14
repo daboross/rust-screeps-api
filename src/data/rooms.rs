@@ -169,7 +169,7 @@ pub mod timespec_seconds {
             }
         }
 
-        deserializer.deserialize_i64(TimeVisitor)
+        deserializer.deserialize_any(TimeVisitor)
     }
 }
 
@@ -249,7 +249,7 @@ pub mod optional_timespec_seconds {
             }
         }
 
-        deserializer.deserialize_i64(TimeVisitor)
+        deserializer.deserialize_any(TimeVisitor)
     }
 }
 
@@ -333,13 +333,13 @@ pub mod double_optional_timespec_seconds {
             }
         }
 
-        deserializer.deserialize_i64(TimeVisitor)
+        deserializer.deserialize_any(TimeVisitor)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{timespec_seconds, HardSign, RoomSign, RoomState};
+    use super::{optional_timespec_seconds, timespec_seconds, HardSign, RoomSign, RoomState};
     use serde_json;
     use time;
 
@@ -355,6 +355,27 @@ mod tests {
         let spec = timespec_seconds::deserialize(&json!(1475538699273i64)).unwrap();
 
         assert_eq!(spec, time::Timespec::new(1475538699273i64, 0));
+    }
+
+    #[test]
+    fn parse_string_optional_timepsec() {
+        let spec = optional_timespec_seconds::deserialize(&json!("1474674699273")).unwrap();
+
+        assert_eq!(spec, Some(time::Timespec::new(1474674699273i64, 0)));
+    }
+
+    #[test]
+    fn parse_number_optional_timepsec() {
+        let spec = optional_timespec_seconds::deserialize(&json!(1474674699273i64)).unwrap();
+
+        assert_eq!(spec, Some(time::Timespec::new(1474674699273i64, 0)));
+    }
+
+    #[test]
+    fn parse_null_optional_timepsec() {
+        let spec = optional_timespec_seconds::deserialize(&json!(null)).unwrap();
+
+        assert_eq!(spec, None);
     }
 
     #[test]
