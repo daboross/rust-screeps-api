@@ -2,9 +2,9 @@
 
 use std::marker::PhantomData;
 
-use EndpointResult;
 use data;
 use error::{ApiError, Result};
+use EndpointResult;
 
 /// World start room raw result.
 #[derive(Deserialize, Clone, Hash, Debug)]
@@ -41,7 +41,8 @@ impl EndpointResult for WorldStartRoom {
                 "expected response.room to be an array of \
                  length 1 or greater, found empty array"
                     .into(),
-            ).into());
+            )
+            .into());
         }
 
         let room_string = room.swap_remove(0);
@@ -65,8 +66,8 @@ impl EndpointResult for WorldStartRoom {
 #[cfg(test)]
 mod tests {
     use super::WorldStartRoom;
-    use EndpointResult;
     use serde_json;
+    use EndpointResult;
 
     fn test_parse(json: serde_json::Value, expected_room: &str, expected_shard: Option<&str>) {
         let response = serde_json::from_value(json).unwrap();

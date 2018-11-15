@@ -82,50 +82,52 @@ extern crate url;
 extern crate num;
 extern crate rand;
 
-pub mod error;
-pub mod endpoints;
-pub mod data;
 pub mod connecting;
-pub mod websocket;
-#[cfg(feature = "sync")]
-pub mod sync;
+pub mod data;
 mod decoders;
 #[cfg(feature = "protocol-docs")]
 pub mod docs;
+pub mod endpoints;
+pub mod error;
+#[cfg(feature = "sync")]
+pub mod sync;
+pub mod websocket;
 
-pub use error::{Error, ErrorKind, NoToken};
+pub use connecting::FutureResponse;
 pub use data::RoomName;
-pub use endpoints::{MapStats, MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, ShardInfo, WorldStartRoom};
-pub use endpoints::leaderboard::LeaderboardType;
-pub use endpoints::room_terrain::TerrainGrid;
-pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
-pub use endpoints::login::LoggedIn;
-pub use endpoints::register::{Details as RegistrationDetails, RegistrationSuccess};
-pub use endpoints::leaderboard::season_list::LeaderboardSeason;
 pub use endpoints::leaderboard::find_rank::FoundUserRank;
 pub use endpoints::leaderboard::page::LeaderboardPage;
-pub use connecting::FutureResponse;
+pub use endpoints::leaderboard::season_list::LeaderboardSeason;
+pub use endpoints::leaderboard::LeaderboardType;
+pub use endpoints::login::LoggedIn;
+pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
+pub use endpoints::register::{Details as RegistrationDetails, RegistrationSuccess};
+pub use endpoints::room_terrain::TerrainGrid;
+pub use endpoints::{
+    MapStats, MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, ShardInfo, WorldStartRoom,
+};
+pub use error::{Error, ErrorKind, NoToken};
 #[cfg(feature = "sync")]
 pub use sync::{Config as SyncConfig, SyncApi};
 
-use std::marker::PhantomData;
 use std::borrow::Cow;
-use std::convert::AsRef;
-use std::collections::VecDeque;
-use std::sync::{Arc, Mutex};
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::collections::VecDeque;
+use std::convert::AsRef;
+use std::marker::PhantomData;
+use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
-use url::Url;
 use hyper::header::ContentType;
+use url::Url;
 
 use endpoints::{login, map_stats, recent_pvp};
 
 use sealed::EndpointResult;
 
 mod sealed {
-    use serde;
     use error::Error;
+    use serde;
 
     /// A trait for each endpoint
     pub trait EndpointResult: Sized + 'static {
@@ -136,21 +138,13 @@ mod sealed {
     }
 
     pub trait Sealed: ::EndpointResult {}
-    impl<T> Sealed for T
-    where
-        T: ::EndpointResult,
-    {
-    }
+    impl<T> Sealed for T where T: ::EndpointResult {}
 }
 
 /// Sealed trait implemented for each endpoint.
 pub trait EndpointType: sealed::Sealed {}
 
-impl<T> EndpointType for T
-where
-    T: sealed::Sealed,
-{
-}
+impl<T> EndpointType for T where T: sealed::Sealed {}
 
 /// An API token that allows for one-time authentication. Each use of an API token with the screeps API
 /// will cause the API to return a new token which should be stored in its place.
@@ -322,7 +316,11 @@ impl<C, H, T> Api<C, H, T> {
     /// The returned instance can be used to make anonymous calls and will be allowed to make authenticated calls
     /// if the token is valid.
     #[inline]
-    pub fn with_url_and_tokens<U: AsRef<str>>(client: H, url: U, tokens: T) -> Result<Self, url::ParseError> {
+    pub fn with_url_and_tokens<U: AsRef<str>>(
+        client: H,
+        url: U,
+        tokens: T,
+    ) -> Result<Self, url::ParseError> {
         let api = Api {
             url: Url::parse(url.as_ref())?,
             client: client,
@@ -413,7 +411,10 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     }
 
     /// Gets the room name the server thinks the client should start with viewing for a particular shard.
-    pub fn shard_start_room<'b, U>(&self, shard: U) -> Result<FutureResponse<WorldStartRoom>, NoToken>
+    pub fn shard_start_room<'b, U>(
+        &self,
+        shard: U,
+    ) -> Result<FutureResponse<WorldStartRoom>, NoToken>
     where
         U: Into<Cow<'b, str>>,
     {
@@ -424,7 +425,11 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     }
 
     /// Get information on a number of rooms.
-    pub fn map_stats<'a, U, V>(&self, shard: &'a str, rooms: &'a V) -> Result<FutureResponse<MapStats>, NoToken>
+    pub fn map_stats<'a, U, V>(
+        &self,
+        shard: &'a str,
+        rooms: &'a V,
+    ) -> Result<FutureResponse<MapStats>, NoToken>
     where
         U: AsRef<str>,
         &'a V: IntoIterator<Item = U>,
@@ -464,20 +469,26 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     /// Gets the terrain of a room, returning a 2d array of 50x50 points.
     ///
     /// Does not require authentication.
-    pub fn room_terrain<'b, U, V>(&self, shard: Option<U>, room_name: V) -> FutureResponse<RoomTerrain>
+    pub fn room_terrain<'b, U, V>(
+        &self,
+        shard: Option<U>,
+        room_name: V,
+    ) -> FutureResponse<RoomTerrain>
     where
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
     {
         match shard {
-            Some(shard) => self.get("game/room-terrain")
+            Some(shard) => self
+                .get("game/room-terrain")
                 .params(&[
                     ("shard", shard.into().into_owned()),
                     ("room", room_name.into().into_owned()),
                     ("encoded", true.to_string()),
                 ])
                 .send(),
-            None => self.get("game/room-terrain")
+            None => self
+                .get("game/room-terrain")
                 .params(&[
                     ("room", room_name.into().into_owned()),
                     ("encoded", true.to_string()),
@@ -523,7 +534,9 @@ impl<C: hyper::client::Connect, H: HyperClient<C>, T: TokenStorage> Api<C, H, T>
     ///
     /// This method does not return any actual data, but rather just a list of valid past season, any of the ids of
     /// which can then be used to retrieve more information.
-    pub fn leaderboard_season_list(&self) -> Result<FutureResponse<Vec<LeaderboardSeason>>, NoToken> {
+    pub fn leaderboard_season_list(
+        &self,
+    ) -> Result<FutureResponse<Vec<LeaderboardSeason>>, NoToken> {
         self.get("leaderboard/seasons").auth().send()
     }
 
@@ -636,7 +649,9 @@ struct AuthRequired<T>(PhantomData<T>);
 impl<T> PartialRequestAuth<T> for AuthRequired<T> {
     type Result = Result<T, NoToken>;
 
-    fn token_or_result<U: TokenStorage>(token_storage: &U) -> Result<Option<Token>, Result<T, NoToken>> {
+    fn token_or_result<U: TokenStorage>(
+        token_storage: &U,
+    ) -> Result<Option<Token>, Result<T, NoToken>> {
         match token_storage.take_token() {
             Some(v) => Ok(Some(v)),
             None => Err(Err(NoToken)),
@@ -801,8 +816,9 @@ where
 
         if let Some(ref serializable) = post_body {
             request.set_body(
-                serde_json::to_string(serializable)
-                    .expect("expected serde_json::to_string to unfailingly succeed, but it failed."),
+                serde_json::to_string(serializable).expect(
+                    "expected serde_json::to_string to unfailingly succeed, but it failed.",
+                ),
             );
         }
 
@@ -868,7 +884,8 @@ pub fn gcl_calc(gcl_points: u64) -> u64 {
 
     ((gcl_points as f64) * GCL_INV_MULTIPLY)
         .powf(GCL_INV_POW)
-        .floor() as u64 + 1
+        .floor() as u64
+        + 1
 }
 
 #[cfg(test)]

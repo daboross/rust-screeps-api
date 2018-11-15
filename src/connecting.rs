@@ -74,11 +74,13 @@ where
                     let new_token = response.headers_mut().remove::<TokenHeader>().map(|h| h.0);
 
                     match new_token {
-                        Some(token) => if token.is_empty() {
-                            Some(token)
-                        } else {
-                            used_token
-                        },
+                        Some(token) => {
+                            if token.is_empty() {
+                                Some(token)
+                            } else {
+                                used_token
+                            }
+                        }
                         None => used_token,
                     }
                 };
@@ -125,14 +127,21 @@ where
     ))
 }
 
-fn deserialize_with_warnings<T: EndpointType>(input: &serde_json::Value, url: &Url) -> Result<T::RequestResult, Error> {
+fn deserialize_with_warnings<T: EndpointType>(
+    input: &serde_json::Value,
+    url: &Url,
+) -> Result<T::RequestResult, Error> {
     let mut unused = Vec::new();
 
-    let res = match serde_ignored::deserialize::<_, _, T::RequestResult>(input, |path| unused.push(path.to_string())) {
+    let res = match serde_ignored::deserialize::<_, _, T::RequestResult>(input, |path| {
+        unused.push(path.to_string())
+    }) {
         Ok(v) => Ok(v),
         Err(e1) => {
             unused.clear();
-            match serde_ignored::deserialize::<_, _, T::ErrorResult>(input, |path| unused.push(path.to_string())) {
+            match serde_ignored::deserialize::<_, _, T::ErrorResult>(input, |path| {
+                unused.push(path.to_string())
+            }) {
                 Ok(v) => Err(Error::with_json(v, Some(url.clone()), Some(input.clone()))),
                 // Favor the primary parsing error if one occurs parsing the error type as well.
                 Err(_) => Err(Error::with_json(e1, Some(url.clone()), Some(input.clone()))),

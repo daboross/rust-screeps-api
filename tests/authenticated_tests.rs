@@ -40,17 +40,19 @@ fn test_auth_my_info() {
 fn test_auth_map_stats() {
     let mut api = logged_in();
 
-    let result = api.map_stats(
-        "shard2",
-        &[
-            "W13S21",
-            "W12S20",
-            "E32N29",
-            "E50N35",
-            "E90N90",
-            "InvalidRoomName",
-        ],
-    ).unwrap();
+    let result = api
+        .map_stats(
+            "shard2",
+            &[
+                "W13S21",
+                "W12S20",
+                "E32N29",
+                "E50N35",
+                "E90N90",
+                "InvalidRoomName",
+            ],
+        )
+        .unwrap();
 
     assert_eq!(result.rooms.len(), 4);
 }
@@ -130,7 +132,8 @@ fn test_auth_retrieve_single_rank() {
         screeps_api::LeaderboardType::GlobalControl,
         "daboross",
         "2017-02",
-    ).unwrap();
+    )
+    .unwrap();
 
     match api.find_season_leaderboard_rank(
         screeps_api::LeaderboardType::GlobalControl,
@@ -161,7 +164,8 @@ fn test_auth_retrieve_single_rank() {
 fn test_auth_retrieve_all_ranks() {
     let mut api = logged_in();
 
-    let result = api.find_leaderboard_ranks(screeps_api::LeaderboardType::GlobalControl, "daboross")
+    let result = api
+        .find_leaderboard_ranks(screeps_api::LeaderboardType::GlobalControl, "daboross")
         .unwrap();
     assert!(!result.is_empty());
 }
@@ -170,12 +174,14 @@ fn test_auth_retrieve_all_ranks() {
 fn test_auth_retrieve_leaderboard() {
     let mut api = logged_in();
 
-    let result = api.leaderboard_page(
-        screeps_api::LeaderboardType::GlobalControl,
-        "2017-02",
-        10,
-        0,
-    ).unwrap();
+    let result = api
+        .leaderboard_page(
+            screeps_api::LeaderboardType::GlobalControl,
+            "2017-02",
+            10,
+            0,
+        )
+        .unwrap();
 
     for ranked_user in result.ranks {
         if result

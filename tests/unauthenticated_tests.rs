@@ -51,7 +51,8 @@ fn test_room_terrain_invalid_shard() {
 fn test_recent_pvp() {
     let mut api = SyncApi::new().unwrap();
 
-    let pvp_results_a = api.recent_pvp(screeps_api::RecentPvpDetails::within(15))
+    let pvp_results_a = api
+        .recent_pvp(screeps_api::RecentPvpDetails::within(15))
         .unwrap();
 
     let reported_up_to = pvp_results_a
@@ -61,6 +62,7 @@ fn test_recent_pvp() {
         .max()
         .unwrap();
 
-    let _ = api.recent_pvp(screeps_api::RecentPvpDetails::since(reported_up_to - 10))
+    let _ = api
+        .recent_pvp(screeps_api::RecentPvpDetails::since(reported_up_to - 10))
         .unwrap();
 }

@@ -5,26 +5,28 @@ extern crate native_tls;
 extern crate tokio_core;
 
 use std::borrow::Cow;
-use std::ops::Deref;
 use std::io;
+use std::ops::Deref;
 
 use hyper::{self, Client};
 
-use hyper::client::HttpConnector;
 use self::hyper_tls::HttpsConnector;
+use hyper::client::HttpConnector;
 
 use error::Error;
 
 use {Api, RcTokenStorage, TokenStorage, DEFAULT_OFFICIAL_API_URL};
 
-use {FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType, MapStats, MyInfo, RecentPvp,
-     RecentPvpDetails, RegistrationDetails, RegistrationSuccess, RoomOverview, RoomStatus, RoomTerrain, ShardInfo,
-     WorldStartRoom};
+use {
+    FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType, MapStats, MyInfo,
+    RecentPvp, RecentPvpDetails, RegistrationDetails, RegistrationSuccess, RoomOverview,
+    RoomStatus, RoomTerrain, ShardInfo, WorldStartRoom,
+};
 
 mod error {
+    use super::native_tls;
     use std::{fmt, io};
     use url;
-    use super::native_tls;
 
     /// Error that can occur from building a [`SyncApi`].
     ///
@@ -103,7 +105,10 @@ pub struct UseRcTokens;
 ///
 /// [`Api`]: ../struct.Api.html
 #[derive(Debug)]
-pub struct SyncApi<C: hyper::client::Connect = HttpsConnector<HttpConnector>, T: TokenStorage = RcTokenStorage> {
+pub struct SyncApi<
+    C: hyper::client::Connect = HttpsConnector<HttpConnector>,
+    T: TokenStorage = RcTokenStorage,
+> {
     core: tokio_core::reactor::Core,
     client: Api<C, Client<C>, T>,
 }
@@ -223,7 +228,9 @@ impl<'a, C: hyper::client::Connect> Config<'a, C, UseRcTokens> {
 
 impl<'a> Config<'a, UseHttpsConnector, UseRcTokens> {
     /// Builds the config into a SyncApi.
-    pub fn build(self) -> Result<SyncApi<HttpsConnector<HttpConnector>, RcTokenStorage>, SyncError> {
+    pub fn build(
+        self,
+    ) -> Result<SyncApi<HttpsConnector<HttpConnector>, RcTokenStorage>, SyncError> {
         self.try_connector(|handle| HttpsConnector::new(4, handle))?
             .tokens(RcTokenStorage::default())
             .build()
@@ -328,14 +335,20 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client
-            .room_overview(shard, room_name, request_interval)?)
+        self.core.run(
+            self.client
+                .room_overview(shard, room_name, request_interval)?,
+        )
     }
 
     /// Gets the terrain of a room, returning a 2d array of 50x50 points.
     ///
     /// See [`Api::room_terrain`](../struct.Api.html#method.room_terrain) for more information.
-    pub fn room_terrain<'b, U, V>(&mut self, shard: Option<U>, room_name: V) -> Result<RoomTerrain, Error>
+    pub fn room_terrain<'b, U, V>(
+        &mut self,
+        shard: Option<U>,
+        room_name: V,
+    ) -> Result<RoomTerrain, Error>
     where
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
@@ -390,8 +403,11 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client
-            .find_season_leaderboard_rank(leaderboard_type, username, season)?)
+        self.core.run(self.client.find_season_leaderboard_rank(
+            leaderboard_type,
+            username,
+            season,
+        )?)
     }
 
     /// Finds the rank of a user for all seasons for a specific leaderboard type.
@@ -405,8 +421,10 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     where
         U: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client
-            .find_leaderboard_ranks(leaderboard_type, username)?)
+        self.core.run(
+            self.client
+                .find_leaderboard_ranks(leaderboard_type, username)?,
+        )
     }
 
     /// Gets a page of the leaderboard for a given season.
@@ -422,7 +440,9 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     where
         U: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client
-            .leaderboard_page(leaderboard_type, season, limit, offset)?)
+        self.core.run(
+            self.client
+                .leaderboard_page(leaderboard_type, season, limit, offset)?,
+        )
     }
 }

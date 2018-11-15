@@ -101,7 +101,8 @@ impl EndpointResult for RoomTerrain {
                 "expected response.terrain[0].\
                  terrain to be a 2500 byte string, found a {} byte string.",
                 terrain.len()
-            )).into());
+            ))
+            .into());
         }
 
         if response_type != "terrain" {
@@ -109,7 +110,8 @@ impl EndpointResult for RoomTerrain {
                 "expected response.terrain[0].type \
                  to be 'terrain', found {:?}",
                 response_type
-            )).into());
+            ))
+            .into());
         }
 
         Ok(RoomTerrain {
@@ -132,7 +134,8 @@ impl EndpointResult for RoomTerrain {
                                 "expected terrain data to contain \
                                  only characters 0,1,2,3, found byte {} at x,y {},{}.",
                                 other, x, y
-                            )).into()),
+                            ))
+                            .into()),
                         })
                         .collect::<Result<_>>()
                 })
@@ -145,8 +148,8 @@ impl EndpointResult for RoomTerrain {
 #[cfg(test)]
 mod tests {
     use super::RoomTerrain;
-    use EndpointResult;
     use serde_json;
+    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

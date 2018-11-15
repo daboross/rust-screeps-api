@@ -1,7 +1,7 @@
 //! Endpoints relating to game leaderboards.
 pub mod find_rank;
-pub mod season_list;
 pub mod page;
+pub mod season_list;
 
 /// Type of leaderboards that are available for each season.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]

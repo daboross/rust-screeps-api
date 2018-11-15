@@ -138,26 +138,29 @@ impl<'de> Visitor<'de> for FlagStringVisitor {
                 let mut iter = flag_str.split('~');
 
                 macro_rules! next {
-                    () => ({
+                    () => {{
                         iter.next().ok_or_else(|| {
-                            E::invalid_type(Unexpected::Str(flag_str),
-                                            &"a string in the format of name~4~2~4~2")
+                            E::invalid_type(
+                                Unexpected::Str(flag_str),
+                                &"a string in the format of name~4~2~4~2",
+                            )
                         })?
-                    })
+                    }};
                 }
 
                 macro_rules! next_u8 {
-                    () => ({
+                    () => {{
                         let next = next!();
-                        next.parse().map_err(|_| E::invalid_type(Unexpected::Str(next),
-                            &"an unsigned integer"))?
-                    })
+                        next.parse().map_err(|_| {
+                            E::invalid_type(Unexpected::Str(next), &"an unsigned integer")
+                        })?
+                    }};
                 }
 
                 macro_rules! next_color {
-                    () => ({
+                    () => {{
                         FlagColor::from_serde(next_u8!())?
-                    })
+                    }};
                 }
 
                 Ok(Flag {

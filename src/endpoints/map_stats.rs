@@ -1,17 +1,17 @@
 //! Interpreting bulk room statistics (map stats).
 //!
 //! Note: currently only supports "owner0" stats, not any other statistic that can also be retrieved with the same API.
-use std::marker::PhantomData;
 use std::convert::AsRef;
+use std::marker::PhantomData;
 
-use time;
 use serde::{Serialize, Serializer};
+use time;
 
 use data::{self, optional_timespec_seconds, RoomName};
 
-use EndpointResult;
 use error::ApiError;
 use error::Result as ScapiResult;
+use EndpointResult;
 
 /// Stat name argument to the map stats call. Only one possible argument implemented, more to come!
 #[derive(Serialize, Clone, Eq, PartialEq, Hash, Debug)]
@@ -218,7 +218,8 @@ impl EndpointResult for MapStats {
                             "expected room status for \"{}\" to be \
                              \"normal\", found \"{}\"",
                             room_name, status
-                        )).into());
+                        ))
+                        .into());
                     }
 
                     let info = RoomInfo {
@@ -252,7 +253,8 @@ impl EndpointResult for MapStats {
                             "expected user id object key to match user \
                              id, {} != {}",
                             user_id, user_id2
-                        )).into());
+                        ))
+                        .into());
                     }
 
                     let info = UserInfo {
@@ -273,8 +275,8 @@ impl EndpointResult for MapStats {
 #[cfg(test)]
 mod tests {
     use super::MapStats;
-    use EndpointResult;
     use serde_json;
+    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

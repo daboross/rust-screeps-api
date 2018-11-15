@@ -11,17 +11,19 @@ extern crate screeps_api;
 // json pretty printing
 extern crate serde_json;
 
-use std::io::{self, Write};
 use std::borrow::Cow;
+use std::io::{self, Write};
 
 fn opt_env(var: &str, default: &'static str) -> Cow<'static, str> {
     dotenv::dotenv().ok();
     match ::std::env::var(var) {
-        Ok(value) => if !value.is_empty() {
-            value.into()
-        } else {
-            default.into()
-        },
+        Ok(value) => {
+            if !value.is_empty() {
+                value.into()
+            } else {
+                default.into()
+            }
+        }
         Err(_) => default.into(),
     }
 }

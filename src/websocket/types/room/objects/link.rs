@@ -1,6 +1,6 @@
 //! `StructureLink` data description.
-use data::RoomName;
 use super::ActionLogTarget;
+use data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// A link structure - a structure that can be filled with energy, then instantly send energy to other links
@@ -57,8 +57,8 @@ with_update_struct! {
 
 #[cfg(test)]
 mod test {
-    use serde_json;
     use serde::Deserialize;
+    use serde_json;
 
     use data::RoomName;
 
@@ -110,19 +110,22 @@ mod test {
         obj.update(
             serde_json::from_value(json!({
             "cooldown": 2
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
             "cooldown": 1
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
             "cooldown": 0
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(obj.cooldown, 0);
@@ -137,7 +140,8 @@ mod test {
             },
             "cooldown": 11,
             "energy": 0
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(
@@ -154,7 +158,8 @@ mod test {
             },
             "cooldown": 10,
             "energy": 50
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(

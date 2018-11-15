@@ -4,8 +4,8 @@ use std::convert::AsRef;
 use std::marker::PhantomData;
 use std::{cmp, fmt};
 
-use serde::{Deserialize, Deserializer};
 use serde::de::{SeqAccess, Visitor};
+use serde::{Deserialize, Deserializer};
 
 use {serde_ignored, serde_json};
 
@@ -103,7 +103,10 @@ impl<'a> SockjsMessage<'a> {
             'a' => {
                 let rest = &message[1..];
 
-                match from_str_with_warning::<MultipleMessagesIntermediate>(rest, "set of screeps update messages") {
+                match from_str_with_warning::<MultipleMessagesIntermediate>(
+                    rest,
+                    "set of screeps update messages",
+                ) {
                     Ok(messages) => SockjsMessage::Messages(messages.0),
                     Err(e) => {
                         return Err(ParseError::serde(

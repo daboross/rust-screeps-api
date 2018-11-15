@@ -1,10 +1,10 @@
 //! Interpreting room status results.
 
-use EndpointResult;
 use data::{self, RoomName, RoomState};
 use error::{ApiError, Result};
 use std::marker::PhantomData;
 use time;
+use EndpointResult;
 
 /// Room overview raw result.
 #[derive(Deserialize, Clone, Hash, Debug)]
@@ -76,7 +76,8 @@ impl EndpointResult for RoomStatus {
                 "expected room status to be \"normal\", \
                  found \"{}\".",
                 &status
-            )).into());
+            ))
+            .into());
         }
 
         let state = RoomState::from_data(time::get_time(), novice, open_time)?;
@@ -92,8 +93,8 @@ impl EndpointResult for RoomStatus {
 #[cfg(test)]
 mod tests {
     use super::RoomStatus;
-    use EndpointResult;
     use serde_json;
+    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

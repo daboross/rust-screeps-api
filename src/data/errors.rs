@@ -37,14 +37,16 @@ mod tests {
     fn parse_sample_standard_server_error() {
         let _: ApiError = serde_json::from_value(json!({
             "error": "any error string",
-        })).unwrap();
+        }))
+        .unwrap();
     }
 
     #[test]
     fn parse_sample_invalid_room_error() {
         let result: ApiError = serde_json::from_value(json!({
             "error": "invalid room",
-        })).unwrap();
+        }))
+        .unwrap();
 
         let error: error::Error = result.into();
 

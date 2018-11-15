@@ -1,9 +1,9 @@
 //! Interpreting rooms in which PvP recently occurred. This is an "experimental" endpoint.
 
-use EndpointResult;
 use data;
 use error::{ApiError, Result};
 use std::marker::PhantomData;
+use EndpointResult;
 
 /// Call parameters for requesting recent pvp
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
@@ -84,12 +84,14 @@ impl EndpointResult for RecentPvp {
         }
 
         Ok(RecentPvp {
-            shards: pvp.into_iter()
+            shards: pvp
+                .into_iter()
                 .map(|(name, data)| {
                     Ok((
                         name,
                         ShardRecentPvp {
-                            rooms: data.rooms
+                            rooms: data
+                                .rooms
                                 .into_iter()
                                 .map(|r| Ok((data::RoomName::new(&r._id)?, r.last_pvp_time)))
                                 .collect::<Result<_>>()?,
@@ -107,8 +109,8 @@ impl EndpointResult for RecentPvp {
 #[cfg(test)]
 mod tests {
     use super::RecentPvp;
-    use EndpointResult;
     use serde_json;
+    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

@@ -86,8 +86,8 @@ with_update_struct! {
 
 #[cfg(test)]
 mod test {
-    use serde_json;
     use serde::Deserialize;
+    use serde_json;
 
     use data::RoomName;
 
@@ -143,36 +143,42 @@ mod test {
         obj.update(
             serde_json::from_value(json!({
             "cooldown": 5
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
             "cooldown": 4
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
             "cooldown": 3
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
             "cooldown": 2
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
             "cooldown": 1
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
         obj.update(
             serde_json::from_value(json!({
             "cooldown": 0
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(obj.cooldown, 0);
@@ -189,7 +195,8 @@ mod test {
             },
             "cooldown": 9,
             "mineralAmount": 160
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(
@@ -210,7 +217,8 @@ mod test {
             "actionLog": {
                 "runReaction": null,
             },
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(

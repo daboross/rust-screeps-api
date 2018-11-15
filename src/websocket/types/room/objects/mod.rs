@@ -6,53 +6,53 @@
 //! Reading the source code is definitely possible. But there may be some investment in reading
 //! each of the macros defined and used here, and it will be much easier to just read the documentation.
 
-pub mod shared;
-pub mod source;
-pub mod mineral;
-pub mod spawn;
-pub mod extension;
-pub mod wall;
-pub mod road;
-pub mod rampart;
-pub mod keeper_lair;
+pub mod container;
 pub mod controller;
-pub mod portal;
+pub mod creep;
+pub mod extension;
+pub mod keeper_lair;
+pub mod lab;
 pub mod link;
-pub mod storage;
-pub mod tower;
+pub mod mineral;
+pub mod nuker;
 pub mod observer;
+pub mod portal;
 pub mod power_bank;
 pub mod power_spawn;
-pub mod lab;
-pub mod terminal;
-pub mod container;
-pub mod nuker;
-pub mod creep;
+pub mod rampart;
 pub mod resource;
+pub mod road;
+pub mod shared;
+pub mod source;
+pub mod spawn;
+pub mod storage;
+pub mod terminal;
+pub mod tower;
+pub mod wall;
 
-use self::shared::ActionLogTarget;
-pub use self::source::{Source, SourceUpdate};
-pub use self::mineral::{Mineral, MineralUpdate};
-pub use self::spawn::{StructureSpawn, StructureSpawnUpdate};
-pub use self::extension::{StructureExtension, StructureExtensionUpdate};
-pub use self::wall::{StructureWall, StructureWallUpdate};
-pub use self::road::{StructureRoad, StructureRoadUpdate};
-pub use self::rampart::{StructureRampart, StructureRampartUpdate};
-pub use self::keeper_lair::{StructureKeeperLair, StructureKeeperLairUpdate};
+pub use self::container::{StructureContainer, StructureContainerUpdate};
 pub use self::controller::{StructureController, StructureControllerUpdate};
-pub use self::portal::{StructurePortal, StructurePortalUpdate};
+pub use self::creep::{Creep, CreepUpdate};
+pub use self::extension::{StructureExtension, StructureExtensionUpdate};
+pub use self::keeper_lair::{StructureKeeperLair, StructureKeeperLairUpdate};
+pub use self::lab::{StructureLab, StructureLabUpdate};
 pub use self::link::{StructureLink, StructureLinkUpdate};
-pub use self::storage::{StructureStorage, StructureStorageUpdate};
-pub use self::tower::{StructureTower, StructureTowerUpdate};
+pub use self::mineral::{Mineral, MineralUpdate};
+pub use self::nuker::{StructureNuker, StructureNukerUpdate};
 pub use self::observer::{StructureObserver, StructureObserverUpdate};
+pub use self::portal::{StructurePortal, StructurePortalUpdate};
 pub use self::power_bank::{StructurePowerBank, StructurePowerBankUpdate};
 pub use self::power_spawn::{StructurePowerSpawn, StructurePowerSpawnUpdate};
-pub use self::lab::{StructureLab, StructureLabUpdate};
-pub use self::terminal::{StructureTerminal, StructureTerminalUpdate};
-pub use self::container::{StructureContainer, StructureContainerUpdate};
-pub use self::nuker::{StructureNuker, StructureNukerUpdate};
-pub use self::creep::{Creep, CreepUpdate};
+pub use self::rampart::{StructureRampart, StructureRampartUpdate};
 pub use self::resource::{Resource, ResourceUpdate};
+pub use self::road::{StructureRoad, StructureRoadUpdate};
+use self::shared::ActionLogTarget;
+pub use self::source::{Source, SourceUpdate};
+pub use self::spawn::{StructureSpawn, StructureSpawnUpdate};
+pub use self::storage::{StructureStorage, StructureStorageUpdate};
+pub use self::terminal::{StructureTerminal, StructureTerminalUpdate};
+pub use self::tower::{StructureTower, StructureTowerUpdate};
+pub use self::wall::{StructureWall, StructureWallUpdate};
 
 use serde_json;
 
@@ -128,28 +128,9 @@ impl KnownRoomObject {
         }
 
         large_match!(
-            Source,
-            Mineral,
-            Spawn,
-            Extension,
-            Wall,
-            Road,
-            Rampart,
-            KeeperLair,
-            Controller,
-            Portal,
-            Link,
-            Storage,
-            Tower,
-            Observer,
-            PowerBank,
-            PowerSpawn,
-            Lab,
-            Terminal,
-            Container,
-            Nuker,
-            Creep,
-            Resource
+            Source, Mineral, Spawn, Extension, Wall, Road, Rampart, KeeperLair, Controller, Portal,
+            Link, Storage, Tower, Observer, PowerBank, PowerSpawn, Lab, Terminal, Container, Nuker,
+            Creep, Resource
         );
 
         Ok(())
@@ -158,8 +139,8 @@ impl KnownRoomObject {
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
     use std::collections::hash_map::Entry::*;
+    use std::collections::HashMap;
 
     use serde_json;
 

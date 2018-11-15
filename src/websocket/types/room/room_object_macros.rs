@@ -72,9 +72,12 @@ pub(crate) mod vec_update {
             {
                 let err1;
                 let err2;
-                let __content = <_serde::private::de::Content as Deserialize>::deserialize(__deserializer)?;
+                let __content =
+                    <_serde::private::de::Content as Deserialize>::deserialize(__deserializer)?;
                 match Result::map(
-                    Vec::<T>::deserialize(_serde::private::de::ContentRefDeserializer::<__D::Error>::new(&__content)),
+                    Vec::<T>::deserialize(
+                        _serde::private::de::ContentRefDeserializer::<__D::Error>::new(&__content),
+                    ),
                     VecUpdate::Array,
                 ) {
                     Ok(value) => return Ok(value),
@@ -195,12 +198,15 @@ pub(crate) mod vec_update {
         fn apply_update(&mut self, update: Self::Update) {
             // TODO: proper erroring out here.
             match update {
-                VecUpdate::Array(vec) => if let Some(vec) = vec.into_iter()
-                    .map(T::create_from_update)
-                    .collect::<Option<Vec<T>>>()
-                {
-                    *self = vec;
-                },
+                VecUpdate::Array(vec) => {
+                    if let Some(vec) = vec
+                        .into_iter()
+                        .map(T::create_from_update)
+                        .collect::<Option<Vec<T>>>()
+                    {
+                        *self = vec;
+                    }
+                }
                 VecUpdate::PartialObj(map) => {
                     for (index, value) in map.0 {
                         let index = index as usize;
@@ -220,7 +226,8 @@ pub(crate) mod vec_update {
 
         fn create_from_update(update: Self::Update) -> Option<Self> {
             match update {
-                VecUpdate::Array(vec) => vec.into_iter()
+                VecUpdate::Array(vec) => vec
+                    .into_iter()
                     .map(T::create_from_update)
                     .collect::<Option<Self>>(),
                 VecUpdate::PartialObj(_) => None,

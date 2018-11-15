@@ -1,9 +1,9 @@
 //! Interpreting generic template calls.
 
-use EndpointResult;
 use data;
 use error::{ApiError, Result};
 use std::marker::PhantomData;
+use EndpointResult;
 
 /// Call raw result.
 #[derive(Deserialize, Clone, Hash, Debug)]
@@ -39,8 +39,8 @@ impl EndpointResult for CallInfo {
 #[cfg(test)]
 mod tests {
     use super::CallInfo;
-    use EndpointResult;
     use serde_json;
+    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

@@ -112,7 +112,10 @@ impl<'a> Channel<'a> {
     ///
     /// Warning: creating a channel with a shard name when the server does not have any shards or creating a channel
     /// without a shard name on a sharded server will both result in the subscribe silently failing.
-    pub fn room_map_view<T: Into<Cow<'a, str>>>(room_name: RoomName, shard_name: Option<T>) -> Self {
+    pub fn room_map_view<T: Into<Cow<'a, str>>>(
+        room_name: RoomName,
+        shard_name: Option<T>,
+    ) -> Self {
         Channel::RoomMapView {
             shard_name: shard_name.map(Into::into),
             room_name: room_name,
@@ -217,7 +220,9 @@ impl<'a> fmt::Display for Channel<'a> {
                 ref path,
             } => write!(f, "user:{}/memory/{}", user_id, path),
             Channel::UserConsole { ref user_id } => write!(f, "user:{}/console", user_id),
-            Channel::UserActiveBranch { ref user_id } => write!(f, "user:{}/set-active-branch", user_id),
+            Channel::UserActiveBranch { ref user_id } => {
+                write!(f, "user:{}/set-active-branch", user_id)
+            }
             Channel::RoomMapView {
                 ref room_name,
                 ref shard_name,

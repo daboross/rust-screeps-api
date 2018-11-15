@@ -1,7 +1,7 @@
 //! Structures relating to room name parsing.
 
-use std::{error, fmt, ops};
 use std::borrow::Cow;
+use std::{error, fmt, ops};
 
 /// A structure representing a room name.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]

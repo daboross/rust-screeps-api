@@ -1,6 +1,6 @@
 //! Error types for the screeps api.
-use std::{fmt, io, str};
 use std::error::Error as StdError;
+use std::{fmt, io, str};
 
 use {hyper, serde_json, url};
 
@@ -100,7 +100,11 @@ impl Error {
         Error::with_json(err, url, None)
     }
     /// Creates a new error from the given error, the given possible url, and the given possible JSON data.
-    pub fn with_json<T: Into<Error>>(err: T, url: Option<url::Url>, json: Option<serde_json::Value>) -> Error {
+    pub fn with_json<T: Into<Error>>(
+        err: T,
+        url: Option<url::Url>,
+        json: Option<serde_json::Value>,
+    ) -> Error {
         let err = err.into();
         Error {
             err: err.err,
@@ -110,7 +114,11 @@ impl Error {
     }
 
     /// Creates a new error from the given error, the given possible url, and the given possible body.
-    pub fn with_body<T: Into<Error>>(err: T, url: Option<url::Url>, body: Option<hyper::Chunk>) -> Error {
+    pub fn with_body<T: Into<Error>>(
+        err: T,
+        url: Option<url::Url>,
+        body: Option<hyper::Chunk>,
+    ) -> Error {
         let err = err.into();
         Error {
             err: err.err,
@@ -342,7 +350,9 @@ impl fmt::Display for ApiError {
         match *self {
             ApiError::NotOk(code) => write!(f, "non-ok result from api result: {}", code),
             ApiError::MissingField(field) => write!(f, "missing field from api result: {}", field),
-            ApiError::MalformedResponse(ref desc) => write!(f, "malformed field from api result: {}", desc),
+            ApiError::MalformedResponse(ref desc) => {
+                write!(f, "malformed field from api result: {}", desc)
+            }
             ApiError::GenericError(ref err) => write!(f, "api call resulted in error: {}", err),
             ApiError::InvalidRoom
             | ApiError::InvalidShard

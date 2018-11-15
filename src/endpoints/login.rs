@@ -1,6 +1,6 @@
 //! Interpreting login responses.
-use std::marker::PhantomData;
 use std::borrow::Cow;
+use std::marker::PhantomData;
 
 use data;
 use error::{ApiError, Result};
@@ -81,8 +81,8 @@ impl EndpointResult for LoggedIn {
 #[cfg(test)]
 mod tests {
     use super::LoggedIn;
-    use EndpointResult;
     use serde_json;
+    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

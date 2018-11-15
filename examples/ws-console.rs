@@ -27,8 +27,10 @@ use futures::{future, stream, Future, Sink, Stream};
 
 use websocket::OwnedMessage;
 
+use screeps_api::websocket::{
+    Channel, ChannelUpdate, ScreepsMessage, SockjsMessage, UserConsoleUpdate,
+};
 use screeps_api::TokenStorage;
-use screeps_api::websocket::{Channel, ChannelUpdate, ScreepsMessage, SockjsMessage, UserConsoleUpdate};
 
 static CONSOLE_LOG_TARGET: &'static str = "log:console";
 static CONSOLE_RAW_OUTPUT_TARGET: &'static str = "log:console-raw";
@@ -45,11 +47,13 @@ fn env(var: &str) -> String {
 fn opt_env(var: &str, default: &'static str) -> Cow<'static, str> {
     dotenv::dotenv().ok();
     match ::std::env::var(var) {
-        Ok(value) => if !value.is_empty() {
-            value.into()
-        } else {
-            default.into()
-        },
+        Ok(value) => {
+            if !value.is_empty() {
+                value.into()
+            } else {
+                default.into()
+            }
+        }
         Err(_) => default.into(),
     }
 }
@@ -118,7 +122,8 @@ fn main() {
 
     info!("connecting - {}", my_info.username);
 
-    let mut core = tokio_core::reactor::Core::new().expect("expected IO core to start up without issue.");
+    let mut core =
+        tokio_core::reactor::Core::new().expect("expected IO core to start up without issue.");
 
     let handle = core.handle();
 
@@ -134,7 +139,8 @@ fn main() {
 
         sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(
             &token_storage.take_token().unwrap(),
-        ))).and_then(|sink| {
+        )))
+        .and_then(|sink| {
             let handler = Handler::new(token_storage, my_info);
 
             sink.send_all(
@@ -149,7 +155,8 @@ fn main() {
                     .flatten(),
             )
         })
-    })).expect("websocket connection exited with failure");
+    }))
+    .expect("websocket connection exited with failure");
 }
 
 struct Handler<T>
@@ -171,7 +178,10 @@ where
         }
     }
 
-    fn handle_data(&self, data: OwnedMessage) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
+    fn handle_data(
+        &self,
+        data: OwnedMessage,
+    ) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         match data {
             OwnedMessage::Text(string) => {
                 let data = SockjsMessage::parse(&string).expect("expected a SockJS message");
@@ -189,7 +199,9 @@ where
                             .map(|message| self.handle_parsed_message(message))
                             .collect::<Vec<_>>();
 
-                        return Box::new(stream::iter_ok::<_, websocket::WebSocketError>(results).flatten());
+                        return Box::new(
+                            stream::iter_ok::<_, websocket::WebSocketError>(results).flatten(),
+                        );
                     }
                 }
             }
@@ -215,14 +227,14 @@ where
 
                 return Box::new(
                     subscribe_with(&self.info.user_id).chain(
-                        stream::futures_unordered(vec![
-                            future::lazy(|| {
-                                info!("subscribed");
-                                future::ok::<_, websocket::WebSocketError>(stream::empty())
-                            }),
-                        ]).flatten(),
+                        stream::futures_unordered(vec![future::lazy(|| {
+                            info!("subscribed");
+                            future::ok::<_, websocket::WebSocketError>(stream::empty())
+                        })])
+                        .flatten(),
                     ),
-                ) as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>;
+                )
+                    as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>;
             }
             ScreepsMessage::ChannelUpdate { update } => {
                 self.handle_update(update);

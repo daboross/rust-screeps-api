@@ -52,8 +52,8 @@ with_base_fields_and_update_struct! {
 
 #[cfg(test)]
 mod test {
-    use {serde_json, time};
     use serde::Deserialize;
+    use {serde_json, time};
 
     use data::RoomName;
 
@@ -135,7 +135,8 @@ mod test {
             serde_json::from_value(json!({
             "decayTime": 20197693,
             "unstableDate": null,
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(

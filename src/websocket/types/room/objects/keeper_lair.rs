@@ -21,8 +21,8 @@ with_base_fields_and_update_struct! {
 
 #[cfg(test)]
 mod test {
-    use serde_json;
     use serde::Deserialize;
+    use serde_json;
 
     use data::RoomName;
 
@@ -59,7 +59,8 @@ mod test {
         obj.update(
             serde_json::from_value(json!({
             "nextSpawnTime": 20000000,
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(
@@ -102,7 +103,8 @@ mod test {
         obj.update(
             serde_json::from_value(json!({
             "nextSpawnTime": null,
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(

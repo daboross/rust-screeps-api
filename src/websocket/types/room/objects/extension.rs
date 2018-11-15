@@ -34,8 +34,8 @@ with_structure_fields_and_update_struct! {
 
 #[cfg(test)]
 mod test {
-    use serde_json;
     use serde::Deserialize;
+    use serde_json;
 
     use data::RoomName;
 
@@ -81,7 +81,8 @@ mod test {
             serde_json::from_value(json!({
             "energy": 0,
             "notifyWhenAttacked": false,
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(

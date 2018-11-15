@@ -8,8 +8,8 @@ extern crate screeps_api;
 
 use std::borrow::Cow;
 
-use screeps_api::LeaderboardType::*;
 use screeps_api::endpoints::leaderboard::page::LeaderboardPage;
+use screeps_api::LeaderboardType::*;
 
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
 fn env(var: &str) -> String {
@@ -23,11 +23,13 @@ fn env(var: &str) -> String {
 fn opt_env(var: &str, default: &'static str) -> Cow<'static, str> {
     dotenv::dotenv().ok();
     match ::std::env::var(var) {
-        Ok(value) => if !value.is_empty() {
-            value.into()
-        } else {
-            default.into()
-        },
+        Ok(value) => {
+            if !value.is_empty() {
+                value.into()
+            } else {
+                default.into()
+            }
+        }
         Err(_) => default.into(),
     }
 }

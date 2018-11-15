@@ -2,8 +2,8 @@
 use std::marker::PhantomData;
 use std::{cmp, fmt};
 
-use serde::{Deserialize, Deserializer};
 use serde::de::{DeserializeSeed, Error, MapAccess, SeqAccess, Visitor};
+use serde::{Deserialize, Deserializer};
 
 /// "Map view" room status update. This contains all entities in a given room,
 /// organized by what type of thing they are, or who owns them.
@@ -160,7 +160,8 @@ impl<'de> Visitor<'de> for RoomMapViewUpdateVisitor {
         let mut controllers = None;
         let mut keeper_lairs = None;
         // there are 8 expected keys, any extra are user ids
-        let mut users_objects = Vec::with_capacity(cmp::max(cmp::min(access.size_hint().unwrap_or(0), 4069), 8) - 8);
+        let mut users_objects =
+            Vec::with_capacity(cmp::max(cmp::min(access.size_hint().unwrap_or(0), 4069), 8) - 8);
 
         while let Some((key, value)) = access.next_entry_seed(PhantomData, StrOrU32TupleVecSeed)? {
             match key {
@@ -204,8 +205,8 @@ impl<'de> Deserialize<'de> for RoomMapViewUpdate {
 
 #[cfg(test)]
 mod test {
-    use serde_json;
     use super::RoomMapViewUpdate;
+    use serde_json;
 
     // this is an edge case discovered on the official server.
     //

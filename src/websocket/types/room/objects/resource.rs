@@ -1,11 +1,13 @@
 //! `Resource` data description.
 use std::fmt;
 
-use serde::de::{Deserialize, Deserializer, Error, IgnoredAny, IntoDeserializer, MapAccess, Visitor};
 use serde::de::value::Error as ValueError;
+use serde::de::{
+    Deserialize, Deserializer, Error, IgnoredAny, IntoDeserializer, MapAccess, Visitor,
+};
 
-use data::RoomName;
 use super::super::resources::ResourceType;
+use data::RoomName;
 
 with_update_struct! {
     /// A resource, a bit of some resource which has dropped on the ground, and is decaying each tick.
@@ -74,7 +76,9 @@ impl<'de> Deserialize<'de> for FieldName {
                     "y" => Ok(FieldName::Y),
                     "resourceType" => Ok(FieldName::ResourceType),
                     other => {
-                        match ResourceType::deserialize(IntoDeserializer::<ValueError>::into_deserializer(other)) {
+                        match ResourceType::deserialize(
+                            IntoDeserializer::<ValueError>::into_deserializer(other),
+                        ) {
                             Ok(resource_type) => Ok(FieldName::Other(resource_type)),
                             Err(_) => Ok(FieldName::Ignored),
                         }
@@ -93,12 +97,14 @@ impl<'de> Deserialize<'de> for FieldName {
                     b"y" => Ok(FieldName::Y),
                     b"resourceType" => Ok(FieldName::ResourceType),
                     other => match ::std::str::from_utf8(other) {
-                        Ok(other_str) => match ResourceType::deserialize(
-                            IntoDeserializer::<ValueError>::into_deserializer(other_str),
-                        ) {
-                            Ok(resource_type) => Ok(FieldName::Other(resource_type)),
-                            Err(_) => Ok(FieldName::Ignored),
-                        },
+                        Ok(other_str) => {
+                            match ResourceType::deserialize(
+                                IntoDeserializer::<ValueError>::into_deserializer(other_str),
+                            ) {
+                                Ok(resource_type) => Ok(FieldName::Other(resource_type)),
+                                Err(_) => Ok(FieldName::Ignored),
+                            }
+                        }
                         Err(_) => Ok(FieldName::Ignored),
                     },
                 }
@@ -180,9 +186,10 @@ impl<'de> Deserialize<'de> for Resource {
                 let room = room.ok_or_else(|| A::Error::missing_field("room"))?;
                 let x = x.ok_or_else(|| A::Error::missing_field("x"))?;
                 let y = y.ok_or_else(|| A::Error::missing_field("y"))?;
-                let resource_type = resource_type.ok_or_else(|| A::Error::missing_field("resourceType"))?;
-                let (found_resource_type, amount) =
-                    resource_amount.ok_or_else(|| A::Error::missing_field("<dynamic ResouceType-named field>"))?;
+                let resource_type =
+                    resource_type.ok_or_else(|| A::Error::missing_field("resourceType"))?;
+                let (found_resource_type, amount) = resource_amount
+                    .ok_or_else(|| A::Error::missing_field("<dynamic ResouceType-named field>"))?;
 
                 if resource_type != found_resource_type {
                     struct ResourceTypeMismatchError(ResourceType, ResourceType);
@@ -284,7 +291,9 @@ impl<'de> Deserialize<'de> for ResourceUpdate {
                                     Ok(CanBeNullI32(Option::deserialize(deserializer)?))
                                 }
                             }
-                            if let CanBeNullI32(Some(value)) = access.next_value::<CanBeNullI32>()? {
+                            if let CanBeNullI32(Some(value)) =
+                                access.next_value::<CanBeNullI32>()?
+                            {
                                 if amount.is_some() {
                                     return Err(A::Error::duplicate_field(
                                         "<dynamic ResourceType-named amount field>",

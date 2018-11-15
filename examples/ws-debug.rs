@@ -30,8 +30,8 @@ use futures::{future, stream, Future, Sink, Stream};
 
 use websocket::OwnedMessage;
 
-use screeps_api::{RoomName, TokenStorage};
 use screeps_api::websocket::{Channel, ChannelUpdate, ScreepsMessage, SockjsMessage};
+use screeps_api::{RoomName, TokenStorage};
 
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
 fn env(var: &str) -> String {
@@ -80,7 +80,9 @@ struct Config {
 }
 
 impl Config {
-    fn new<'a>(args: &'a clap::ArgMatches) -> Result<Self, screeps_api::data::room_name::RoomNameParseError<'a>> {
+    fn new<'a>(
+        args: &'a clap::ArgMatches,
+    ) -> Result<Self, screeps_api::data::room_name::RoomNameParseError<'a>> {
         #[allow(unused_imports)] // becomes unnecessary for rust 1.23+
         use std::ascii::AsciiExt;
 
@@ -89,7 +91,8 @@ impl Config {
             messages: args.is_present("messages"),
             credits: args.is_present("credits"),
             console: args.is_present("console"),
-            shard: args.value_of("shard")
+            shard: args
+                .value_of("shard")
                 .map(|v| {
                     if "none".eq_ignore_ascii_case(v) {
                         None
@@ -98,24 +101,34 @@ impl Config {
                     }
                 })
                 .unwrap_or_else(|| Some("shard0".into())),
-            rooms: args.values_of("room")
+            rooms: args
+                .values_of("room")
                 .map(|it| it.map(|v| RoomName::new(v)).collect::<Result<_, _>>())
                 .unwrap_or_else(|| Ok(Vec::new()))?,
-            map_view: args.values_of("map-view")
+            map_view: args
+                .values_of("map-view")
                 .map(|it| it.map(|v| RoomName::new(v)).collect::<Result<_, _>>())
                 .unwrap_or_else(|| Ok(Vec::new()))?,
-            url: args.value_of("url")
+            url: args
+                .value_of("url")
                 .map(|v| v.to_owned().into())
                 .unwrap_or_else(|| screeps_api::DEFAULT_OFFICIAL_API_URL.into()),
         })
     }
 
-    fn subscribe_with(&self, id: &str) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
+    fn subscribe_with(
+        &self,
+        id: &str,
+    ) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         use screeps_api::websocket::subscribe;
 
         let mut messages = Vec::with_capacity(
-            1 + self.cpu as usize + self.messages as usize + self.credits as usize + self.console as usize
-                + self.rooms.len() + self.map_view.len(),
+            1 + self.cpu as usize
+                + self.messages as usize
+                + self.credits as usize
+                + self.console as usize
+                + self.rooms.len()
+                + self.map_view.len(),
         );
 
         messages.push(subscribe(&Channel::ServerMessages));
@@ -237,7 +250,8 @@ fn setup() -> Config {
             message: e.to_string(),
             kind: clap::ErrorKind::InvalidValue,
             info: None,
-        }.exit(),
+        }
+        .exit(),
     }
 }
 
@@ -265,7 +279,8 @@ fn main() {
         my_info.username
     );
 
-    let mut core = tokio_core::reactor::Core::new().expect("expected IO core to start up without issue.");
+    let mut core =
+        tokio_core::reactor::Core::new().expect("expected IO core to start up without issue.");
 
     let handle = core.handle();
 
@@ -281,7 +296,8 @@ fn main() {
 
         sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(
             &token_storage.take_token().unwrap(),
-        ))).and_then(|sink| {
+        )))
+        .and_then(|sink| {
             let handler = Handler::new(token_storage, my_info, config);
 
             sink.send_all(
@@ -296,7 +312,8 @@ fn main() {
                     .flatten(),
             )
         })
-    })).expect("expected websocket connection to complete successfully, but an error occurred");
+    }))
+    .expect("expected websocket connection to complete successfully, but an error occurred");
 }
 
 struct Handler<T>
@@ -320,11 +337,14 @@ where
         }
     }
 
-    fn handle_data(&self, data: OwnedMessage) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
+    fn handle_data(
+        &self,
+        data: OwnedMessage,
+    ) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         match data {
             OwnedMessage::Text(string) => {
-                let data =
-                    SockjsMessage::parse(&string).expect("expected a correct SockJS message, found a parse error.");
+                let data = SockjsMessage::parse(&string)
+                    .expect("expected a correct SockJS message, found a parse error.");
 
                 match data {
                     SockjsMessage::Open => debug!("SockJS connection opened"),
@@ -339,7 +359,10 @@ where
                             .map(|message| Ok(self.handle_parsed_message(message)))
                             .collect::<Vec<_>>();
 
-                        return Box::new(stream::iter_result::<_, _, websocket::WebSocketError>(results).flatten());
+                        return Box::new(
+                            stream::iter_result::<_, _, websocket::WebSocketError>(results)
+                                .flatten(),
+                        );
                     }
                 }
             }
@@ -371,14 +394,14 @@ where
 
                 return Box::new(
                     self.config.subscribe_with(&self.info.user_id).chain(
-                        stream::futures_unordered(vec![
-                            future::lazy(|| {
-                                warn!("subscribed!");
-                                future::ok::<_, websocket::WebSocketError>(stream::empty())
-                            }),
-                        ]).flatten(),
+                        stream::futures_unordered(vec![future::lazy(|| {
+                            warn!("subscribed!");
+                            future::ok::<_, websocket::WebSocketError>(stream::empty())
+                        })])
+                        .flatten(),
                     ),
-                ) as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>;
+                )
+                    as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>;
             }
             ScreepsMessage::ChannelUpdate { update } => {
                 self.handle_update(update);
@@ -432,7 +455,8 @@ where
                     room_name,
                     serde_json::to_string_pretty(&serde_json::Value::Object(
                         update.objects.iter().cloned().collect()
-                    )).expect("expected to_string to succeed on plain map.")
+                    ))
+                    .expect("expected to_string to succeed on plain map.")
                 );
             }
             ChannelUpdate::NoRoomDetail {

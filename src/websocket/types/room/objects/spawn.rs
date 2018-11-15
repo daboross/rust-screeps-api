@@ -121,7 +121,8 @@ mod test {
             "spawning": {
                 "remainingTime": 4,
             },
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         obj.update(
@@ -129,7 +130,8 @@ mod test {
             "spawning": {
                 "remainingTime": 3,
             },
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         obj.update(
@@ -137,7 +139,8 @@ mod test {
             "spawning": {
                 "remainingTime": 2,
             },
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         obj.update(
@@ -145,7 +148,8 @@ mod test {
             "spawning": {
                 "remainingTime": 1,
             },
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(
@@ -160,7 +164,8 @@ mod test {
         obj.update(
             serde_json::from_value(json!({
             "spawning": null,
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(obj.spawning, None);

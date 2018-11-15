@@ -1,6 +1,6 @@
 //! Websocket message parsing errors.
-use std::fmt;
 use serde_json;
+use std::fmt;
 
 /// A SockJS parse error occurred. TODO: more detailed info.
 #[derive(Debug)]

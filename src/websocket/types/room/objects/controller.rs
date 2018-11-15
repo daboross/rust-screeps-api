@@ -96,8 +96,8 @@ with_structure_fields_and_update_struct! {
 
 #[cfg(test)]
 mod test {
-    use {serde_json, time};
     use serde::Deserialize;
+    use {serde_json, time};
 
     use data::{RoomName, RoomSign};
 
@@ -164,7 +164,8 @@ mod test {
         obj.update(
             serde_json::from_value(json!({
             "safeModeAvailable": 8,
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(
@@ -254,7 +255,8 @@ mod test {
             "reservation": {
                 "endTime": 20158029,
             },
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(
@@ -314,7 +316,8 @@ mod test {
         obj.update(
             serde_json::from_value(json!({
             "sign": null,
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(

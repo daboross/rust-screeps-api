@@ -48,5 +48,6 @@ pub fn authenticate(token: &Token) -> String {
 }
 
 fn sockjs_send_from_internal<T: AsRef<str>>(source: &T) -> String {
-    serde_json::to_string(&(source.as_ref(),)).expect("serializing a tuple containing a single string can't fail.")
+    serde_json::to_string(&(source.as_ref(),))
+        .expect("serializing a tuple containing a single string can't fail.")
 }

@@ -1,11 +1,11 @@
 //! Interpreting user leaderboard page results.
 
 use super::find_rank;
-use EndpointResult;
 use data;
 use error::{ApiError, Result};
 use std::collections::HashMap;
 use std::marker::PhantomData;
+use EndpointResult;
 
 /// Raw list results.
 #[derive(Deserialize, Clone, Debug)]
@@ -85,7 +85,8 @@ impl EndpointResult for LeaderboardPage {
 
         Ok(LeaderboardPage {
             total_count: total_count,
-            ranks: list.into_iter()
+            ranks: list
+                .into_iter()
                 .map(|info| RankedUser {
                     season_id: info.season,
                     user_id: info.user,
@@ -117,8 +118,8 @@ impl EndpointResult for LeaderboardPage {
 #[cfg(test)]
 mod tests {
     use super::LeaderboardPage;
-    use EndpointResult;
     use serde_json;
+    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

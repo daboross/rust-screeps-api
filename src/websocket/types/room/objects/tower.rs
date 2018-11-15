@@ -1,6 +1,6 @@
 //! `StructureLink` data description.
-use data::RoomName;
 use super::ActionLogTarget;
+use data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// A tower structure - a structure that can be filled with energy, and then attack, heal and
@@ -58,8 +58,8 @@ with_update_struct! {
 
 #[cfg(test)]
 mod test {
-    use serde_json;
     use serde::Deserialize;
+    use serde_json;
 
     use data::RoomName;
 
@@ -119,7 +119,8 @@ mod test {
                 }
             },
             "energy": 820
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(

@@ -67,7 +67,8 @@ mod tests {
             "color3": 1,
             "param": 0,
             "flip": false,
-        })).unwrap();
+        }))
+        .unwrap();
     }
 
     #[test]
@@ -79,7 +80,8 @@ mod tests {
             "color3": "#ffe56d",
             "param": -100,
             "flip": false,
-        })).unwrap();
+        }))
+        .unwrap();
     }
 
     #[test]

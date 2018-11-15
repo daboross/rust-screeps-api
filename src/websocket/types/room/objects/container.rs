@@ -277,10 +277,7 @@ mod test {
                 y: 22,
                 ref id,
                 ..
-            } if id == "58cc8143050a8f701678f22e" =>
-            {
-                ()
-            }
+            } if id == "58cc8143050a8f701678f22e" => (),
             other => panic!(
                 "expected pre-set StructureContainer to match, found {:#?}",
                 other

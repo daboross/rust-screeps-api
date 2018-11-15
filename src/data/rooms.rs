@@ -1,6 +1,6 @@
 //! Room result structures.
-use time;
 use error;
+use time;
 
 /// A room state, returned by room status.
 ///
@@ -113,8 +113,8 @@ pub struct HardSign {
 
 /// Serialization / deserialization of `time::Timespec`.
 pub mod timespec_seconds {
-    use time::Timespec;
     use serde::{Deserializer, Serializer};
+    use time::Timespec;
 
     /// Serializes a Timespec by just serializing the seconds as a number.
     pub fn serialize<S>(date: &Timespec, serializer: S) -> Result<S::Ok, S::Error>
@@ -129,8 +129,8 @@ pub mod timespec_seconds {
     where
         D: Deserializer<'de>,
     {
-        use std::fmt;
         use serde::de::{Error, Unexpected, Visitor};
+        use std::fmt;
 
         struct TimeVisitor;
 
@@ -175,8 +175,8 @@ pub mod timespec_seconds {
 
 /// Serialization / deserialization of `Option<time::Timespec>`.
 pub mod optional_timespec_seconds {
-    use time::Timespec;
     use serde::{Deserializer, Serializer};
+    use time::Timespec;
 
     /// Serializes an `Option<Timespec>` as the timespec's seconds as a number.
     ///
@@ -200,8 +200,8 @@ pub mod optional_timespec_seconds {
     where
         D: Deserializer<'de>,
     {
-        use std::fmt;
         use serde::de::{Error, Unexpected, Visitor};
+        use std::fmt;
 
         struct TimeVisitor;
 
@@ -259,8 +259,8 @@ pub mod optional_timespec_seconds {
 ///
 /// Useful for updating structs.
 pub mod double_optional_timespec_seconds {
-    use time::Timespec;
     use serde::{Deserializer, Serializer};
+    use time::Timespec;
 
     /// Serializes an `Option<Option<Timespec>>` as the timespec's seconds as a number.
     ///
@@ -284,8 +284,8 @@ pub mod double_optional_timespec_seconds {
     where
         D: Deserializer<'de>,
     {
-        use std::fmt;
         use serde::de::{Error, Unexpected, Visitor};
+        use std::fmt;
 
         struct TimeVisitor;
 
@@ -392,7 +392,8 @@ mod tests {
             time::Timespec::new(4, 0),
             Some(time::Timespec::new(3, 0)),
             Some(time::Timespec::new(2, 0)),
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(state, RoomState::Open);
     }
 
@@ -403,7 +404,8 @@ mod tests {
             time::Timespec::new(4, 0),
             Some(time::Timespec::new(10, 0)),
             None,
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(
             state,
             RoomState::Novice {
@@ -419,7 +421,8 @@ mod tests {
             time::Timespec::new(4, 0),
             Some(time::Timespec::new(10, 0)),
             Some(time::Timespec::new(2, 0)),
-        ).unwrap();
+        )
+        .unwrap();
         assert_eq!(
             state,
             RoomState::Novice {
@@ -435,7 +438,8 @@ mod tests {
             time::Timespec::new(10, 0),
             Some(time::Timespec::new(20, 0)),
             Some(time::Timespec::new(15, 0)),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(
             state,
@@ -453,7 +457,8 @@ mod tests {
             "text": "I have plans for this block",
             "datetime": 1484071532985i64,
             "user": "57c7df771d90a0c561977377"
-        })).unwrap();
+        }))
+        .unwrap();
     }
 
     #[test]
@@ -464,6 +469,7 @@ mod tests {
             "text": "A new Novice Area is being planned somewhere in this sector. \
                      Please make sure all important rooms are reserved.",
             "endDatetime": 1490978122587i64
-        })).unwrap();
+        }))
+        .unwrap();
     }
 }

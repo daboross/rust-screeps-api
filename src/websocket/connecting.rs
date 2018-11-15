@@ -1,8 +1,8 @@
 //! Websocket url utilities.
 use std::str;
 
-use url::Url;
 use rand::{self, Rng};
+use url::Url;
 
 mod error {
     use std::{error, fmt};
@@ -48,7 +48,9 @@ mod error {
     impl fmt::Display for Error {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match *self {
-                Error::Parse { ref err, ref url } => write!(f, "URL parse error: {} | url: {}", err, url),
+                Error::Parse { ref err, ref url } => {
+                    write!(f, "URL parse error: {} | url: {}", err, url)
+                }
                 Error::WrongScheme {
                     ref scheme,
                     ref url,
@@ -82,7 +84,8 @@ pub use self::error::Error as UrlError;
 
 /// Creates a new (random) websocket URL to connect to the official server.
 pub fn default_url() -> Url {
-    transform_url(::DEFAULT_OFFICIAL_API_URL).expect("expected known good default URL to parse successfully.")
+    transform_url(::DEFAULT_OFFICIAL_API_URL)
+        .expect("expected known good default URL to parse successfully.")
 }
 
 /// Method for finding a websocket URL given the screeps API URL.
@@ -134,7 +137,8 @@ pub fn transform_url<U: AsRef<str> + ?Sized>(url: &U) -> Result<Url, UrlError> {
         }
     }
 
-    let result = url.join(&GenServerAndSessionId.to_string())
+    let result = url
+        .join(&GenServerAndSessionId.to_string())
         .expect("expected generated string known to be correct to parse successfully");
 
     Ok(result)

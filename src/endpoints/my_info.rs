@@ -5,10 +5,10 @@ use std::marker::PhantomData;
 
 use time::Timespec;
 
-use EndpointResult;
 use data::{self, Badge};
 use data::{optional_timespec_seconds, timespec_seconds};
 use error::{ApiError, Result};
+use EndpointResult;
 
 /// User info raw result.
 #[derive(Deserialize, Clone, Debug)]
@@ -114,8 +114,8 @@ impl EndpointResult for MyInfo {
 #[cfg(test)]
 mod tests {
     use super::MyInfo;
-    use EndpointResult;
     use serde_json;
+    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

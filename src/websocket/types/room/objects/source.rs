@@ -29,8 +29,8 @@ with_base_fields_and_update_struct! {
 
 #[cfg(test)]
 mod test {
-    use serde_json;
     use serde::Deserialize;
+    use serde_json;
 
     use data::RoomName;
 
@@ -73,7 +73,8 @@ mod test {
             "x": 40,
             "y": 50,
             "energy": 0,
-        })).unwrap(),
+        }))
+            .unwrap(),
         );
 
         assert_eq!(
