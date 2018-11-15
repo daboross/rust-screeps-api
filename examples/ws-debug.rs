@@ -83,9 +83,6 @@ impl Config {
     fn new<'a>(
         args: &'a clap::ArgMatches,
     ) -> Result<Self, screeps_api::data::room_name::RoomNameParseError<'a>> {
-        #[allow(unused_imports)] // becomes unnecessary for rust 1.23+
-        use std::ascii::AsciiExt;
-
         Ok(Config {
             cpu: args.is_present("cpu"),
             messages: args.is_present("messages"),
