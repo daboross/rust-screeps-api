@@ -6,7 +6,7 @@ use {hyper, serde_ignored, serde_json};
 use futures::{Future, Poll, Stream};
 use url::Url;
 
-use {EndpointType, Error, Token, TokenStorage};
+use {EndpointType, Error};
 
 /// Struct mirroring `hyper`'s `FutureResponse`, but with parsing that happens after the request is finished.
 #[must_use = "futures do nothing unless polled"]
@@ -37,7 +37,6 @@ where
 /// The returned future will:
 ///
 /// - Wait for the hyper request to finish
-/// - Send any auth token found in headers back to token storage
 /// - Wait for hyper request body, collecting it into a single chunk
 /// - Parse JSON body as the given `EndpointType`, and return result/error.
 ///
@@ -45,56 +44,22 @@ where
 ///
 /// # Parameters
 ///
-/// - `token_storage`: token storage to store any tokens that were refreshed.
-/// - `used_token`: token that was used when sending this request, if any.
-///   if the server doesn't return a new token, and this is Some, the inner
-///   token will be returned to the token storage.
 /// - `url`: url that is being queried, used only for error and warning messages.
 /// - `response`: actual hyper response that we're interpreting
-pub fn interpret<T, R>(
-    token_storage: T,
-    used_token: Option<Token>,
-    url: Url,
-    response: hyper::client::FutureResponse,
-) -> FutureResponse<R>
+pub fn interpret<R>(url: Url, response: hyper::client::ResponseFuture) -> FutureResponse<R>
 where
-    T: TokenStorage,
     R: EndpointType,
 {
     FutureResponse(Box::new(
         response
             .then(move |result| match result {
-                Ok(v) => Ok((token_storage, used_token, url, v)),
+                Ok(v) => Ok((url, v)),
                 Err(e) => Err(Error::with_url(e, Some(url))),
-            })
-            .and_then(|(token_storage, used_token, url, mut response)| {
-                let token_to_return = {
-                    header! { (TokenHeader, "X-Token") => [String] }
-
-                    let new_token = response.headers_mut().remove::<TokenHeader>().map(|h| h.0);
-
-                    match new_token {
-                        Some(token) => {
-                            if token.is_empty() {
-                                Some(token)
-                            } else {
-                                used_token
-                            }
-                        }
-                        None => used_token,
-                    }
-                };
-
-                if let Some(token) = token_to_return {
-                    token_storage.return_token(token);
-                }
-
-                Ok((url, response))
             })
             .and_then(|(url, response)| {
                 let status = response.status();
 
-                response.body().concat2().then(move |result| match result {
+                response.into_body().concat2().then(move |result| match result {
                     Ok(v) => Ok((status, url, v)),
                     Err(e) => Err(Error::with_url(e, Some(url))),
                 })

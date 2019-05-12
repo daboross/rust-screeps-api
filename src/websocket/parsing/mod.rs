@@ -229,7 +229,7 @@ impl ScreepsMessage<'static> {
                 return {
                     if rest.starts_with(AUTH_OK) {
                         ScreepsMessage::AuthOk {
-                            new_token: rest[AUTH_OK.len()..].to_owned(),
+                            new_token: rest[AUTH_OK.len()..].to_owned().into(),
                         }
                     } else if rest == AUTH_FAILED {
                         ScreepsMessage::AuthFailed

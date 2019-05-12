@@ -1,7 +1,7 @@
 //! Websocket url utilities.
 use std::str;
 
-use rand::{self, Rng};
+use rand::{self, Rng, seq::SliceRandom};
 use url::Url;
 
 mod error {
@@ -129,7 +129,7 @@ pub fn transform_url<U: AsRef<str> + ?Sized>(url: &U) -> Result<Url, UrlError> {
             write!(f, "../socket/{:04}/", rng.gen_range(0, 1000))?;
 
             for _ in 0..8 {
-                write!(f, "{}", *rng.choose(VALID_CHARS).unwrap() as char)?;
+                write!(f, "{}", *VALID_CHARS.choose(&mut rng).unwrap() as char)?;
             }
             write!(f, "/websocket")?;
 

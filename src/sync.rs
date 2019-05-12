@@ -2,7 +2,7 @@
 
 extern crate hyper_tls;
 extern crate native_tls;
-extern crate tokio_core;
+extern crate tokio;
 
 use std::borrow::Cow;
 use std::io;
@@ -15,13 +15,15 @@ use hyper::client::HttpConnector;
 
 use error::Error;
 
-use {Api, RcTokenStorage, TokenStorage, DEFAULT_OFFICIAL_API_URL};
+use {Api, DEFAULT_OFFICIAL_API_URL};
 
 use {
     FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType, MapStats, MyInfo,
     RecentPvp, RecentPvpDetails, RegistrationDetails, RegistrationSuccess, RoomOverview,
     RoomStatus, RoomTerrain, ShardInfo, WorldStartRoom,
 };
+
+type TokioRuntime = self::tokio::runtime::current_thread::Runtime;
 
 mod error {
     use super::native_tls;
@@ -33,7 +35,7 @@ mod error {
     /// [`SyncApi`]: struct.SyncApi.html
     #[derive(Debug)]
     pub enum SyncError {
-        /// The tokio core failed to start.
+        /// The tokio runtime failed to start.
         Io(io::Error),
         /// The URL failed to parse.
         Url(url::ParseError),
@@ -94,27 +96,20 @@ pub use self::error::SyncError;
 #[derive(Copy, Clone, Debug, Default)]
 pub struct UseHttpsConnector;
 
-/// Represents the configuration which will create an non-Send token storage.
-#[derive(Copy, Clone, Debug, Default)]
-pub struct UseRcTokens;
-
 /// API structure mirroring [`Api`], but providing utilities for synchronous connection.
 ///
-/// This structure owns both the hyper client and the tokio core. If this is not wanted, please
+/// This structure owns both the hyper client and the tokio runtime. If this is not wanted, please
 /// use [`Api`] instead.
 ///
 /// [`Api`]: ../struct.Api.html
 #[derive(Debug)]
-pub struct SyncApi<
-    C: hyper::client::Connect = HttpsConnector<HttpConnector>,
-    T: TokenStorage = RcTokenStorage,
-> {
-    core: tokio_core::reactor::Core,
-    client: Api<C, Client<C>, T>,
+pub struct SyncApi<C: hyper::client::connect::Connect = HttpsConnector<HttpConnector>> {
+    runtime: TokioRuntime,
+    client: Api<C, Client<C>>,
 }
 
-impl SyncApi<HttpsConnector<HttpConnector>, RcTokenStorage> {
-    /// Opinionated method to construct a SyncApi with non-Send token storage, with HTTPS support and
+impl SyncApi<HttpsConnector<HttpConnector>> {
+    /// Opinionated method to construct a SyncApi with HTTPS support and
     /// connecting to the default server.
     ///
     /// Since this connects to the official server, it won't be useful without HTTPS support.
@@ -124,12 +119,12 @@ impl SyncApi<HttpsConnector<HttpConnector>, RcTokenStorage> {
     ///
     /// [`Config`]: struct.Config.html
     pub fn new() -> Result<Self, SyncError> {
-        Ok(Config::<UseHttpsConnector, UseRcTokens>::new()?.build()?)
+        Ok(Config::<UseHttpsConnector>::new()?.build()?)
     }
 }
 
-impl<C: hyper::client::Connect, T: TokenStorage> Deref for SyncApi<C, T> {
-    type Target = Api<C, Client<C>, T>;
+impl<C: hyper::client::connect::Connect> Deref for SyncApi<C> {
+    type Target = Api<C, Client<C>>;
 
     fn deref(&self) -> &Self::Target {
         &self.client
@@ -137,22 +132,19 @@ impl<C: hyper::client::Connect, T: TokenStorage> Deref for SyncApi<C, T> {
 }
 
 /// Configuration for construction a `SyncApi`.
-pub struct Config<'a, C = UseHttpsConnector, T = UseRcTokens> {
-    core: tokio_core::reactor::Core,
-    hyper: hyper::client::Config<C, hyper::Body>,
-    tokens: T,
+pub struct Config<'a, C = UseHttpsConnector> {
+    runtime: TokioRuntime,
+    connector: C,
     url: &'a str,
 }
 
-impl Config<'static, UseHttpsConnector, UseRcTokens> {
+impl Config<'static, UseHttpsConnector> {
     /// Creates an initial config which will use an HTTPS connector and non-Send tokens.
     pub fn new() -> io::Result<Self> {
-        let core = tokio_core::reactor::Core::new()?;
-        let hyper = hyper::Client::configure().connector(UseHttpsConnector);
+        let runtime = TokioRuntime::new()?;
         let config = Config {
-            core: core,
-            hyper: hyper,
-            tokens: UseRcTokens,
+            runtime,
+            connector: UseHttpsConnector,
             url: DEFAULT_OFFICIAL_API_URL,
         };
 
@@ -160,121 +152,55 @@ impl Config<'static, UseHttpsConnector, UseRcTokens> {
     }
 }
 
-impl<'a, C, T> Config<'a, C, T> {
+impl<'a, C> Config<'a, C> {
     /// Sets the Hyper connector to connect to to the given connector.
-    pub fn connector<F, CC>(self, connector: F) -> Config<'a, CC, T>
-    where
-        F: FnOnce(&tokio_core::reactor::Handle) -> CC,
-    {
-        let handle = self.core.handle();
+    pub fn connector<CC>(self, connector: CC) -> Config<'a, CC> {
         Config {
-            core: self.core,
-            hyper: self.hyper.connector(connector(&handle)),
-            tokens: self.tokens,
+            runtime: self.runtime,
+            connector,
             url: self.url,
         }
-    }
-
-    /// Sets the Hyper connector to connect to to the given connector.
-    pub fn try_connector<F, E, CC>(self, connector: F) -> Result<Config<'a, CC, T>, E>
-    where
-        F: FnOnce(&tokio_core::reactor::Handle) -> Result<CC, E>,
-    {
-        let handle = self.core.handle();
-        Ok(Config {
-            core: self.core,
-            hyper: self.hyper.connector(connector(&handle)?),
-            tokens: self.tokens,
-            url: self.url,
-        })
     }
 
     /// Sets the url to connect to to the given url.
-    pub fn url(self, url: &AsRef<str>) -> Config<C, T> {
+    pub fn url(self, url: &AsRef<str>) -> Config<C> {
         Config {
-            core: self.core,
-            hyper: self.hyper,
-            tokens: self.tokens,
+            runtime: self.runtime,
+            connector: self.connector,
             url: url.as_ref(),
         }
     }
-
-    /// Sets the token storage for the config to the given token storage.
-    pub fn tokens<TT>(self, tokens: TT) -> Config<'a, C, TT> {
-        Config {
-            core: self.core,
-            hyper: self.hyper,
-            url: self.url,
-            tokens: tokens,
-        }
-    }
 }
 
-impl<'a, T: TokenStorage> Config<'a, UseHttpsConnector, T> {
+impl<'a> Config<'a, UseHttpsConnector> {
     /// Builds the config into a SyncApi.
-    pub fn build(self) -> Result<SyncApi<HttpsConnector<HttpConnector>, T>, SyncError> {
-        self.try_connector(|handle| HttpsConnector::new(4, handle))?
+    pub fn build(self) -> Result<SyncApi<HttpsConnector<HttpConnector>>, SyncError> {
+        self.connector(HttpsConnector::new(4)?)
             .build()
             .map_err(Into::into)
     }
 }
 
-impl<'a, C: hyper::client::Connect> Config<'a, C, UseRcTokens> {
+impl<'a, C: hyper::client::connect::Connect + 'static> Config<'a, C> {
     /// Builds the config into a SyncApi.
-    pub fn build(self) -> Result<SyncApi<C, RcTokenStorage>, SyncError> {
-        self.tokens(RcTokenStorage::default()).build()
-    }
-}
-
-impl<'a> Config<'a, UseHttpsConnector, UseRcTokens> {
-    /// Builds the config into a SyncApi.
-    pub fn build(
-        self,
-    ) -> Result<SyncApi<HttpsConnector<HttpConnector>, RcTokenStorage>, SyncError> {
-        self.try_connector(|handle| HttpsConnector::new(4, handle))?
-            .tokens(RcTokenStorage::default())
-            .build()
-            .map_err(Into::into)
-    }
-}
-
-impl<'a, C: hyper::client::Connect, T: TokenStorage> Config<'a, C, T> {
-    /// Builds the config into a SyncApi.
-    pub fn build(self) -> Result<SyncApi<C, T>, SyncError> {
+    pub fn build(self) -> Result<SyncApi<C>, SyncError> {
         let Config {
-            core,
-            hyper,
-            tokens,
+            runtime,
             url,
+            connector,
         } = self;
-        let handle = core.handle();
-        let hyper = hyper.build(&handle);
+        let hyper = Client::builder().build(connector);
 
         let api = SyncApi {
-            core: core,
-            client: Api::with_url_and_tokens(hyper, url, tokens)?,
+            runtime,
+            client: Api::new(hyper).with_url(url)?,
         };
 
         Ok(api)
     }
 }
 
-impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
-    /// Logs in with the given username and password and gets an authentication token as the result.
-    ///
-    /// The authentication token will then be stored in this client.
-    pub fn login<'b, U, V>(&mut self, username: U, password: V) -> Result<(), Error>
-    where
-        U: Into<Cow<'b, str>>,
-        V: Into<Cow<'b, str>>,
-    {
-        let result = self.core.run(self.client.login(username, password))?;
-
-        result.return_to(&self.client.tokens);
-
-        Ok(())
-    }
-
+impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
     /// Registers a new account with the given username, password and optional email and returns a
     /// result. Successful results contain no information other than that of success.
     ///
@@ -283,21 +209,21 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     ///
     /// [screepsmod-auth]: https://github.com/ScreepsMods/screepsmod-auth
     pub fn register(&mut self, details: RegistrationDetails) -> Result<RegistrationSuccess, Error> {
-        self.core.run(self.client.register(details))
+        self.runtime.block_on(self.client.register(details))
     }
 
     /// Gets user information on the user currently logged in, including username and user id.
     ///
     /// See [`Api::my_info`](../struct.Api.html#method.my_info) for more information.
     pub fn my_info(&mut self) -> Result<MyInfo, Error> {
-        self.core.run(self.client.my_info()?)
+        self.runtime.block_on(self.client.my_info()?)
     }
 
     /// Gets the world shard and room name the server thinks the client should start with viewing.
     ///
     /// See [`Api::world_start_room`](../struct.Api.html#method.world_start_room) for more information.
     pub fn world_start_room(&mut self) -> Result<WorldStartRoom, Error> {
-        self.core.run(self.client.world_start_room()?)
+        self.runtime.block_on(self.client.world_start_room()?)
     }
 
     /// Gets the room name the server thinks the client should start with viewing for a particular shard.
@@ -307,7 +233,7 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     where
         U: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client.shard_start_room(shard)?)
+        self.runtime.block_on(self.client.shard_start_room(shard)?)
     }
 
     /// Get information on a number of rooms.
@@ -318,7 +244,7 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
         U: AsRef<str>,
         &'a V: IntoIterator<Item = U>,
     {
-        self.core.run(self.client.map_stats(shard, rooms)?)
+        self.runtime.block_on(self.client.map_stats(shard, rooms)?)
     }
 
     /// Gets the overview of a room, returning totals for usually 3 intervals, 8, 180 and 1440, representing
@@ -335,7 +261,7 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
     {
-        self.core.run(
+        self.runtime.block_on(
             self.client
                 .room_overview(shard, room_name, request_interval)?,
         )
@@ -353,7 +279,8 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client.room_terrain(shard, room_name))
+        self.runtime
+            .block_on(self.client.room_terrain(shard, room_name))
     }
 
     /// Gets a list of shards available on this server. Errors with a `404` error when connected to a
@@ -361,7 +288,7 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     ///
     /// See [`Api::shard_list`](../struct.Api.html#method.shard_list) for more information.
     pub fn shard_list(&mut self) -> Result<Vec<ShardInfo>, Error> {
-        self.core.run(self.client.shard_list())
+        self.runtime.block_on(self.client.shard_list())
     }
 
     /// Gets the "status" of a room: if it is open, if it is in a novice area, if it exists.
@@ -371,21 +298,22 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     where
         U: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client.room_status(room_name)?)
+        self.runtime.block_on(self.client.room_status(room_name)?)
     }
 
     /// Experimental endpoint to get all rooms in which PvP has recently occurred.
     ///
     /// See [`Api::recent_pvp`](../struct.Api.html#method.recent_pvp) for more information.
     pub fn recent_pvp(&mut self, details: RecentPvpDetails) -> Result<RecentPvp, Error> {
-        self.core.run(self.client.recent_pvp(details))
+        self.runtime.block_on(self.client.recent_pvp(details))
     }
 
     /// Gets a list of all past leaderboard seasons, with end dates, display names, and season ids for each season.
     ///
     /// See [`Api::leaderboard_season_list`](../struct.Api.html#method.leaderboard_season_list) for more information.
     pub fn leaderboard_season_list(&mut self) -> Result<Vec<LeaderboardSeason>, Error> {
-        self.core.run(self.client.leaderboard_season_list()?)
+        self.runtime
+            .block_on(self.client.leaderboard_season_list()?)
     }
 
     /// Finds the rank of a user in a specific season for a specific leaderboard type.
@@ -403,11 +331,12 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
     {
-        self.core.run(self.client.find_season_leaderboard_rank(
-            leaderboard_type,
-            username,
-            season,
-        )?)
+        self.runtime
+            .block_on(self.client.find_season_leaderboard_rank(
+                leaderboard_type,
+                username,
+                season,
+            )?)
     }
 
     /// Finds the rank of a user for all seasons for a specific leaderboard type.
@@ -421,7 +350,7 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     where
         U: Into<Cow<'b, str>>,
     {
-        self.core.run(
+        self.runtime.block_on(
             self.client
                 .find_leaderboard_ranks(leaderboard_type, username)?,
         )
@@ -440,9 +369,11 @@ impl<C: hyper::client::Connect, T: TokenStorage> SyncApi<C, T> {
     where
         U: Into<Cow<'b, str>>,
     {
-        self.core.run(
-            self.client
-                .leaderboard_page(leaderboard_type, season, limit, offset)?,
-        )
+        self.runtime.block_on(self.client.leaderboard_page(
+            leaderboard_type,
+            season,
+            limit,
+            offset,
+        )?)
     }
 }

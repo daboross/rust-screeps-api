@@ -187,7 +187,7 @@ impl From<io::Error> for Error {
 
 impl From<hyper::StatusCode> for Error {
     fn from(code: hyper::StatusCode) -> Error {
-        if code == hyper::StatusCode::Unauthorized {
+        if code == hyper::StatusCode::UNAUTHORIZED {
             ErrorKind::Unauthorized.into()
         } else {
             ErrorKind::StatusCode(code).into()
@@ -250,37 +250,6 @@ impl fmt::Display for Error {
 }
 
 impl StdError for Error {
-    fn description(&self) -> &str {
-        match self.err {
-            SerdeJson(ref err) => err.description(),
-            Hyper(ref err) => err.description(),
-            Url(ref err) => err.description(),
-            Io(ref err) => err.description(),
-            StatusCode(ref status) => match status.canonical_reason() {
-                Some(reason) => reason,
-                None => if status.is_informational() {
-                    "status code error: informational"
-                } else if status.is_success() {
-                    "status code error: success"
-                } else if status.is_redirection() {
-                    "status code error: redirection"
-                } else if status.is_client_error() {
-                    "status code error: client error"
-                } else if status.is_server_error() {
-                    "status code error: server error"
-                } else if status.is_strange_status() {
-                    "status code error: strange status"
-                } else {
-                    "status code error: wrong status"
-                },
-            },
-            Api(ref err) => err.description(),
-            RoomNameParse(ref err) => err.description(),
-            Unauthorized => "access not authorized: token expired, username/password incorrect or no login provided",
-            __Nonexhaustive => unreachable!(),
-        }
-    }
-
     fn cause(&self) -> Option<&StdError> {
         match self.err {
             SerdeJson(ref err) => Some(err),

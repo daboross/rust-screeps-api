@@ -37,23 +37,25 @@ time = "0.1"
 # HTTP
 futures = "0.1"
 url = "1.0"
-hyper = "0.11"
+hyper = "0.12"
+bytes = "0.4"
 # Sync HTTP wrapper
+tokio = { version = "0.1", optional = true }
 tokio-core = { version = "0.1", optional = true }
-hyper-tls = { version = "0.1", optional = true }
-native-tls = { version = "0.1", optional = true }
+hyper-tls = { version = "0.3", optional = true }
+native-tls = { version = "0.2", optional = true }
 # Websockets
-rand = "0.4"
-num = { version = "0.1", default-features = false }
+rand = "0.6"
+num = { version = "0.2", default-features = false }
 
 [features]
-sync = ["tokio-core", "hyper-tls", "native-tls"]
+sync = ["tokio", "hyper-tls", "native-tls"]
 protocol-docs = []
 default = ["sync"]
 
 [dev-dependencies]
 # .env parsing
-dotenv = "0.10"
+dotenv = "0.13"
 # logging in examples
 fern = "0.5"
 chrono = "0.4"
@@ -62,7 +64,7 @@ clap = "2.22"
 # socket connections in ws-debug example
 tokio-core = "0.1"
 futures = "0.1"
-websocket = "0.20.1"
+websocket = "0.21"
 # pretty printing in ws-debug.
 serde_json = "1.0"
 
