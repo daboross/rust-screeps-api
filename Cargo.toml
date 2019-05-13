@@ -3,18 +3,16 @@ name = "screeps-api"
 # Ensure html_root_url in src/lib.rs is updated for each version.
 version = "0.4.1"
 authors = ["David Ross <daboross@daboross.net>"]
-description = "Fully typed and tested wrapper over the Screeps Game's HTTP API"
 
+categories = ["api-bindings"]
 documentation = "https://docs.rs/screeps-api/"
+include = ["Cargo.toml", "src/**/*", "tests/**/*", "examples/**/*", "LICENSE", "README.md"]
+keywords = ["screeps"]
+license = "MIT"
+readme = "README.md"
 repository = "https://github.com/daboross/rust-screeps-api"
 
-readme = "README.md"
-
-license = "MIT"
-keywords = ["screeps"]
-categories = ["api-bindings"]
-
-include = ["Cargo.toml", "src/**/*", "tests/**/*", "examples/**/*", "LICENSE", "README.md"]
+description = "Fully typed and tested wrapper over the Screeps Game's HTTP API"
 
 [package.metadata.docs.rs]
 all-features = true
@@ -41,15 +39,13 @@ hyper = "0.12"
 bytes = "0.4"
 # Sync HTTP wrapper
 tokio = { version = "0.1", optional = true }
-tokio-core = { version = "0.1", optional = true }
 hyper-tls = { version = "0.3", optional = true }
-native-tls = { version = "0.2", optional = true }
 # Websockets
 rand = "0.6"
 num = { version = "0.2", default-features = false }
 
 [features]
-sync = ["tokio", "hyper-tls", "native-tls"]
+sync = ["tokio", "hyper-tls"]
 protocol-docs = []
 default = ["sync"]
 
@@ -60,13 +56,12 @@ dotenv = "0.14"
 fern = "0.5"
 chrono = "0.4"
 # cli options in examples
-clap = "2.22"
+clap = "2"
 # socket connections in ws-debug example
-tokio-core = "0.1"
 futures = "0.1"
 websocket = "0.22"
 # pretty printing in ws-debug.
-serde_json = "1.0"
+serde_json = "1"
 
 [[example]]
 name = "ws-debug"

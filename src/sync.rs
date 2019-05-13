@@ -1,7 +1,5 @@
 //! Small wrapper around the asynchronous Api struct providing synchronous access methods.
-
 extern crate hyper_tls;
-extern crate native_tls;
 extern crate tokio;
 
 use std::borrow::Cow;
@@ -26,7 +24,7 @@ use {
 type TokioRuntime = self::tokio::runtime::current_thread::Runtime;
 
 mod error {
-    use super::native_tls;
+    use super::hyper_tls;
     use std::{fmt, io};
     use url;
 
@@ -40,7 +38,7 @@ mod error {
         /// The URL failed to parse.
         Url(url::ParseError),
         /// The TLS connector failed.
-        Tls(native_tls::Error),
+        Tls(hyper_tls::Error),
     }
 
     impl From<io::Error> for SyncError {
@@ -55,8 +53,8 @@ mod error {
         }
     }
 
-    impl From<native_tls::Error> for SyncError {
-        fn from(e: native_tls::Error) -> Self {
+    impl From<hyper_tls::Error> for SyncError {
+        fn from(e: hyper_tls::Error) -> Self {
             SyncError::Tls(e)
         }
     }
