@@ -310,7 +310,7 @@ macro_rules! with_resource_fields_and_update_struct {
                 $(
                     /// The current amount of this resource held in this structure.
                     #[serde(default, rename = $serde_ident,
-                        with = "::websocket::types::room::resources::null_is_default")]
+                        with = "crate::websocket::types::room::resources::null_is_default")]
                     pub $field_ident: i32,
                 )*
                 $( $struct_field )*
@@ -323,8 +323,12 @@ macro_rules! with_resource_fields_and_update_struct {
                 #[serde(rename = "hitsMax")]
                 - hits_max: i32,
                 $(
-                    #[serde(default, rename = $serde_ident,
-                        with = "::websocket::types::room::resources::null_is_default_and_always_some")]
+                    #[serde(
+                        default,
+                        rename = $serde_ident,
+                        with = "crate::websocket::types::room::resources\
+                                ::null_is_default_and_always_some"
+                    )]
                     (no_extra_meta)
                     - $field_ident: i32,
                 )*
