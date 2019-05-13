@@ -46,7 +46,7 @@ impl<'a> Details<'a> {
 }
 
 /// Raw registration response.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,

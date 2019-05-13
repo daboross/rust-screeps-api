@@ -2,7 +2,7 @@
 use std::borrow::Cow;
 use std::fmt;
 
-use RoomName;
+use crate::RoomName;
 
 /// Different channels one can subscribe to.
 pub enum Channel<'a> {

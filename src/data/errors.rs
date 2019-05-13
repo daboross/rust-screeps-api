@@ -2,7 +2,7 @@
 use error;
 
 /// JSON API error result from the server.
-#[derive(Deserialize, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct ApiError {
     /// The error string.
     pub error: String,

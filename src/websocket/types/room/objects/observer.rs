@@ -1,5 +1,5 @@
 //! `StructureObserver` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// An observer structure - a structure that give each player room information on one other room

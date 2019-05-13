@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use EndpointResult;
 
 /// Room overview raw result.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
 #[doc(hidden)]
 pub struct Response {
@@ -16,13 +16,13 @@ pub struct Response {
     stats_max: Option<RoomTotalStatsResponse>,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 struct OwnerResponse {
     username: String,
     badge: Badge,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
 struct RoomStatsResponse {
     energy_harvested: Vec<StatPointResponse>,
@@ -33,14 +33,14 @@ struct RoomStatsResponse {
     creeps_lost: Vec<StatPointResponse>,
 }
 
-#[derive(Deserialize, Copy, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Copy, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
 struct StatPointResponse {
     value: u32,
     end_time: u32,
 }
 
-#[derive(Deserialize, Copy, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Copy, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
 struct RoomTotalStatsResponse {
     energy_8: u32,

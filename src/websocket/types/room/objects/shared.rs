@@ -2,7 +2,7 @@
 
 with_update_struct! {
     /// A struct describing the destination of various actions within action logs.
-    #[derive(Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
     pub struct ActionLogTarget {
         /// The in-room x position of this target.
         pub x: u16,
@@ -11,6 +11,6 @@ with_update_struct! {
     }
 
     /// The update structure for an `ActionLogTarget`.
-    #[derive(Deserialize, Clone, Debug)]
+    #[derive(serde_derive::Deserialize, Clone, Debug)]
     pub struct ActionLogTargetUpdate { ... }
 }

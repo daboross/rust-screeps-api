@@ -7,7 +7,7 @@ implement_update_for! {
     RoomSign;
 
     /// Update for room signs
-    #[derive(Deserialize, Clone, Debug)]
+    #[derive(serde_derive::Deserialize, Clone, Debug)]
     (no_extra_meta)
     pub struct RoomSignUpdate {
         /// The game time when the sign was set.
@@ -26,7 +26,7 @@ implement_update_for! {
 
 with_update_struct! {
     /// A struct describing a room's reservation.
-    #[derive(Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct ControllerReservation {
         /// The user ID of the user reserving this controller.
@@ -36,7 +36,7 @@ with_update_struct! {
     }
 
     /// The update structure for a controller reservation.
-    #[derive(Deserialize, Clone, Debug)]
+    #[derive(serde_derive::Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct ControllerReservationUpdate { ... }
 }

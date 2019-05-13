@@ -90,7 +90,7 @@ where
 }
 
 /// Map stats raw result.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
@@ -100,7 +100,7 @@ pub struct Response {
     users: Vec<(String, UserResponse)>,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
 struct RoomResponse {
     status: String,
@@ -117,7 +117,7 @@ struct RoomResponse {
     hard_sign: Option<data::HardSign>,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 struct UserResponse {
     badge: data::Badge,
     _id: String,

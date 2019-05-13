@@ -3,7 +3,7 @@ use data::RoomName;
 
 with_update_struct! {
     /// A struct describing a creep currently spawning (used as part of the update for a StructureSpawn).
-    #[derive(Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct SpawningCreep {
         /// The name of this creep, unique per player.
@@ -16,7 +16,7 @@ with_update_struct! {
     }
 
     /// The update structure for a spawning creep.
-    #[derive(Deserialize, Clone, Debug)]
+    #[derive(serde_derive::Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct SpawningCreepUpdate { ... }
 }

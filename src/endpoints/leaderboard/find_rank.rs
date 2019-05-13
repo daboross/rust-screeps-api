@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 use EndpointResult;
 
 /// Raw result for when the API endpoint is called with a specific season id.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct SingleResponse {
     // I have no idea what this is for, so not including in the documented and expected response.
@@ -19,14 +19,14 @@ pub struct SingleResponse {
 }
 
 /// Raw result for when the API endpoint is called without a specific season id.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct AllSeasonRanksResponse {
     ok: i32,
     list: Vec<InnerAllSeasonsResponse>,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 struct InnerAllSeasonsResponse {
     // Again, no idea what this is for, so I'm not including it in the documented response.
     // _id: String,

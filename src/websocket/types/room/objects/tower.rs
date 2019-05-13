@@ -39,7 +39,7 @@ with_structure_fields_and_update_struct! {
 
 with_update_struct! {
     /// A struct describing a tower's actions.
-    #[derive(Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureTowerActions {
         /// Where this tower attacked last tick.
@@ -51,7 +51,7 @@ with_update_struct! {
     }
 
     /// The update structure for a `StructureTowerActions`.
-    #[derive(Deserialize, Clone, Debug)]
+    #[derive(serde_derive::Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureTowerActionsUpdate { ... }
 }

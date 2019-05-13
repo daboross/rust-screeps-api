@@ -7,7 +7,7 @@ use serde::de::{
 };
 
 use super::super::resources::ResourceType;
-use data::RoomName;
+use crate::data::RoomName;
 
 with_update_struct! {
     /// A resource, a bit of some resource which has dropped on the ground, and is decaying each tick.

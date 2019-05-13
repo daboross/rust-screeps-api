@@ -55,7 +55,7 @@ impl<'de> DeserializeSeed<'de> for StrOrU32Seed {
     where
         D: Deserializer<'de>,
     {
-        ::decoders::u32_or_str_containing::deserialize(deserializer)
+        crate::decoders::u32_or_str_containing::deserialize(deserializer)
     }
 }
 

@@ -9,14 +9,14 @@ use error::{ApiError, Result};
 use EndpointResult;
 
 /// Room overview raw result.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
     terrain: Option<Vec<InnerResponse>>,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 struct InnerResponse {
     // this is returned as part of the data, but what the heck is it even for?
     /// A cache key maybe?

@@ -1,5 +1,5 @@
 //! Room result structures.
-use error;
+use crate::error;
 use time;
 
 /// A room state, returned by room status.

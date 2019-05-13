@@ -1,5 +1,5 @@
 //! `StructureKeeperLair` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 with_base_fields_and_update_struct! {
     /// A keeper lair - a structure which spawns npc hostiles to protect minerals and resources nearby.

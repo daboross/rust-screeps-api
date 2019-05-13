@@ -1,5 +1,5 @@
 //! `StructureWall` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// A wall structure - a structure that has a large amount of possible hit points.

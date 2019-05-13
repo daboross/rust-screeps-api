@@ -20,7 +20,7 @@ pub mod objects;
 use self::flags::{deserialize_flags, Flag};
 
 /// Update for detailed room information.
-#[derive(Deserialize, Clone, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct RoomUpdate {
     /// The game time when this update was created.
@@ -59,7 +59,7 @@ pub struct RoomUpdate {
 /// "info" struct to go with room update.
 ///
 /// TODO: find all variants and parse into enum.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 pub struct RoomUpdateInfo {
     /// Usually "world" for regular rooms.
     pub mode: Option<String>,
@@ -69,7 +69,7 @@ pub struct RoomUpdateInfo {
 }
 
 /// Information on a user which is packaged with a room update.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 pub struct RoomUpdateUserInfo {
     /// User ID
     #[serde(rename = "_id")]

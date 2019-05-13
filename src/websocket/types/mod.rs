@@ -7,9 +7,9 @@ use serde::de::{self, SeqAccess, Unexpected, Visitor};
 use serde::{Deserialize, Deserializer};
 
 use serde_json;
-use websocket::Channel;
+use crate::websocket::Channel;
 
-use RoomName;
+use crate::RoomName;
 
 use self::messages::{ConversationUpdate, MessageUpdate};
 use self::room::RoomUpdate;

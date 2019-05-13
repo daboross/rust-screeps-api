@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 use EndpointResult;
 
 /// Raw list results.
-#[derive(Deserialize, Clone, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
@@ -17,7 +17,7 @@ pub struct Response {
     users: HashMap<String, ExtendedUserInfo>,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 struct ResponseRankedUser {
     //_id: String, // exists, but I don't know what it's for.
     rank: u32,
@@ -26,7 +26,7 @@ struct ResponseRankedUser {
     user: String,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 struct ExtendedUserInfo {
     _id: String,
     username: String,

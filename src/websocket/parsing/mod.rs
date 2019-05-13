@@ -9,9 +9,9 @@ use serde::{Deserialize, Deserializer};
 
 use {serde_ignored, serde_json};
 
-use Token;
+use crate::Token;
 
-use websocket::types::ChannelUpdate;
+use crate::websocket::types::ChannelUpdate;
 
 mod error;
 

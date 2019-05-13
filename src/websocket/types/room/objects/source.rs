@@ -1,5 +1,5 @@
 //! `Source` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 with_base_fields_and_update_struct! {
     /// A source object, which creeps can gain energy by mining from.

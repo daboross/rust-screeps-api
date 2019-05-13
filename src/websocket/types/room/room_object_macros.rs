@@ -1,5 +1,5 @@
 //! Module containing macros which simplify making "updateable" structures.
-use data::RoomName;
+use crate::data::RoomName;
 
 use time::Timespec;
 
@@ -22,7 +22,7 @@ pub(super) trait Updatable: Sized {
 
 macro_rules! basic_updatable {
     ($name: ident) => (
-        impl ::websocket::types::room::room_object_macros::Updatable for $name {
+        impl crate::websocket::types::room::room_object_macros::Updatable for $name {
             type Update = $name;
 
             fn apply_update(&mut self, update: Self::Update) {
@@ -305,7 +305,7 @@ macro_rules! implement_update_for {
             }
         }
 
-        impl ::websocket::types::room::room_object_macros::Updatable for $name {
+        impl crate::websocket::types::room::room_object_macros::Updatable for $name {
             type Update = $update_name;
 
             fn apply_update(&mut self, update: Self::Update) {
@@ -320,7 +320,7 @@ macro_rules! implement_update_for {
                 let finished = $name {
                     $(
                         $field: match update.$field.and_then(
-                                ::websocket::types::room::room_object_macros::Updatable::create_from_update) {
+                                crate::websocket::types::room::room_object_macros::Updatable::create_from_update) {
                             Some(v) => v,
                             None => return None
                         },
@@ -525,7 +525,7 @@ macro_rules! with_update_struct {
                     $( #[$update_field_attr] )*
                     $( ($update_field_extra) )*
                     priv $update_field:
-                        Option<<$update_type as ::websocket::types::room::room_object_macros::Updatable>::Update>,
+                        Option<<$update_type as crate::websocket::types::room::room_object_macros::Updatable>::Update>,
                 )*
             }
         }
@@ -533,14 +533,14 @@ macro_rules! with_update_struct {
         impl $name {
             /// Updates this structure with all values present in the given update.
             pub fn update(&mut self, update: $update_name) {
-                <Self as ::websocket::types::room::room_object_macros::Updatable>::apply_update(self, update);
+                <Self as crate::websocket::types::room::room_object_macros::Updatable>::apply_update(self, update);
             }
         }
     )
 }
 
 /// This macro creates the struct described within the invocation, but with an additional 4 fields common to all
-/// room objects, and with `#[derive(Deserialize)]`. The structure definition is then passed on to `with_update_struct`.
+/// room objects, and with `#[derive(serde_derive::Deserialize)]`. The structure definition is then passed on to `with_update_struct`.
 macro_rules! with_base_fields_and_update_struct {
     (
         $( #[$struct_attr:meta] )*
@@ -590,7 +590,7 @@ macro_rules! with_base_fields_and_update_struct {
     ) => (
         with_update_struct! {
             $( #[$struct_attr] )*
-            #[derive(Deserialize)]
+            #[derive(serde_derive::Deserialize)]
             pub struct $name {
                 /// Unique 'id' identifier for all game objects on a server.
                 #[serde(rename = "_id")]
@@ -607,7 +607,7 @@ macro_rules! with_base_fields_and_update_struct {
             }
 
             $( #[$update_struct_attr] )*
-            #[derive(Deserialize)]
+            #[derive(serde_derive::Deserialize)]
             $( ($update_extra) )*
             pub struct $update_name {
                 #[serde(rename = "_id")]

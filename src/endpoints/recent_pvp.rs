@@ -32,7 +32,7 @@ impl PvpArgs {
 }
 
 /// Recent PvP raw result.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
@@ -40,13 +40,13 @@ pub struct Response {
     pvp: Vec<(String, InnerShard)>,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 struct InnerShard {
     rooms: Vec<InnerRoom>,
     time: u32,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 struct InnerRoom {
     _id: String,
     #[serde(rename = "lastPvpTime")]

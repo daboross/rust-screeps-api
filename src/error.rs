@@ -4,7 +4,7 @@ use std::{fmt, io, str};
 
 use {hyper, serde_json, url};
 
-use data::room_name::RoomNameParseError;
+use crate::data::room_name::RoomNameParseError;
 
 use self::ErrorKind::*;
 

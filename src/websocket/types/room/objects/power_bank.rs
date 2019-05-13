@@ -1,5 +1,5 @@
 //! `StructurePowerBank` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// A power bank object, which can be attacked by creeps, and when killed will yield a harvest of power.

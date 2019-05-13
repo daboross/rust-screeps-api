@@ -96,21 +96,21 @@ pub mod error;
 pub mod sync;
 pub mod websocket;
 
-pub use data::RoomName;
-pub use endpoints::leaderboard::find_rank::FoundUserRank;
-pub use endpoints::leaderboard::page::LeaderboardPage;
-pub use endpoints::leaderboard::season_list::LeaderboardSeason;
-pub use endpoints::leaderboard::LeaderboardType;
-pub use endpoints::login::LoggedIn;
-pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
-pub use endpoints::register::{Details as RegistrationDetails, RegistrationSuccess};
-pub use endpoints::room_terrain::TerrainGrid;
-pub use endpoints::{
+pub use crate::data::RoomName;
+pub use crate::endpoints::leaderboard::find_rank::FoundUserRank;
+pub use crate::endpoints::leaderboard::page::LeaderboardPage;
+pub use crate::endpoints::leaderboard::season_list::LeaderboardSeason;
+pub use crate::endpoints::leaderboard::LeaderboardType;
+pub use crate::endpoints::login::LoggedIn;
+pub use crate::endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
+pub use crate::endpoints::register::{Details as RegistrationDetails, RegistrationSuccess};
+pub use crate::endpoints::room_terrain::TerrainGrid;
+pub use crate::endpoints::{
     MapStats, MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, ShardInfo, WorldStartRoom,
 };
-pub use error::{Error, ErrorKind, NoToken};
+pub use crate::error::{Error, ErrorKind, NoToken};
 #[cfg(feature = "sync")]
-pub use sync::SyncApi;
+pub use crate::sync::SyncApi;
 
 use std::borrow::Cow;
 use std::convert::AsRef;
@@ -123,13 +123,13 @@ use futures::Future;
 use hyper::header::{HeaderValue, CONTENT_TYPE};
 use url::Url;
 
-use connecting::FutureResponse;
-use endpoints::{login, map_stats, recent_pvp};
+use crate::connecting::FutureResponse;
+use crate::endpoints::{login, map_stats, recent_pvp};
 
-use sealed::EndpointResult;
+use crate::sealed::EndpointResult;
 
 mod sealed {
-    use error::Error;
+    use crate::error::Error;
     use serde;
 
     /// A trait for each endpoint
@@ -140,8 +140,8 @@ mod sealed {
         fn from_raw(data: Self::RequestResult) -> Result<Self, Error>;
     }
 
-    pub trait Sealed: ::EndpointResult {}
-    impl<T> Sealed for T where T: ::EndpointResult {}
+    pub trait Sealed: crate::EndpointResult {}
+    impl<T> Sealed for T where T: crate::EndpointResult {}
 }
 
 /// Sealed trait implemented for each endpoint.

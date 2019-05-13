@@ -52,7 +52,7 @@ with_structure_fields_and_update_struct! {
 
 with_update_struct! {
     /// A struct describing the source labs for a lab performing a mineral reaction.
-    #[derive(Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
     pub struct LabActionTarget {
         /// The x position of the first source lab.
         pub x1: u16,
@@ -65,13 +65,13 @@ with_update_struct! {
     }
 
     /// The update structure for a `LabActionTarget`.
-    #[derive(Deserialize, Clone, Debug)]
+    #[derive(serde_derive::Deserialize, Clone, Debug)]
     pub struct LabActionTargetUpdate { ... }
 }
 
 with_update_struct! {
     /// A struct describing a lab's actions.
-    #[derive(Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureLabActions {
         /// The two source labs that provided minerals for the reaction that was run last tick.
@@ -79,7 +79,7 @@ with_update_struct! {
     }
 
     /// The update structure for a `StructureLabActions`.
-    #[derive(Deserialize, Clone, Debug)]
+    #[derive(serde_derive::Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureLabActionsUpdate { ... }
 }

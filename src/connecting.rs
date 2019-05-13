@@ -6,7 +6,7 @@ use {hyper, serde_ignored, serde_json};
 use futures::{Future, Poll, Stream};
 use url::Url;
 
-use {EndpointType, Error, TokenStorage};
+use crate::{EndpointType, Error, TokenStorage};
 
 /// Struct mirroring `hyper`'s `FutureResponse`, but with parsing that happens after the request is finished.
 #[must_use = "futures do nothing unless polled"]

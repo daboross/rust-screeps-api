@@ -1,5 +1,5 @@
 //! `StructureRoad` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// A road structure - a structure that speeds up creeps without sufficient move parts.

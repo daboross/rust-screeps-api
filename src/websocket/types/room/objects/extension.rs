@@ -1,5 +1,5 @@
 //! `StructureExtension` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// An extension structure - a structure that can be filled with extra energy spawns can use.

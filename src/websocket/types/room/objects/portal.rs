@@ -5,7 +5,7 @@ use data::{double_optional_timespec_seconds, optional_timespec_seconds, RoomName
 
 with_update_struct! {
     /// The destination for a portal structure.
-    #[derive(Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
     pub struct PortalDestination {
         /// The room name the other side of this portal ends at.
         pub room: RoomName,
@@ -16,7 +16,7 @@ with_update_struct! {
     }
 
     /// The update structure for a portal destination.
-    #[derive(Deserialize, Clone, Debug)]
+    #[derive(serde_derive::Deserialize, Clone, Debug)]
     pub struct PortalDestinationUpdate { ... }
 }
 

@@ -1,6 +1,6 @@
 //! `Mineral` data description.
 use super::super::resources::ResourceType;
-use data::RoomName;
+use crate::data::RoomName;
 
 with_base_fields_and_update_struct! {
     /// A mineral, an object creeps can mine for a non-energy resource.

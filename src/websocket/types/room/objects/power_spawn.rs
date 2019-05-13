@@ -1,5 +1,5 @@
 //! `StructurePowerSpawn` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// A power spawn structure - a structure which can consume power, and in the future

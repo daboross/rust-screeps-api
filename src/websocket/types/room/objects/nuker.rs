@@ -1,5 +1,5 @@
 //! `StructureNuker` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// An nuker structure - a structure which can be loaded with energy and ghodium, and then

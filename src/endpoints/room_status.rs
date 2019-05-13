@@ -7,14 +7,14 @@ use time;
 use EndpointResult;
 
 /// Room overview raw result.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
     room: Option<InnerRoom>,
 }
 
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 struct InnerRoom {
     /// The room's name
     _id: String,

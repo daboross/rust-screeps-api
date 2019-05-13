@@ -11,7 +11,7 @@ use error::{ApiError, Result};
 use EndpointResult;
 
 /// User info raw result.
-#[derive(Deserialize, Clone, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Debug)]
 #[doc(hidden)]
 #[serde(rename_all = "camelCase")]
 pub struct Response {

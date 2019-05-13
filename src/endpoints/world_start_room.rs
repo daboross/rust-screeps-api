@@ -7,7 +7,7 @@ use error::{ApiError, Result};
 use EndpointResult;
 
 /// World start room raw result.
-#[derive(Deserialize, Clone, Hash, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,

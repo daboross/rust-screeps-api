@@ -6,14 +6,14 @@ use std::marker::PhantomData;
 use EndpointResult;
 
 /// Shard info raw result.
-#[derive(Deserialize, Clone, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Debug)]
 #[doc(hidden)]
 pub struct Response {
     ok: i32,
     shards: Vec<ShardResponse>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(serde_derive::Deserialize, Clone, Debug)]
 struct ShardResponse {
     users: u32,
     name: String,

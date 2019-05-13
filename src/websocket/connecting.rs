@@ -84,7 +84,7 @@ pub use self::error::Error as UrlError;
 
 /// Creates a new (random) websocket URL to connect to the official server.
 pub fn default_url() -> Url {
-    transform_url(::DEFAULT_OFFICIAL_API_URL)
+    transform_url(crate::DEFAULT_OFFICIAL_API_URL)
         .expect("expected known good default URL to parse successfully.")
 }
 

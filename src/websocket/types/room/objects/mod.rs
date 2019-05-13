@@ -57,7 +57,7 @@ pub use self::wall::{StructureWall, StructureWallUpdate};
 use serde_json;
 
 /// Enum describing all known room objects.
-#[derive(Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum KnownRoomObject {
     /// Source object.
