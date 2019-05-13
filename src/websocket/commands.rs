@@ -3,15 +3,15 @@ use std::str;
 
 use serde_json;
 
-use Token;
-
 use super::Channel;
 
 /// Gets the raw websocket string to send for subscribing to a channel.
 ///
 /// Subscribing to a channel you are already subscribed to may have differing
 /// results depending on the server software (official vs. private). Note that if you subscribe
-/// multiple times, it may be necessary to unsubscribe at least that many times to fully unsubscribe.
+/// multiple times, it may be necessary to unsubscribe at least that many times to fully
+/// unsubscribe.
+///
 /// Subscribing multiple times may or may not result in duplicated messages, and may or may not
 /// result in extra initial messages.
 ///
@@ -39,9 +39,9 @@ pub fn unsubscribe(channel: &Channel) -> String {
 
 /// Authenticates with the given token.
 ///
-/// After doing this, you'll be able to subscribe and unsubscribe to messages. A "auth success" message
-/// will happen as a response which returns either this token or a new one.
-pub fn authenticate(token: &Token) -> String {
+/// After doing this, you'll be able to subscribe and unsubscribe to messages. A "auth success"
+/// message will happen as a response which returns either this token or a new one.
+pub fn authenticate(token: &[u8]) -> String {
     let message = "auth "
         .chars()
         .chain(str::from_utf8(token).unwrap().chars())

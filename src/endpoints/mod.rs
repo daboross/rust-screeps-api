@@ -2,6 +2,7 @@
 //!
 //! Each sub-module contains code for interpreting the result of calling a specific API endpoint.
 pub mod leaderboard;
+pub mod login;
 pub mod map_stats;
 pub mod my_info;
 pub mod recent_pvp;

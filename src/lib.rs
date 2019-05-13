@@ -1,15 +1,17 @@
 //! Rust library for using the [Screeps] HTTP API.
 //!
-//! Screeps is a true programming MMO where users uploading JavaScript code to power their online empires.
-//! `rust-screeps-api` can connect to the [official server][screeps], and any [private server][screeps-os] instances
-//! run by users.
+//! Screeps is a true programming MMO where users uploading JavaScript code to power their online
+//! empires.
+//!
+//! `rust-screeps-api` can connect to the [official server][screeps], and any
+//! [private server][screeps-os] instances run by users.
 //!
 //! `rust-screeps-api` uses [hyper] to run http requests and [serde] to parse json results.
 //!
 //! # Usage
 //!
-//! Screeps API is built on two levels: an underlying asynchronous [`Api`] structure, and an easier-to-use [`SyncApi`]
-//! built on top of it.
+//! Screeps API is built on two levels: an underlying asynchronous [`Api`] structure, and an
+//! easier-to-use [`SyncApi`] built on top of it.
 //!
 //! To start using screeps through the blocking synchronous API, simply create a `SyncApi` object:
 //!
@@ -25,8 +27,9 @@
 //! # #[cfg(not(feature = "sync"))] fn main() {}
 //! ```
 //!
-//! This API object can then be used to make any number of API calls. Each will return a `Result` with a typed response
-//! or an error. All calls require mutable access to manage tokens and the underlying tokio instance:
+//! This API object can then be used to make any number of API calls. Each will return a `Result`
+//! with a typed response or an error. All calls require mutable access to manage tokens and the
+//! underlying tokio instance:
 //!
 //! ```no_run
 //! # extern crate screeps_api;
@@ -37,7 +40,7 @@
 //! #
 //! # let mut api = SyncApi::new().unwrap();
 //! #
-//! api.set_token("auth token").unwrap();
+//! api.set_token("auth token");
 //!
 //! let my_info = api.my_info().unwrap();
 //!
@@ -98,6 +101,7 @@ pub use endpoints::leaderboard::find_rank::FoundUserRank;
 pub use endpoints::leaderboard::page::LeaderboardPage;
 pub use endpoints::leaderboard::season_list::LeaderboardSeason;
 pub use endpoints::leaderboard::LeaderboardType;
+pub use endpoints::login::LoggedIn;
 pub use endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
 pub use endpoints::register::{Details as RegistrationDetails, RegistrationSuccess};
 pub use endpoints::room_terrain::TerrainGrid;
@@ -106,13 +110,13 @@ pub use endpoints::{
 };
 pub use error::{Error, ErrorKind, NoToken};
 #[cfg(feature = "sync")]
-pub use sync::{Config as SyncConfig, SyncApi};
+pub use sync::SyncApi;
 
 use std::borrow::Cow;
 use std::convert::AsRef;
 use std::marker::PhantomData;
 use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, PoisonError, RwLock};
 
 use bytes::Bytes;
 use futures::Future;
@@ -120,7 +124,7 @@ use hyper::header::{HeaderValue, CONTENT_TYPE};
 use url::Url;
 
 use connecting::FutureResponse;
-use endpoints::{map_stats, recent_pvp};
+use endpoints::{login, map_stats, recent_pvp};
 
 use sealed::EndpointResult;
 
@@ -145,12 +149,34 @@ pub trait EndpointType: sealed::Sealed {}
 
 impl<T> EndpointType for T where T: sealed::Sealed {}
 
-/// An API token that allows for one-time authentication. Each use of an API token with the screeps API
-/// will cause the API to return a new token which should be stored in its place.
+/// An API token that allows for one-time authentication. Each use of an API token with the screeps
+/// API will cause the API to return a new token which should be stored in its place.
 pub type Token = Bytes;
 
-/// A generic trait over hyper's Client which allows for references, owned clients, and `Arc<hyper::Client>`
-/// to be used.
+/// Storage for the token inside the client, so that async requests can update the client's token if
+/// an updated token is returned.
+///
+/// When cloned, the clone will share the same underlying synchronized token storage.
+#[derive(Clone, Debug, Default)]
+pub struct TokenStorage(Arc<RwLock<Option<Token>>>);
+
+impl TokenStorage {
+    /// Overwrites the previously stored token with the given token.
+    pub fn set(&self, token: Bytes) {
+        *self.0.write().unwrap_or_else(PoisonError::into_inner) = Some(token);
+    }
+
+    /// Gets the current stored token.
+    pub fn get(&self) -> Option<Bytes> {
+        self.0
+            .read()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone()
+    }
+}
+
+/// A generic trait over hyper's Client which allows for references, owned clients, and
+/// `Arc<hyper::Client>` to be used.
 pub trait HyperClient<C>
 where
     C: hyper::client::connect::Connect,
@@ -201,7 +227,7 @@ pub struct Api<C, H = hyper::Client<C>> {
     /// The base URL for this API instance.
     pub url: Url,
     /// The authentication token.
-    auth_token: Option<Token>,
+    auth_token: TokenStorage,
     /// The hyper client.
     client: H,
     /// Phantom data required in order to have C bound here.
@@ -227,7 +253,8 @@ fn default_url() -> Url {
 }
 
 impl<C, H> Api<C, H> {
-    /// Creates a new API instance for the official server with the `https://screeps.com/api/` base url.
+    /// Creates a new API instance for the official server with the `https://screeps.com/api/` base
+    /// url.
     ///
     /// Use [`with_url`] or [`set_url`] to change to a custom server.
     ///
@@ -237,8 +264,8 @@ impl<C, H> Api<C, H> {
     pub fn new(client: H) -> Self {
         Api {
             url: default_url(),
-            client: client,
-            auth_token: None,
+            client,
+            auth_token: TokenStorage::default(),
             _phantom: PhantomData,
         }
     }
@@ -265,17 +292,23 @@ impl<C, H> Api<C, H> {
     ///
     /// See also [`with_token`].
     #[inline]
-    pub fn set_token(&mut self, token: Token) {
-        self.auth_token = Some(token);
+    pub fn set_token<T: Into<Token>>(&mut self, token: T) {
+        self.auth_token.set(token.into());
     }
 
     /// Sets the auth token this api client will use, and returns the client.
     ///
     /// See also [`set_token`].
     #[inline]
-    pub fn with_token(mut self, token: Token) -> Self {
+    pub fn with_token<T: Into<Token>>(mut self, token: T) -> Self {
         self.set_token(token);
         self
+    }
+
+    /// Retrieves the token storage for this client.
+    #[inline]
+    pub fn token_storage(&self) -> &TokenStorage {
+        &self.auth_token
     }
 }
 
@@ -292,14 +325,15 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
     {
         PartialRequest {
             client: self,
-            endpoint: endpoint,
+            endpoint,
             post_body: None,
             query_params: None,
             _phantom: PhantomData,
         }
     }
 
-    /// Makes a new GET request to the given endpoint URL, with given the query parameters added to the end.
+    /// Makes a new GET request to the given endpoint URL, with given the query parameters added to
+    /// the end.
     #[inline]
     fn get<'a, R>(
         &'a self,
@@ -311,7 +345,8 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
         self.request(endpoint)
     }
 
-    /// Makes a POST request to the given endpoint URL, with the given data encoded as JSON in the body of the request.
+    /// Makes a POST request to the given endpoint URL, with the given data encoded as JSON in the
+    /// body of the request.
     #[inline]
     fn post<'a, U, R>(
         &'a self,
@@ -323,6 +358,18 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
         R: EndpointResult,
     {
         self.request(endpoint).post(request_text)
+    }
+
+    /// Logs in with the given username and password and returns a result containing the token.
+    ///
+    /// Use `client.set_token(logged_in.token)` to let the client use the token from logging in.
+    pub fn login<'b, U, V>(&self, username: U, password: V) -> FutureResponse<LoggedIn>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
+    {
+        self.post("auth/signin", login::Details::new(username, password))
+            .send()
     }
 
     /// Registers a new account with the given username, password and optional email and returns a
@@ -351,7 +398,8 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
         self.get("user/world-start-room").auth().send()
     }
 
-    /// Gets the room name the server thinks the client should start with viewing for a particular shard.
+    /// Gets the room name the server thinks the client should start with viewing for a particular
+    /// shard.
     pub fn shard_start_room<'b, U>(
         &self,
         shard: U,
@@ -381,12 +429,13 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
         self.post("game/map-stats", args).auth().send()
     }
 
-    /// Gets the overview of a room, returning totals for usually 3 intervals, 8, 180 and 1440, representing
-    /// data for the past hour, data for the past 24 hours, and data for the past week respectively.
+    /// Gets the overview of a room, returning totals for usually 3 intervals, 8, 180 and 1440,
+    /// representing data for the past hour, data for the past 24 hours, and data for the past week
+    /// respectively.
     ///
-    /// All Allowed request_intervals are not known, but at least `8`, `180` and `1440` are allowed. The returned data,
-    /// at the time of writing, includes 8 data points of each type, representing equal portions of the time period
-    /// requested (hour for `8`, day for `180`, week for `1440`).
+    /// All Allowed request_intervals are not known, but at least `8`, `180` and `1440` are allowed.
+    /// The returned data, at the time of writing, includes 8 data points of each type, representing
+    /// equal portions of the time period requested (hour for `8`, day for `180`, week for `1440`).
     pub fn room_overview<'b, U, V>(
         &self,
         shard: U,
@@ -438,8 +487,8 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
         }
     }
 
-    /// Gets a list of shards available on this server. Errors with a `404` error when connected to a
-    /// non-sharded server.
+    /// Gets a list of shards available on this server. Errors with a `404` error when connected to
+    /// a non-sharded server.
     ///
     /// Does not require authentication.
     pub fn shard_list(&self) -> impl Future<Item = Vec<ShardInfo>, Error = Error> {
@@ -460,8 +509,8 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
             .send()
     }
 
-    /// Experimental endpoint to get all rooms in which PvP has recently occurred, or where PvP has occurred since a
-    /// certain game tick.
+    /// Experimental endpoint to get all rooms in which PvP has recently occurred, or where PvP has
+    /// occurred since a certain game tick.
     pub fn recent_pvp(
         &self,
         details: RecentPvpDetails,
@@ -474,13 +523,15 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
         self.get("experimental/pvp").params(&args).send()
     }
 
-    /// Gets a list of all past leaderboard seasons, with end dates, display names, and season ids for each season.
+    /// Gets a list of all past leaderboard seasons, with end dates, display names, and season ids
+    /// for each season.
     ///
-    /// Seasons are a way of having limited time periods (usually one month) in which all rankings are reset at the
-    /// beginning of, and points earned during the time period contribute to a player's rank in that season.
+    /// Seasons are a way of having limited time periods (usually one month) in which all rankings
+    /// are reset at the beginning of, and points earned during the time period contribute to a
+    /// player's rank in that season.
     ///
-    /// This method does not return any actual data, but rather just a list of valid past season, any of the ids of
-    /// which can then be used to retrieve more information.
+    /// This method does not return any actual data, but rather just a list of valid past season,
+    /// any of the ids of which can then be used to retrieve more information.
     pub fn leaderboard_season_list(
         &self,
     ) -> Result<impl Future<Item = Vec<LeaderboardSeason>, Error = Error>, NoToken> {
@@ -489,13 +540,14 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
 
     /// Finds the rank of a user in a specific season for a specific leaderboard type.
     ///
-    /// Will return `ApiError::UserNotFound` when the username does not exist, and `ApiError::ResultNotFound`
-    /// when the user exists but does not have a rank for the given season. The user will not have a rank when either
-    /// the account did not exist when the season ended, or the user either processed no power or upgraded no
-    /// controllers, during the specific leaderboard season.
+    /// Will return `ApiError::UserNotFound` when the username does not exist, and
+    /// `ApiError::ResultNotFound` when the user exists but does not have a rank for the given
+    /// season. The user will not have a rank when either the account did not exist when the season
+    /// ended, or the user either processed no power or upgraded no controllers, during the specific
+    /// leaderboard season.
     ///
-    /// This is technically the same API endpoint as find_leaderboard_rank, but the result format differs when
-    /// requesting a specific season from when requesting all season ranks.
+    /// This is technically the same API endpoint as find_leaderboard_rank, but the result format
+    /// differs when requesting a specific season from when requesting all season ranks.
     pub fn find_season_leaderboard_rank<'b, U, V>(
         &self,
         leaderboard_type: LeaderboardType,
@@ -518,9 +570,10 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
 
     /// Finds the rank of a user for all seasons for a specific leaderboard type.
     ///
-    /// This will return `ApiError::UserNotFound` if a username does not exist, and may also return an empty `Vec` as
-    /// the result if the user does not have any ranks in the given leaderboard type (they have never contributed any
-    /// global control points, or processed power, depending on the type).
+    /// This will return `ApiError::UserNotFound` if a username does not exist, and may also return
+    /// an empty `Vec` as the result if the user does not have any ranks in the given leaderboard
+    /// type (they have never contributed any global control points, or processed power, depending
+    /// on the type).
     pub fn find_leaderboard_ranks<'b, U>(
         &self,
         leaderboard_type: LeaderboardType,
@@ -540,11 +593,11 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
 
     /// Gets a page of the leaderboard for a given season.
     ///
-    /// Limit dictates how many users will be returned, maximum is 20. Higher than that will cause an InvalidParameters
-    /// error message.
+    /// Limit dictates how many users will be returned, maximum is 20. Higher than that will cause
+    /// an InvalidParameters error message.
     ///
-    /// Offset doesn't have to be a multiple of limit, but it's most likely most useful that it is. Offset 0 will get
-    /// you the start/top of the ranked list.
+    /// Offset doesn't have to be a multiple of limit, but it's most likely most useful that it is.
+    /// Offset 0 will get you the start/top of the ranked list.
     pub fn leaderboard_page<'b, U>(
         &self,
         leaderboard_type: LeaderboardType,
@@ -567,12 +620,10 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
     }
 }
 
-/// Really hacky way of having compile-time assurance there's no
-/// auth errors for non-auth requiring types.
 trait PartialRequestAuth<T> {
     type Result;
 
-    fn token_or_result(token: Option<&Token>) -> Result<Option<&Token>, Self::Result>;
+    fn token_or_result(token: Option<Token>) -> Result<Option<Token>, Self::Result>;
 
     fn successful_result(success: T) -> Self::Result;
 }
@@ -582,7 +633,7 @@ struct NoAuthRequired;
 impl<T> PartialRequestAuth<T> for NoAuthRequired {
     type Result = T;
 
-    fn token_or_result(_token: Option<&Token>) -> Result<Option<&Token>, T> {
+    fn token_or_result(_token: Option<Token>) -> Result<Option<Token>, T> {
         Ok(None)
     }
 
@@ -596,7 +647,7 @@ struct AuthRequired;
 impl<T> PartialRequestAuth<T> for AuthRequired {
     type Result = Result<T, NoToken>;
 
-    fn token_or_result(token: Option<&Token>) -> Result<Option<&Token>, Result<T, NoToken>> {
+    fn token_or_result(token: Option<Token>) -> Result<Option<Token>, Result<T, NoToken>> {
         match token {
             Some(v) => Ok(Some(v)),
             None => Err(Err(NoToken)),
@@ -711,7 +762,7 @@ where
         // ```
         //
         // but this way we can return without a Result if authentication isn't required.
-        let auth_token = match A::token_or_result(client.auth_token.as_ref()) {
+        let auth_token = match A::token_or_result(client.auth_token.get()) {
             Ok(token_option) => token_option,
             Err(return_value) => return return_value,
         };
@@ -757,7 +808,7 @@ where
         let request = request.expect("building http request should never fail");
 
         let hyper_future = client.client.client().request(request);
-        let finished = connecting::interpret(url, hyper_future);
+        let finished = connecting::interpret(client.auth_token.clone(), url, hyper_future);
 
         // turns into either `Result<FutureResponse<..>>` or `FutureResponse<..>` depending on
         // if we required auth.

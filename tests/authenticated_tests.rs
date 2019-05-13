@@ -15,18 +15,8 @@ fn env(var: &str) -> String {
 }
 
 fn logged_in() -> SyncApi {
-    let username = env("SCREEPS_API_USERNAME");
-    let password = env("SCREEPS_API_PASSWORD");
-    let mut api = SyncApi::new().unwrap();
-
-    if let Err(err) = api.login(username, password) {
-        panic!(
-            "Error logging in: {:?}\nTo disable login tests, use `cargo test -- --skip auth`",
-            err
-        );
-    }
-
-    api
+    let token = env("SCREEPS_API_TOKEN");
+    SyncApi::new().unwrap().with_token(token)
 }
 
 #[test]
@@ -79,26 +69,6 @@ fn test_auth_token_reretrieval() {
     api.my_info().unwrap();
 
     api.my_info().unwrap();
-}
-
-#[test]
-fn test_auth_shared_token_storage() {
-    // let shared = std::rc::Rc::new(std::cell::RefCell::new(None::<screeps_api::Token>));
-
-    // let username = env("SCREEPS_API_USERNAME");
-    // let password = env("SCREEPS_API_PASSWORD");
-
-    // TODO: this is disabled waiting for screeps_api::sync::Config to be implemented.
-
-    // screeps_api::API::with_token(shared_client.clone(), shared.clone()).login(username, password).unwrap();
-
-    // screeps_api::API::with_token(shared_client.clone(), shared.clone()).my_info().unwrap();
-
-    // screeps_api::API::with_token(shared_client.clone(), shared.clone()).my_info().unwrap();
-
-    // screeps_api::API::with_token(shared_client.clone(), shared.clone()).my_info().unwrap();
-
-    // screeps_api::API::with_token(shared_client.clone(), shared.clone()).my_info().unwrap();
 }
 
 #[test]

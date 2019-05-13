@@ -6,7 +6,7 @@ extern crate tokio;
 
 use std::borrow::Cow;
 use std::io;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 use hyper::{self, Client};
 
@@ -15,7 +15,7 @@ use hyper::client::HttpConnector;
 
 use error::Error;
 
-use {Api, DEFAULT_OFFICIAL_API_URL};
+use {Api, Token};
 
 use {
     FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType, MapStats, MyInfo,
@@ -92,10 +92,6 @@ mod error {
 
 pub use self::error::SyncError;
 
-/// Represents the configuration which will create a reasonable default HTTPS connector.
-#[derive(Copy, Clone, Debug, Default)]
-pub struct UseHttpsConnector;
-
 /// API structure mirroring [`Api`], but providing utilities for synchronous connection.
 ///
 /// This structure owns both the hyper client and the tokio runtime. If this is not wanted, please
@@ -109,17 +105,23 @@ pub struct SyncApi<C: hyper::client::connect::Connect = HttpsConnector<HttpConne
 }
 
 impl SyncApi<HttpsConnector<HttpConnector>> {
-    /// Opinionated method to construct a SyncApi with HTTPS support and
-    /// connecting to the default server.
+    /// Creates a sync API client using an Https connector.
     ///
-    /// Since this connects to the official server, it won't be useful without HTTPS support.
-    ///
-    /// Use [`Config`] for more configuration, including choosing an HTTP only backend, or
-    /// setting the url to something other than `https://screep.com/api/`.
-    ///
-    /// [`Config`]: struct.Config.html
+    /// Use [`new_with_connector`] to set another backend, such as an HTTP only backend.
     pub fn new() -> Result<Self, SyncError> {
-        Ok(Config::<UseHttpsConnector>::new()?.build()?)
+        Ok(Self::new_with_connector(HttpsConnector::new(4)?)?)
+    }
+}
+
+impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
+    /// Creates a sync API client using a custom connector.
+    pub fn new_with_connector(connector: C) -> Result<Self, io::Error> {
+        let runtime = TokioRuntime::new()?;
+        let hyper = Client::builder().build(connector);
+        Ok(SyncApi {
+            runtime,
+            client: Api::new(hyper),
+        })
     }
 }
 
@@ -131,76 +133,49 @@ impl<C: hyper::client::connect::Connect> Deref for SyncApi<C> {
     }
 }
 
-/// Configuration for construction a `SyncApi`.
-pub struct Config<'a, C = UseHttpsConnector> {
-    runtime: TokioRuntime,
-    connector: C,
-    url: &'a str,
-}
-
-impl Config<'static, UseHttpsConnector> {
-    /// Creates an initial config which will use an HTTPS connector and non-Send tokens.
-    pub fn new() -> io::Result<Self> {
-        let runtime = TokioRuntime::new()?;
-        let config = Config {
-            runtime,
-            connector: UseHttpsConnector,
-            url: DEFAULT_OFFICIAL_API_URL,
-        };
-
-        Ok(config)
-    }
-}
-
-impl<'a, C> Config<'a, C> {
-    /// Sets the Hyper connector to connect to to the given connector.
-    pub fn connector<CC>(self, connector: CC) -> Config<'a, CC> {
-        Config {
-            runtime: self.runtime,
-            connector,
-            url: self.url,
-        }
-    }
-
-    /// Sets the url to connect to to the given url.
-    pub fn url(self, url: &AsRef<str>) -> Config<C> {
-        Config {
-            runtime: self.runtime,
-            connector: self.connector,
-            url: url.as_ref(),
-        }
-    }
-}
-
-impl<'a> Config<'a, UseHttpsConnector> {
-    /// Builds the config into a SyncApi.
-    pub fn build(self) -> Result<SyncApi<HttpsConnector<HttpConnector>>, SyncError> {
-        self.connector(HttpsConnector::new(4)?)
-            .build()
-            .map_err(Into::into)
-    }
-}
-
-impl<'a, C: hyper::client::connect::Connect + 'static> Config<'a, C> {
-    /// Builds the config into a SyncApi.
-    pub fn build(self) -> Result<SyncApi<C>, SyncError> {
-        let Config {
-            runtime,
-            url,
-            connector,
-        } = self;
-        let hyper = Client::builder().build(connector);
-
-        let api = SyncApi {
-            runtime,
-            client: Api::new(hyper).with_url(url)?,
-        };
-
-        Ok(api)
+impl<C: hyper::client::connect::Connect> DerefMut for SyncApi<C> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.client
     }
 }
 
 impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
+    /// Sets the server url this api client will use, and returns the client.
+    ///
+    /// See also [`Api::set_url`].
+    #[inline]
+    pub fn with_url<U: AsRef<str>>(mut self, url: U) -> Result<Self, url::ParseError> {
+        self.set_url(url)?;
+        Ok(self)
+    }
+
+    /// Sets the auth token this api client will use, and returns the client.
+    ///
+    /// See also [`Api::set_token`].
+    #[inline]
+    pub fn with_token<T: Into<Token>>(mut self, token: T) -> Self {
+        self.set_token(token.into());
+        self
+    }
+
+    /// Logs in with the given username and password and gets an authentication token as the
+    /// result.
+    ///
+    /// The authentication token will then be stored in this client.
+    pub fn login<'b, U, V>(&mut self, username: U, password: V) -> Result<(), Error>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
+    {
+        let result = self
+            .runtime
+            .block_on(self.client.login(username, password))?;
+
+        result.return_to(&self.client.auth_token);
+
+        Ok(())
+    }
+
     /// Registers a new account with the given username, password and optional email and returns a
     /// result. Successful results contain no information other than that of success.
     ///

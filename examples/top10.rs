@@ -62,18 +62,18 @@ fn main() {
         .apply()
         .unwrap();
 
-    let mut client = screeps_api::SyncConfig::new()
+    let mut client = screeps_api::SyncApi::new()
         .unwrap()
-        .url(&opt_env(
+        .with_url(&opt_env(
             "SCREEPS_API_URL",
             screeps_api::DEFAULT_OFFICIAL_API_URL,
         ))
-        .build()
-        .unwrap();
+        .unwrap()
+        .with_token(env("SCREEPS_API_TOKEN"));
 
-    client
-        .login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD"))
-        .unwrap();
+    // client
+    //     .login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD"))
+    //     .unwrap();
 
     let top10gcl = client
         .leaderboard_page(GlobalControl, "2017-02", 10, 0)

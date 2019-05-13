@@ -66,10 +66,7 @@ fn main() {
 fn perform_registration() -> Result<(), Box<std::error::Error>> {
     let http_url = server_url();
 
-    let mut client = screeps_api::SyncConfig::new()
-        .unwrap()
-        .url(&http_url)
-        .build()?;
+    let mut client = screeps_api::SyncApi::new()?.with_url(&http_url)?;
 
     println!("New user registration! Connecting to {}", http_url);
 

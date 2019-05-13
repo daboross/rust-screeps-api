@@ -6,7 +6,7 @@ use {hyper, serde_ignored, serde_json};
 use futures::{Future, Poll, Stream};
 use url::Url;
 
-use {EndpointType, Error};
+use {EndpointType, Error, TokenStorage};
 
 /// Struct mirroring `hyper`'s `FutureResponse`, but with parsing that happens after the request is finished.
 #[must_use = "futures do nothing unless polled"]
@@ -44,17 +44,32 @@ where
 ///
 /// # Parameters
 ///
-/// - `url`: url that is being queried, used only for error and warning messages.
+/// - `url`: url that is being queried, used only for error and warning messages
+/// - `tokens`: where to put any tokens that were returned, if any
 /// - `response`: actual hyper response that we're interpreting
-pub fn interpret<R>(url: Url, response: hyper::client::ResponseFuture) -> FutureResponse<R>
+pub fn interpret<R>(
+    tokens: TokenStorage,
+    url: Url,
+    response: hyper::client::ResponseFuture,
+) -> FutureResponse<R>
 where
     R: EndpointType,
 {
     FutureResponse(Box::new(
         response
             .then(move |result| match result {
-                Ok(v) => Ok((url, v)),
+                Ok(v) => Ok((tokens, url, v)),
                 Err(e) => Err(Error::with_url(e, Some(url))),
+            })
+            .and_then(|(tokens, url, response)| {
+                if let Some(token) = response.headers().get("X-Token") {
+                    debug!(
+                        "replacing stored auth_token with token returned from API: {:?}",
+                        token.to_str()
+                    );
+                    tokens.set(token.as_bytes().into());
+                }
+                Ok((url, response))
             })
             .and_then(|(url, response)| {
                 let status = response.status();

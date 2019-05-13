@@ -12,7 +12,7 @@ extern crate fern;
 // sockets
 
 extern crate futures;
-extern crate tokio_core;
+extern crate tokio;
 extern crate websocket;
 // Screeps API
 
@@ -104,78 +104,72 @@ fn main() {
     setup_logging();
 
     let http_url = server_url();
-    let token_storage = screeps_api::RcTokenStorage::default();
 
-    let mut client = screeps_api::SyncConfig::new()
+    let mut client = screeps_api::SyncApi::new()
         .unwrap()
-        .url(&http_url)
-        .tokens(token_storage.clone())
-        .build()
-        .unwrap();
+        .with_url(&http_url)
+        .unwrap()
+        .with_token(env("SCREEPS_API_TOKEN"));
 
-    // Login using the API client - this will storage the auth token in token_storage.
-    client
-        .login(env("SCREEPS_API_USERNAME"), env("SCREEPS_API_PASSWORD"))
-        .expect("login failed");
+    let tokens = client.token_storage().clone();
 
     let my_info = client.my_info().expect("my_info call failed");
 
     info!("connecting - {}", my_info.username);
 
-    let mut core =
-        tokio_core::reactor::Core::new().expect("expected IO core to start up without issue.");
-
-    let handle = core.handle();
-
     let ws_url = screeps_api::websocket::connecting::transform_url(&http_url)
         .expect("expected server api url to parse into websocket url");
 
-    let connection = websocket::ClientBuilder::from_url(&ws_url).async_connect(None, &handle);
+    let connection = websocket::ClientBuilder::from_url(&ws_url).async_connect(None);
 
-    core.run(connection.then(|result| {
-        let (client, _) = result.expect("connecting to server failed");
+    tokio::runtime::current_thread::run(
+        connection
+            .then(|result| {
+                let (client, _) = result.expect("connecting to server failed");
 
-        let (sink, stream) = client.split();
+                let (sink, stream) = client.split();
 
-        sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(
-            &token_storage.take_token().unwrap(),
-        )))
-        .and_then(|sink| {
-            let handler = Handler::new(token_storage, my_info);
+                sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(
+                    &tokens.get().unwrap(),
+                )))
+                .and_then(|sink| {
+                    let handler = Handler::new(tokens, my_info);
 
-            sink.send_all(
-                stream
-                    .and_then(move |data| future::ok(handler.handle_data(data)))
-                    .or_else(|err| {
-                        warn!("IO error: {}", err);
+                    sink.send_all(
+                        stream
+                            .and_then(move |data| future::ok(handler.handle_data(data)))
+                            .or_else(|err| {
+                                warn!("IO error: {}", err);
 
-                        future::ok::<_, websocket::WebSocketError>(Box::new(stream::empty())
-                            as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>)
-                    })
-                    .flatten(),
-            )
-        })
-    }))
-    .expect("websocket connection exited with failure");
+                                future::ok::<_, websocket::WebSocketError>(
+                                    Box::new(stream::empty())
+                                        as Box<
+                                            Stream<
+                                                Item = OwnedMessage,
+                                                Error = websocket::WebSocketError,
+                                            >,
+                                        >,
+                                )
+                            })
+                            .flatten(),
+                    )
+                })
+            })
+            .then(|res| {
+                res.expect("websocket connection exited with failure");
+                Ok(())
+            }),
+    );
 }
 
-struct Handler<T>
-where
-    T: screeps_api::TokenStorage,
-{
-    tokens: T,
+struct Handler {
+    tokens: TokenStorage,
     info: screeps_api::MyInfo,
 }
 
-impl<T> Handler<T>
-where
-    T: screeps_api::TokenStorage,
-{
-    fn new(tokens: T, info: screeps_api::MyInfo) -> Self {
-        Handler {
-            tokens: tokens,
-            info: info,
-        }
+impl Handler {
+    fn new(tokens: TokenStorage, info: screeps_api::MyInfo) -> Self {
+        Handler { tokens, info }
     }
 
     fn handle_data(
@@ -225,7 +219,7 @@ where
             ScreepsMessage::AuthOk { new_token } => {
                 info!("connected - {}", self.info.username);
 
-                self.tokens.return_token(new_token);
+                self.tokens.set(new_token);
 
                 return Box::new(
                     subscribe_with(&self.info.user_id).chain(
