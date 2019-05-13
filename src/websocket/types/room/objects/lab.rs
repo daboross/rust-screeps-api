@@ -1,7 +1,6 @@
 //! `StructureLab` data description.
-use crate::data::RoomName;
-
 use super::super::resources::ResourceType;
+use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// A lab structure - a structure that can be filled with energy and minerals, merge minerals with

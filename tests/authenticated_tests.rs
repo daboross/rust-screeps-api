@@ -1,7 +1,4 @@
 #![cfg(feature = "sync")]
-extern crate dotenv;
-extern crate screeps_api;
-
 use screeps_api::error::{ApiError, ErrorKind};
 use screeps_api::SyncApi;
 

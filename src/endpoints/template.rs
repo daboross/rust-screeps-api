@@ -1,9 +1,11 @@
 //! Interpreting generic template calls.
-
-use crate::data;
-use crate::error::{ApiError, Result};
-use crate::EndpointResult;
 use std::marker::PhantomData;
+
+use crate::{
+    data,
+    error::{ApiError, Result},
+    EndpointResult,
+};
 
 /// Call raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]

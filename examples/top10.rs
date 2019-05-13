@@ -1,11 +1,6 @@
 //! Simple command line program to view the top 10 users in power processing and GCL.
 //!
 //! Logs in using the SCREEPS_API_USERNAME and SCREEPS_API_PASSWORD env variables.
-extern crate dotenv;
-extern crate fern;
-extern crate log;
-extern crate screeps_api;
-
 use std::borrow::Cow;
 
 use screeps_api::endpoints::leaderboard::page::LeaderboardPage;

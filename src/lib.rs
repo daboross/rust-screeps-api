@@ -60,30 +60,13 @@
 #![recursion_limit = "512"]
 #![cfg_attr(feature = "protocol-docs", feature(external_doc))]
 
-// Logging
 #[macro_use]
 extern crate log;
 
-// Parsing
-extern crate arrayvec;
-extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_ignored;
 #[cfg_attr(test, macro_use)]
 extern crate serde_json;
-extern crate time;
-extern crate tuple_vec_map;
-
-// HTTP
-extern crate bytes;
-extern crate futures;
-extern crate hyper;
-extern crate url;
-
-// Websockets
-extern crate num;
-extern crate rand;
 
 pub mod connecting;
 pub mod data;
@@ -96,27 +79,32 @@ pub mod error;
 pub mod sync;
 pub mod websocket;
 
-pub use crate::data::RoomName;
-pub use crate::endpoints::leaderboard::find_rank::FoundUserRank;
-pub use crate::endpoints::leaderboard::page::LeaderboardPage;
-pub use crate::endpoints::leaderboard::season_list::LeaderboardSeason;
-pub use crate::endpoints::leaderboard::LeaderboardType;
-pub use crate::endpoints::login::LoggedIn;
-pub use crate::endpoints::recent_pvp::PvpArgs as RecentPvpDetails;
-pub use crate::endpoints::register::{Details as RegistrationDetails, RegistrationSuccess};
-pub use crate::endpoints::room_terrain::TerrainGrid;
-pub use crate::endpoints::{
-    MapStats, MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, ShardInfo, WorldStartRoom,
-};
-pub use crate::error::{Error, ErrorKind, NoToken};
 #[cfg(feature = "sync")]
 pub use crate::sync::SyncApi;
+pub use crate::{
+    data::RoomName,
+    endpoints::leaderboard::find_rank::FoundUserRank,
+    endpoints::leaderboard::page::LeaderboardPage,
+    endpoints::leaderboard::season_list::LeaderboardSeason,
+    endpoints::leaderboard::LeaderboardType,
+    endpoints::login::LoggedIn,
+    endpoints::recent_pvp::PvpArgs as RecentPvpDetails,
+    endpoints::register::{Details as RegistrationDetails, RegistrationSuccess},
+    endpoints::room_terrain::TerrainGrid,
+    endpoints::{
+        MapStats, MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, ShardInfo,
+        WorldStartRoom,
+    },
+    error::{Error, ErrorKind, NoToken},
+};
 
-use std::borrow::Cow;
-use std::convert::AsRef;
-use std::marker::PhantomData;
-use std::rc::Rc;
-use std::sync::{Arc, PoisonError, RwLock};
+use std::{
+    borrow::Cow,
+    convert::AsRef,
+    marker::PhantomData,
+    rc::Rc,
+    sync::{Arc, PoisonError, RwLock},
+};
 
 use bytes::Bytes;
 use futures::Future;
@@ -125,12 +113,10 @@ use url::Url;
 
 use crate::connecting::FutureResponse;
 use crate::endpoints::{login, map_stats, recent_pvp};
-
 use crate::sealed::EndpointResult;
 
 mod sealed {
     use crate::error::Error;
-    use serde;
 
     /// A trait for each endpoint
     pub trait EndpointResult: Sized + 'static {

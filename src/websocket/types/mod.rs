@@ -1,14 +1,12 @@
 //! Parsing inner Screeps websocket update messages.
-use std::borrow::Cow;
-use std::fmt;
-use std::marker::PhantomData;
+use std::{borrow::Cow, fmt, marker::PhantomData};
 
-use serde::de::{self, SeqAccess, Unexpected, Visitor};
-use serde::{Deserialize, Deserializer};
+use serde::{
+    de::{self, SeqAccess, Unexpected, Visitor},
+    Deserialize, Deserializer,
+};
 
 use crate::websocket::Channel;
-use serde_json;
-
 use crate::RoomName;
 
 use self::messages::{ConversationUpdate, MessageUpdate};

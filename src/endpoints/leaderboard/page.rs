@@ -1,11 +1,11 @@
 //! Interpreting user leaderboard page results.
+use std::collections::HashMap;
+use std::marker::PhantomData;
 
 use super::find_rank;
 use crate::data;
 use crate::error::{ApiError, Result};
 use crate::EndpointResult;
-use std::collections::HashMap;
-use std::marker::PhantomData;
 
 /// Raw list results.
 #[derive(serde_derive::Deserialize, Clone, Debug)]

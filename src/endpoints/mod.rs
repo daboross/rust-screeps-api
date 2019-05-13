@@ -17,11 +17,8 @@ pub mod world_start_room;
 #[cfg(test)]
 pub mod template;
 
-pub use self::map_stats::MapStats;
-pub use self::my_info::MyInfo;
-pub use self::recent_pvp::RecentPvp;
-pub use self::room_overview::RoomOverview;
-pub use self::room_status::RoomStatus;
-pub use self::room_terrain::RoomTerrain;
-pub use self::shards::ShardInfo;
-pub use self::world_start_room::WorldStartRoom;
+pub use self::{
+    map_stats::MapStats, my_info::MyInfo, recent_pvp::RecentPvp, room_overview::RoomOverview,
+    room_status::RoomStatus, room_terrain::RoomTerrain, shards::ShardInfo,
+    world_start_room::WorldStartRoom,
+};

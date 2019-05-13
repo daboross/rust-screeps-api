@@ -1,6 +1,4 @@
 //! `StructureController` data description.
-use time;
-
 use crate::data::{optional_timespec_seconds, RoomName, RoomSign};
 
 implement_update_for! {

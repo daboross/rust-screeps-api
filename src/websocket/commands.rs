@@ -1,8 +1,6 @@
 //! Websocket command creation.
 use std::str;
 
-use serde_json;
-
 use super::Channel;
 
 /// Gets the raw websocket string to send for subscribing to a channel.

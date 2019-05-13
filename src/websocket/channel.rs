@@ -1,6 +1,5 @@
 //! Websocket subscribable channel data structure.
-use std::borrow::Cow;
-use std::fmt;
+use std::{borrow::Cow, fmt};
 
 use crate::RoomName;
 

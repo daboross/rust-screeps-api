@@ -1,12 +1,6 @@
 //! Simple command line program to view the information of the user logged in.
 //!
 //! Logs in using the SCREEPS_API_USERNAME and SCREEPS_API_PASSWORD env variables.
-extern crate dotenv;
-extern crate fern;
-extern crate hyper;
-extern crate log;
-extern crate screeps_api;
-
 use std::borrow::Cow;
 
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.

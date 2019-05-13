@@ -1,9 +1,11 @@
 //! Interpreting rooms in which PvP recently occurred. This is an "experimental" endpoint.
-
-use crate::data;
-use crate::error::{ApiError, Result};
-use crate::EndpointResult;
 use std::marker::PhantomData;
+
+use crate::{
+    data,
+    error::{ApiError, Result},
+    EndpointResult,
+};
 
 /// Call parameters for requesting recent pvp
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]

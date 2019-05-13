@@ -6,7 +6,6 @@ use url::Url;
 
 mod error {
     use std::{error, fmt};
-    use url;
 
     /// Error turning a screeps API url into a websocket url.
     #[derive(Clone, Debug)]

@@ -1,14 +1,14 @@
 //! Interpreting user self information.
-
-use std::collections::HashMap;
-use std::marker::PhantomData;
+use std::{collections::HashMap, marker::PhantomData};
 
 use time::Timespec;
 
-use crate::data::{self, Badge};
-use crate::data::{optional_timespec_seconds, timespec_seconds};
-use crate::error::{ApiError, Result};
-use crate::EndpointResult;
+use crate::{
+    data::{self, Badge},
+    data::{optional_timespec_seconds, timespec_seconds},
+    error::{ApiError, Result},
+    EndpointResult,
+};
 
 /// User info raw result.
 #[derive(serde_derive::Deserialize, Clone, Debug)]

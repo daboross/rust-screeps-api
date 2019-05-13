@@ -1,10 +1,11 @@
 //! Creating registration calls and interpreting registration results.
+use std::{borrow::Cow, marker::PhantomData};
 
-use crate::data;
-use crate::error::{ApiError, Result};
-use crate::EndpointResult;
-use std::borrow::Cow;
-use std::marker::PhantomData;
+use crate::{
+    data,
+    error::{ApiError, Result},
+    EndpointResult,
+};
 
 /// Registration details
 #[derive(Serialize, Clone, Hash, Debug)]

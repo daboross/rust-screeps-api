@@ -1,29 +1,7 @@
-// .env parsing
-
-extern crate dotenv;
-// logging macros
-
-#[macro_use]
-extern crate log;
-// console logging output
-
-extern crate chrono;
-extern crate fern;
-// sockets
-
-extern crate futures;
-extern crate tokio;
-extern crate websocket;
-// Screeps API
-
-extern crate screeps_api;
-// json pretty printing
-
-extern crate serde_json;
-
 use std::borrow::Cow;
 
 use futures::{future, stream, Future, Sink, Stream};
+use log::{debug, info, warn};
 
 use websocket::OwnedMessage;
 
@@ -83,7 +61,9 @@ fn setup_logging() {
         .unwrap_or(());
 }
 
-fn subscribe_with(id: &str) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
+fn subscribe_with(
+    id: &str,
+) -> Box<dyn Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
     use screeps_api::websocket::subscribe;
 
     let messages = vec![
@@ -144,7 +124,7 @@ fn main() {
                                 future::ok::<_, websocket::WebSocketError>(
                                     Box::new(stream::empty())
                                         as Box<
-                                            Stream<
+                                            dyn Stream<
                                                 Item = OwnedMessage,
                                                 Error = websocket::WebSocketError,
                                             >,
@@ -175,7 +155,7 @@ impl Handler {
     fn handle_data(
         &self,
         data: OwnedMessage,
-    ) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
+    ) -> Box<dyn Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         match data {
             OwnedMessage::Text(string) => {
                 let data = SockjsMessage::parse(&string).expect("expected a SockJS message");
@@ -212,8 +192,8 @@ impl Handler {
 
     fn handle_parsed_message(
         &self,
-        message: screeps_api::websocket::parsing::ScreepsMessage,
-    ) -> Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
+        message: screeps_api::websocket::parsing::ScreepsMessage<'_>,
+    ) -> Box<dyn Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         match message {
             ScreepsMessage::AuthFailed => panic!("authentication with stored token failed!"),
             ScreepsMessage::AuthOk { new_token } => {
@@ -230,7 +210,7 @@ impl Handler {
                         .flatten(),
                     ),
                 )
-                    as Box<Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>;
+                    as Box<dyn Stream<Item = OwnedMessage, Error = websocket::WebSocketError>>;
             }
             ScreepsMessage::ChannelUpdate { update } => {
                 self.handle_update(update);
@@ -252,7 +232,7 @@ impl Handler {
         Box::new(stream::empty())
     }
 
-    fn handle_update(&self, update: ChannelUpdate) {
+    fn handle_update(&self, update: ChannelUpdate<'_>) {
         match update {
             ChannelUpdate::UserConsole { user_id, update } => {
                 assert_eq!(user_id, self.info.user_id);

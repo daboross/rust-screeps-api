@@ -30,31 +30,32 @@ pub mod terminal;
 pub mod tower;
 pub mod wall;
 
-pub use self::container::{StructureContainer, StructureContainerUpdate};
-pub use self::controller::{StructureController, StructureControllerUpdate};
-pub use self::creep::{Creep, CreepUpdate};
-pub use self::extension::{StructureExtension, StructureExtensionUpdate};
-pub use self::keeper_lair::{StructureKeeperLair, StructureKeeperLairUpdate};
-pub use self::lab::{StructureLab, StructureLabUpdate};
-pub use self::link::{StructureLink, StructureLinkUpdate};
-pub use self::mineral::{Mineral, MineralUpdate};
-pub use self::nuker::{StructureNuker, StructureNukerUpdate};
-pub use self::observer::{StructureObserver, StructureObserverUpdate};
-pub use self::portal::{StructurePortal, StructurePortalUpdate};
-pub use self::power_bank::{StructurePowerBank, StructurePowerBankUpdate};
-pub use self::power_spawn::{StructurePowerSpawn, StructurePowerSpawnUpdate};
-pub use self::rampart::{StructureRampart, StructureRampartUpdate};
-pub use self::resource::{Resource, ResourceUpdate};
-pub use self::road::{StructureRoad, StructureRoadUpdate};
-use self::shared::ActionLogTarget;
-pub use self::source::{Source, SourceUpdate};
-pub use self::spawn::{StructureSpawn, StructureSpawnUpdate};
-pub use self::storage::{StructureStorage, StructureStorageUpdate};
-pub use self::terminal::{StructureTerminal, StructureTerminalUpdate};
-pub use self::tower::{StructureTower, StructureTowerUpdate};
-pub use self::wall::{StructureWall, StructureWallUpdate};
+pub use self::{
+    container::{StructureContainer, StructureContainerUpdate},
+    controller::{StructureController, StructureControllerUpdate},
+    creep::{Creep, CreepUpdate},
+    extension::{StructureExtension, StructureExtensionUpdate},
+    keeper_lair::{StructureKeeperLair, StructureKeeperLairUpdate},
+    lab::{StructureLab, StructureLabUpdate},
+    link::{StructureLink, StructureLinkUpdate},
+    mineral::{Mineral, MineralUpdate},
+    nuker::{StructureNuker, StructureNukerUpdate},
+    observer::{StructureObserver, StructureObserverUpdate},
+    portal::{StructurePortal, StructurePortalUpdate},
+    power_bank::{StructurePowerBank, StructurePowerBankUpdate},
+    power_spawn::{StructurePowerSpawn, StructurePowerSpawnUpdate},
+    rampart::{StructureRampart, StructureRampartUpdate},
+    resource::{Resource, ResourceUpdate},
+    road::{StructureRoad, StructureRoadUpdate},
+    source::{Source, SourceUpdate},
+    spawn::{StructureSpawn, StructureSpawnUpdate},
+    storage::{StructureStorage, StructureStorageUpdate},
+    terminal::{StructureTerminal, StructureTerminalUpdate},
+    tower::{StructureTower, StructureTowerUpdate},
+    wall::{StructureWall, StructureWallUpdate},
+};
 
-use serde_json;
+use self::shared::ActionLogTarget;
 
 /// Enum describing all known room objects.
 #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]

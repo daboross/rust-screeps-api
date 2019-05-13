@@ -1,9 +1,9 @@
 //! Interpreting the result of finding the rank of a specific user.
+use std::marker::PhantomData;
 
 use crate::data;
 use crate::error::{ApiError, Result};
 use crate::EndpointResult;
-use std::marker::PhantomData;
 
 /// Raw result for when the API endpoint is called with a specific season id.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]

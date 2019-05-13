@@ -1,9 +1,9 @@
 //! `Resource` data description.
 use std::fmt;
 
-use serde::de::value::Error as ValueError;
 use serde::de::{
-    Deserialize, Deserializer, Error, IgnoredAny, IntoDeserializer, MapAccess, Visitor,
+    value::Error as ValueError, Deserialize, Deserializer, Error, IgnoredAny, IntoDeserializer,
+    MapAccess, Visitor,
 };
 
 use super::super::resources::ResourceType;

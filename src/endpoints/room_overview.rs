@@ -1,9 +1,11 @@
 //! Interpreting room overview results.
-
-use crate::data::{self, Badge};
-use crate::error::{ApiError, Result};
-use crate::EndpointResult;
 use std::marker::PhantomData;
+
+use crate::{
+    data::{self, users::Badge},
+    error::{ApiError, Result},
+    EndpointResult,
+};
 
 /// Room overview raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]

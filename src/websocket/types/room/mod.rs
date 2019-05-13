@@ -3,12 +3,9 @@
 //! This is made significantly more complicated by the fact that all updates besides the initial one are "partial" -
 //! they only contain changes, and each update to a specific room object will not contain the object's type, as it
 //! will not have changed.
-use std::collections::HashMap;
-use std::marker::PhantomData;
+use std::{collections::HashMap, marker::PhantomData};
 
 use crate::data::Badge;
-
-use {serde_json, tuple_vec_map};
 
 pub mod flags;
 #[macro_use]

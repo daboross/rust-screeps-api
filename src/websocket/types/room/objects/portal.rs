@@ -1,6 +1,4 @@
 //! `StructurePortal` data description.
-use time;
-
 use crate::data::{double_optional_timespec_seconds, optional_timespec_seconds, RoomName};
 
 with_update_struct! {

@@ -1,10 +1,11 @@
 //! Interpreting room status results.
-
-use crate::data::{self, RoomName, RoomState};
-use crate::error::{ApiError, Result};
-use crate::EndpointResult;
 use std::marker::PhantomData;
-use time;
+
+use crate::{
+    data::{self, RoomName, RoomState},
+    error::{ApiError, Result},
+    EndpointResult,
+};
 
 /// Room overview raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]

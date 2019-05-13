@@ -1,11 +1,9 @@
 //! Interpreting bulk room statistics (map stats).
 //!
 //! Note: currently only supports "owner0" stats, not any other statistic that can also be retrieved with the same API.
-use std::convert::AsRef;
-use std::marker::PhantomData;
+use std::{convert::AsRef, marker::PhantomData};
 
 use serde::{Serialize, Serializer};
-use time;
 
 use crate::data::{self, optional_timespec_seconds, RoomName};
 

@@ -1,17 +1,13 @@
 //! Parsing messages from Screeps websockets.
-use std::borrow::Cow;
-use std::convert::AsRef;
-use std::marker::PhantomData;
-use std::{cmp, fmt};
+use std::{borrow::Cow, cmp, convert::AsRef, fmt, marker::PhantomData};
 
-use serde::de::{SeqAccess, Visitor};
-use serde::{Deserialize, Deserializer};
-
-use {serde_ignored, serde_json};
-
-use crate::Token;
+use serde::{
+    de::{SeqAccess, Visitor},
+    Deserialize, Deserializer,
+};
 
 use crate::websocket::types::ChannelUpdate;
+use crate::Token;
 
 mod error;
 

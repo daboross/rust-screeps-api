@@ -1,9 +1,7 @@
 //! Module containing macros which simplify making "updateable" structures.
-use crate::data::RoomName;
-
 use time::Timespec;
 
-use serde_json;
+use crate::data::RoomName;
 
 /// Helper trait for the below macros, to help reduce boilerplate further.
 ///

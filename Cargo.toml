@@ -6,6 +6,7 @@ authors = ["David Ross <daboross@daboross.net>"]
 
 categories = ["api-bindings"]
 documentation = "https://docs.rs/screeps-api/"
+edition = "2018"
 include = ["Cargo.toml", "src/**/*", "tests/**/*", "examples/**/*", "LICENSE", "README.md"]
 keywords = ["screeps"]
 license = "MIT"

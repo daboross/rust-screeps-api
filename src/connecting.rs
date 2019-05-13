@@ -1,8 +1,6 @@
 //! Semi-internal functionality related to networking.
 use std::fmt;
 
-use {hyper, serde_ignored, serde_json};
-
 use futures::{Future, Poll, Stream};
 use url::Url;
 

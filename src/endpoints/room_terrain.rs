@@ -1,12 +1,13 @@
 //! Interpreting room terrain results.
-
 use std::marker::PhantomData;
 
 use arrayvec::ArrayVec;
 
-use crate::data;
-use crate::error::{ApiError, Result};
-use crate::EndpointResult;
+use crate::{
+    data,
+    error::{ApiError, Result},
+    EndpointResult,
+};
 
 /// Room overview raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]

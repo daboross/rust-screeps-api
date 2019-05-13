@@ -1,18 +1,7 @@
-// .env parsing
-extern crate dotenv;
-// logging macros
-#[macro_use]
-extern crate log;
-// console logging output
-extern crate chrono;
-extern crate fern;
-// Screeps API
-extern crate screeps_api;
-// json pretty printing
-extern crate serde_json;
-
 use std::borrow::Cow;
 use std::io::{self, Write};
+
+use log::info;
 
 fn opt_env(var: &str, default: &'static str) -> Cow<'static, str> {
     dotenv::dotenv().ok();
@@ -63,7 +52,7 @@ fn main() {
     }
 }
 
-fn perform_registration() -> Result<(), Box<std::error::Error>> {
+fn perform_registration() -> Result<(), Box<dyn std::error::Error>> {
     let http_url = server_url();
 
     let mut client = screeps_api::SyncApi::new()?.with_url(&http_url)?;

@@ -1,5 +1,4 @@
 //! Websocket message parsing errors.
-use serde_json;
 use std::fmt;
 
 /// A SockJS parse error occurred. TODO: more detailed info.

@@ -1,32 +1,24 @@
 //! Small wrapper around the asynchronous Api struct providing synchronous access methods.
-extern crate hyper_tls;
-extern crate tokio;
-
-use std::borrow::Cow;
-use std::io;
-use std::ops::{Deref, DerefMut};
-
-use hyper::{self, Client};
-
-use self::hyper_tls::HttpsConnector;
-use hyper::client::HttpConnector;
-
-use crate::error::Error;
-
-use crate::{Api, Token};
-
-use crate::{
-    FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType, MapStats, MyInfo,
-    RecentPvp, RecentPvpDetails, RegistrationDetails, RegistrationSuccess, RoomOverview,
-    RoomStatus, RoomTerrain, ShardInfo, WorldStartRoom,
+use std::{
+    borrow::Cow,
+    io,
+    ops::{Deref, DerefMut},
 };
 
-type TokioRuntime = self::tokio::runtime::current_thread::Runtime;
+use hyper::client::HttpConnector;
+use hyper::{self, Client};
+use hyper_tls::HttpsConnector;
+
+use crate::{
+    error::Error, Api, FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType,
+    MapStats, MyInfo, RecentPvp, RecentPvpDetails, RegistrationDetails, RegistrationSuccess,
+    RoomOverview, RoomStatus, RoomTerrain, ShardInfo, Token, WorldStartRoom,
+};
+
+type TokioRuntime = tokio::runtime::current_thread::Runtime;
 
 mod error {
-    use super::hyper_tls;
     use std::{fmt, io};
-    use url;
 
     /// Error that can occur from building a [`SyncApi`].
     ///

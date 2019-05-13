@@ -1,8 +1,5 @@
 //! Error types for the screeps api.
-use std::error::Error as StdError;
-use std::{fmt, io, str};
-
-use {hyper, serde_json, url};
+use std::{error::Error as StdError, fmt, io, str};
 
 use crate::data::room_name::RoomNameParseError;
 

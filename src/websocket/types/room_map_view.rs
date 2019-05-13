@@ -1,9 +1,13 @@
 //! Update parsing for spare "map view" room updates
-use std::marker::PhantomData;
-use std::{cmp, fmt};
+use std::{
+    marker::PhantomData,
+    {cmp, fmt},
+};
 
-use serde::de::{DeserializeSeed, Error, MapAccess, SeqAccess, Visitor};
-use serde::{Deserialize, Deserializer};
+use serde::{
+    de::{DeserializeSeed, Error, MapAccess, SeqAccess, Visitor},
+    {Deserialize, Deserializer},
+};
 
 /// "Map view" room status update. This contains all entities in a given room,
 /// organized by what type of thing they are, or who owns them.

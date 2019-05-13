@@ -1,6 +1,7 @@
 //! `StructureLink` data description.
-use super::ActionLogTarget;
 use crate::data::RoomName;
+
+use super::ActionLogTarget;
 
 with_structure_fields_and_update_struct! {
     /// A tower structure - a structure that can be filled with energy, and then attack, heal and
