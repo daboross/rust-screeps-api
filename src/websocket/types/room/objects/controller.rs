@@ -1,7 +1,7 @@
 //! `StructureController` data description.
 use time;
 
-use data::{optional_timespec_seconds, RoomName, RoomSign};
+use crate::data::{optional_timespec_seconds, RoomName, RoomSign};
 
 implement_update_for! {
     RoomSign;
@@ -99,7 +99,7 @@ mod test {
     use serde::Deserialize;
     use {serde_json, time};
 
-    use data::{RoomName, RoomSign};
+    use crate::data::{RoomName, RoomSign};
 
     use super::{ControllerReservation, StructureController};
 

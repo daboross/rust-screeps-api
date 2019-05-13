@@ -1,7 +1,7 @@
 //! `Creep` data description.
 use super::super::resources::ResourceType;
 use super::ActionLogTarget;
-use data::RoomName;
+use crate::data::RoomName;
 
 with_update_struct! {
     /// A struct describing a creep part.
@@ -368,7 +368,7 @@ impl Creep {
 mod test {
     use serde::Deserialize;
 
-    use data::RoomName;
+    use crate::data::RoomName;
 
     use super::{Creep, CreepActions, CreepPartType};
 

@@ -1,9 +1,9 @@
 //! Interpreting room overview results.
 
-use data::{self, Badge};
-use error::{ApiError, Result};
+use crate::data::{self, Badge};
+use crate::error::{ApiError, Result};
+use crate::EndpointResult;
 use std::marker::PhantomData;
-use EndpointResult;
 
 /// Room overview raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
@@ -214,8 +214,8 @@ impl EndpointResult for RoomOverview {
 #[cfg(test)]
 mod tests {
     use super::RoomOverview;
+    use crate::EndpointResult;
     use serde_json;
-    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

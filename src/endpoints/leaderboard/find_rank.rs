@@ -1,9 +1,9 @@
 //! Interpreting the result of finding the rank of a specific user.
 
-use data;
-use error::{ApiError, Result};
+use crate::data;
+use crate::error::{ApiError, Result};
+use crate::EndpointResult;
 use std::marker::PhantomData;
-use EndpointResult;
 
 /// Raw result for when the API endpoint is called with a specific season id.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
@@ -122,8 +122,8 @@ impl EndpointResult for Vec<FoundUserRank> {
 #[cfg(test)]
 mod tests {
     use super::FoundUserRank;
+    use crate::EndpointResult;
     use serde_json;
-    use EndpointResult;
 
     fn test_parse_single(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

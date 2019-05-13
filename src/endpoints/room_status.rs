@@ -1,10 +1,10 @@
 //! Interpreting room status results.
 
-use data::{self, RoomName, RoomState};
-use error::{ApiError, Result};
+use crate::data::{self, RoomName, RoomState};
+use crate::error::{ApiError, Result};
+use crate::EndpointResult;
 use std::marker::PhantomData;
 use time;
-use EndpointResult;
 
 /// Room overview raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
@@ -93,8 +93,8 @@ impl EndpointResult for RoomStatus {
 #[cfg(test)]
 mod tests {
     use super::RoomStatus;
+    use crate::EndpointResult;
     use serde_json;
-    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

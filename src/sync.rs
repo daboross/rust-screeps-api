@@ -1,6 +1,6 @@
 //! Small wrapper around the asynchronous Api struct providing synchronous access methods.
-extern crate tokio;
 extern crate hyper_tls;
+extern crate tokio;
 
 use std::borrow::Cow;
 use std::io;
@@ -24,8 +24,8 @@ use crate::{
 type TokioRuntime = self::tokio::runtime::current_thread::Runtime;
 
 mod error {
-    use std::{fmt, io};
     use super::hyper_tls;
+    use std::{fmt, io};
     use url;
 
     /// Error that can occur from building a [`SyncApi`].

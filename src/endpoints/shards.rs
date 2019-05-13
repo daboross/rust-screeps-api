@@ -1,9 +1,9 @@
 //! Interpreting shard info calls.
 
-use data;
-use error::{ApiError, Result};
+use crate::data;
+use crate::error::{ApiError, Result};
+use crate::EndpointResult;
 use std::marker::PhantomData;
-use EndpointResult;
 
 /// Shard info raw result.
 #[derive(serde_derive::Deserialize, Clone, Debug)]
@@ -77,8 +77,8 @@ impl EndpointResult for Vec<ShardInfo> {
 #[cfg(test)]
 mod tests {
     use super::ShardInfo;
+    use crate::EndpointResult;
     use serde_json;
-    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

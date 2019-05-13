@@ -26,7 +26,7 @@ mod test {
     use serde::Deserialize;
     use serde_json;
 
-    use data::RoomName;
+    use crate::data::RoomName;
 
     use super::StructureRoad;
 

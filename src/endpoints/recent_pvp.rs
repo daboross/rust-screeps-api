@@ -1,9 +1,9 @@
 //! Interpreting rooms in which PvP recently occurred. This is an "experimental" endpoint.
 
-use data;
-use error::{ApiError, Result};
+use crate::data;
+use crate::error::{ApiError, Result};
+use crate::EndpointResult;
 use std::marker::PhantomData;
-use EndpointResult;
 
 /// Call parameters for requesting recent pvp
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
@@ -109,8 +109,8 @@ impl EndpointResult for RecentPvp {
 #[cfg(test)]
 mod tests {
     use super::RecentPvp;
+    use crate::EndpointResult;
     use serde_json;
-    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

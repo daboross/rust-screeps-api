@@ -1,10 +1,10 @@
 //! Creating registration calls and interpreting registration results.
 
-use data;
-use error::{ApiError, Result};
+use crate::data;
+use crate::error::{ApiError, Result};
+use crate::EndpointResult;
 use std::borrow::Cow;
 use std::marker::PhantomData;
-use EndpointResult;
 
 /// Registration details
 #[derive(Serialize, Clone, Hash, Debug)]
@@ -79,8 +79,8 @@ impl EndpointResult for RegistrationSuccess {
 #[cfg(test)]
 mod tests {
     use super::RegistrationSuccess;
+    use crate::EndpointResult;
     use serde_json;
-    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

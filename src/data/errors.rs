@@ -1,5 +1,5 @@
 //! JSON deserializable API error structures.
-use error;
+use crate::error;
 
 /// JSON API error result from the server.
 #[derive(serde_derive::Deserialize, Clone, Eq, PartialEq, Hash, Debug)]
@@ -30,7 +30,7 @@ impl Into<error::Error> for ApiError {
 #[cfg(test)]
 mod tests {
     use super::ApiError;
-    use error;
+    use crate::error;
     use serde_json;
 
     #[test]

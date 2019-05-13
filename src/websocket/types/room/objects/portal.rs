@@ -1,7 +1,7 @@
 //! `StructurePortal` data description.
 use time;
 
-use data::{double_optional_timespec_seconds, optional_timespec_seconds, RoomName};
+use crate::data::{double_optional_timespec_seconds, optional_timespec_seconds, RoomName};
 
 with_update_struct! {
     /// The destination for a portal structure.
@@ -55,7 +55,7 @@ mod test {
     use serde::Deserialize;
     use {serde_json, time};
 
-    use data::RoomName;
+    use crate::data::RoomName;
 
     use super::{PortalDestination, StructurePortal};
 

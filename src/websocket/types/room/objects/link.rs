@@ -1,6 +1,6 @@
 //! `StructureLink` data description.
 use super::ActionLogTarget;
-use data::RoomName;
+use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// A link structure - a structure that can be filled with energy, then instantly send energy to other links
@@ -60,7 +60,7 @@ mod test {
     use serde::Deserialize;
     use serde_json;
 
-    use data::RoomName;
+    use crate::data::RoomName;
 
     use super::{ActionLogTarget, StructureLink, StructureLinkActions};
 

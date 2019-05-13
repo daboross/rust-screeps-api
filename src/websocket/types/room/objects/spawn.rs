@@ -1,5 +1,5 @@
 //! `StructureSpawn` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 with_update_struct! {
     /// A struct describing a creep currently spawning (used as part of the update for a StructureSpawn).
@@ -64,7 +64,7 @@ mod test {
 
     use serde::Deserialize;
 
-    use data::RoomName;
+    use crate::data::RoomName;
 
     use super::{SpawningCreep, StructureSpawn};
 

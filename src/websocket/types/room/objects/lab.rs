@@ -1,5 +1,5 @@
 //! `StructureLab` data description.
-use data::RoomName;
+use crate::data::RoomName;
 
 use super::super::resources::ResourceType;
 
@@ -89,7 +89,7 @@ mod test {
     use serde::Deserialize;
     use serde_json;
 
-    use data::RoomName;
+    use crate::data::RoomName;
 
     use super::{LabActionTarget, ResourceType, StructureLab, StructureLabActions};
 

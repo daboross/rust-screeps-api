@@ -332,7 +332,7 @@ impl<'de> Deserialize<'de> for ResourceUpdate {
 mod test {
     use serde::Deserialize;
 
-    use data::RoomName;
+    use crate::data::RoomName;
 
     use super::{Resource, ResourceType};
 

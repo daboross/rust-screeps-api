@@ -6,8 +6,8 @@ use std::marker::PhantomData;
 use serde::de::{self, SeqAccess, Unexpected, Visitor};
 use serde::{Deserialize, Deserializer};
 
-use serde_json;
 use crate::websocket::Channel;
+use serde_json;
 
 use crate::RoomName;
 

@@ -241,7 +241,7 @@ mod test {
     use serde::Deserialize;
 
     use super::StructureContainer;
-    use websocket::types::room::resources::ResourceType;
+    use crate::websocket::types::room::resources::ResourceType;
 
     #[test]
     fn parse_container() {

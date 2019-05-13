@@ -4,9 +4,9 @@ use std::marker::PhantomData;
 
 use arrayvec::ArrayVec;
 
-use data;
-use error::{ApiError, Result};
-use EndpointResult;
+use crate::data;
+use crate::error::{ApiError, Result};
+use crate::EndpointResult;
 
 /// Room overview raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
@@ -148,8 +148,8 @@ impl EndpointResult for RoomTerrain {
 #[cfg(test)]
 mod tests {
     use super::RoomTerrain;
+    use crate::EndpointResult;
     use serde_json;
-    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

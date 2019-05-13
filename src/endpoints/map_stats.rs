@@ -7,11 +7,11 @@ use std::marker::PhantomData;
 use serde::{Serialize, Serializer};
 use time;
 
-use data::{self, optional_timespec_seconds, RoomName};
+use crate::data::{self, optional_timespec_seconds, RoomName};
 
-use error::ApiError;
-use error::Result as ScapiResult;
-use EndpointResult;
+use crate::error::ApiError;
+use crate::error::Result as ScapiResult;
+use crate::EndpointResult;
 
 /// Stat name argument to the map stats call. Only one possible argument implemented, more to come!
 #[derive(Serialize, Clone, Eq, PartialEq, Hash, Debug)]
@@ -275,8 +275,8 @@ impl EndpointResult for MapStats {
 #[cfg(test)]
 mod tests {
     use super::MapStats;
+    use crate::EndpointResult;
     use serde_json;
-    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

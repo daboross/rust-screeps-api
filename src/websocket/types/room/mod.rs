@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-use data::Badge;
+use crate::data::Badge;
 
 use {serde_json, tuple_vec_map};
 

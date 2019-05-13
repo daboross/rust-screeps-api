@@ -1,11 +1,11 @@
 //! Interpreting user leaderboard page results.
 
 use super::find_rank;
-use data;
-use error::{ApiError, Result};
+use crate::data;
+use crate::error::{ApiError, Result};
+use crate::EndpointResult;
 use std::collections::HashMap;
 use std::marker::PhantomData;
-use EndpointResult;
 
 /// Raw list results.
 #[derive(serde_derive::Deserialize, Clone, Debug)]
@@ -118,8 +118,8 @@ impl EndpointResult for LeaderboardPage {
 #[cfg(test)]
 mod tests {
     use super::LeaderboardPage;
+    use crate::EndpointResult;
     use serde_json;
-    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

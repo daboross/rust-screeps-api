@@ -2,10 +2,10 @@
 use std::borrow::Cow;
 use std::marker::PhantomData;
 
-use data;
-use error::{ApiError, Result};
+use crate::data;
+use crate::error::{ApiError, Result};
 
-use {EndpointResult, Token, TokenStorage};
+use crate::{EndpointResult, Token, TokenStorage};
 
 /// Login details
 #[derive(Serialize, Clone, Hash, Debug)]
@@ -78,8 +78,8 @@ impl EndpointResult for LoggedIn {
 #[cfg(test)]
 mod tests {
     use super::LoggedIn;
+    use crate::EndpointResult;
     use serde_json;
-    use EndpointResult;
 
     fn test_parse(json: serde_json::Value) {
         let response = serde_json::from_value(json).unwrap();

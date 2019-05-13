@@ -30,7 +30,7 @@ with_base_fields_and_update_struct! {
 mod test {
     use serde::Deserialize;
 
-    use data::RoomName;
+    use crate::data::RoomName;
 
     use super::{Mineral, ResourceType};
 
