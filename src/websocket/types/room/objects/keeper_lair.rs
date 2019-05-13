@@ -58,8 +58,8 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "nextSpawnTime": 20000000,
-        }))
+                "nextSpawnTime": 20000000,
+            }))
             .unwrap(),
         );
 
@@ -102,8 +102,8 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "nextSpawnTime": null,
-        }))
+                "nextSpawnTime": null,
+            }))
             .unwrap(),
         );
 

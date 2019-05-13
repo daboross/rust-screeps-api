@@ -70,10 +70,10 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "x": 40,
-            "y": 50,
-            "energy": 0,
-        }))
+                "x": 40,
+                "y": 50,
+                "energy": 0,
+            }))
             .unwrap(),
         );
 

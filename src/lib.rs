@@ -73,9 +73,9 @@ extern crate time;
 extern crate tuple_vec_map;
 
 // HTTP
+extern crate bytes;
 extern crate futures;
 extern crate hyper;
-extern crate bytes;
 extern crate url;
 
 // Websockets
@@ -745,14 +745,15 @@ where
             request.header("X-Token", token.clone());
         }
 
-        let request =
-            if let Some(ref serializable) = post_body {
-                request.body(hyper::Body::from(serde_json::to_string(serializable).expect(
+        let request = if let Some(ref serializable) = post_body {
+            request.body(hyper::Body::from(
+                serde_json::to_string(serializable).expect(
                     "expected serde_json::to_string to unfailingly succeed, but it failed.",
-                )))
-            } else {
-                request.body(hyper::Body::empty())
-            };
+                ),
+            ))
+        } else {
+            request.body(hyper::Body::empty())
+        };
         let request = request.expect("building http request should never fail");
 
         let hyper_future = client.client.client().request(request);
@@ -763,7 +764,6 @@ where
         A::successful_result(finished)
     }
 }
-
 
 /// Calculates GCL, given GCL points.
 #[inline]

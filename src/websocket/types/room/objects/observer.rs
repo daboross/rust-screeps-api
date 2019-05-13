@@ -76,8 +76,8 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "observeRoom": "E4N20"
-        }))
+                "observeRoom": "E4N20"
+            }))
             .unwrap(),
         );
 

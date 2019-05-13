@@ -603,7 +603,8 @@ mod test {
                         part.part_type == CreepPartType::Move
                             || part.part_type == CreepPartType::Work
                             || part.part_type == CreepPartType::Carry
-                    }) {
+                    })
+                {
                     panic!("some fields wrong from pre-set Creep: {:#?}", obj);
                 }
             }

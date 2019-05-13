@@ -142,42 +142,42 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "cooldown": 5
-        }))
+                "cooldown": 5
+            }))
             .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
-            "cooldown": 4
-        }))
+                "cooldown": 4
+            }))
             .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
-            "cooldown": 3
-        }))
+                "cooldown": 3
+            }))
             .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
-            "cooldown": 2
-        }))
+                "cooldown": 2
+            }))
             .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
-            "cooldown": 1
-        }))
+                "cooldown": 1
+            }))
             .unwrap(),
         );
         obj.update(
             serde_json::from_value(json!({
-            "cooldown": 0
-        }))
+                "cooldown": 0
+            }))
             .unwrap(),
         );
 
@@ -185,17 +185,17 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "actionLog": {
-                "runReaction": {
-                    "x1": 18,
-                    "x2": 17,
-                    "y1": 9,
-                    "y2": 10
-                }
-            },
-            "cooldown": 9,
-            "mineralAmount": 160
-        }))
+                "actionLog": {
+                    "runReaction": {
+                        "x1": 18,
+                        "x2": 17,
+                        "y1": 9,
+                        "y2": 10
+                    }
+                },
+                "cooldown": 9,
+                "mineralAmount": 160
+            }))
             .unwrap(),
         );
 
@@ -213,11 +213,11 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "cooldown": 8,
-            "actionLog": {
-                "runReaction": null,
-            },
-        }))
+                "cooldown": 8,
+                "actionLog": {
+                    "runReaction": null,
+                },
+            }))
             .unwrap(),
         );
 

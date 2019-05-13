@@ -112,14 +112,14 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "actionLog": {
-                "attack": {
-                    "x": 10,
-                    "y": 10
-                }
-            },
-            "energy": 820
-        }))
+                "actionLog": {
+                    "attack": {
+                        "x": 10,
+                        "y": 10
+                    }
+                },
+                "energy": 820
+            }))
             .unwrap(),
         );
 

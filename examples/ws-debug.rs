@@ -365,7 +365,9 @@ where
             }
             OwnedMessage::Binary(data) => warn!("ignoring binary data from websocket: {:?}", data),
             OwnedMessage::Close(data) => warn!("connection closing: {:?}", data),
-            OwnedMessage::Ping(data) => return Box::new(stream::once(Ok(OwnedMessage::Pong(data)))),
+            OwnedMessage::Ping(data) => {
+                return Box::new(stream::once(Ok(OwnedMessage::Pong(data))))
+            }
             OwnedMessage::Pong(_) => (),
         }
 

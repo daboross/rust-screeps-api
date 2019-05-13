@@ -109,22 +109,22 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "cooldown": 2
-        }))
+                "cooldown": 2
+            }))
             .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
-            "cooldown": 1
-        }))
+                "cooldown": 1
+            }))
             .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
-            "cooldown": 0
-        }))
+                "cooldown": 0
+            }))
             .unwrap(),
         );
 
@@ -132,15 +132,15 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "actionLog": {
-                "transferEnergy": {
-                    "x": 9,
-                    "y": 18
-                }
-            },
-            "cooldown": 11,
-            "energy": 0
-        }))
+                "actionLog": {
+                    "transferEnergy": {
+                        "x": 9,
+                        "y": 18
+                    }
+                },
+                "cooldown": 11,
+                "energy": 0
+            }))
             .unwrap(),
         );
 
@@ -153,12 +153,12 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "actionLog": {
-                "transferEnergy": null
-            },
-            "cooldown": 10,
-            "energy": 50
-        }))
+                "actionLog": {
+                    "transferEnergy": null
+                },
+                "cooldown": 10,
+                "energy": 50
+            }))
             .unwrap(),
         );
 

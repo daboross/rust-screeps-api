@@ -163,8 +163,8 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "safeModeAvailable": 8,
-        }))
+                "safeModeAvailable": 8,
+            }))
             .unwrap(),
         );
 
@@ -252,10 +252,10 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "reservation": {
-                "endTime": 20158029,
-            },
-        }))
+                "reservation": {
+                    "endTime": 20158029,
+                },
+            }))
             .unwrap(),
         );
 
@@ -315,8 +315,8 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "sign": null,
-        }))
+                "sign": null,
+            }))
             .unwrap(),
         );
 

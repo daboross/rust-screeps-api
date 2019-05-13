@@ -59,10 +59,13 @@ where
             .and_then(|(url, response)| {
                 let status = response.status();
 
-                response.into_body().concat2().then(move |result| match result {
-                    Ok(v) => Ok((status, url, v)),
-                    Err(e) => Err(Error::with_url(e, Some(url))),
-                })
+                response
+                    .into_body()
+                    .concat2()
+                    .then(move |result| match result {
+                        Ok(v) => Ok((status, url, v)),
+                        Err(e) => Err(Error::with_url(e, Some(url))),
+                    })
             })
             .and_then(
                 |(status, url, data): (hyper::StatusCode, _, hyper::Chunk)| {

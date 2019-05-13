@@ -79,9 +79,9 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "energy": 0,
-            "notifyWhenAttacked": false,
-        }))
+                "energy": 0,
+                "notifyWhenAttacked": false,
+            }))
             .unwrap(),
         );
 

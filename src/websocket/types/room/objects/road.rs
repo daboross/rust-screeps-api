@@ -62,10 +62,10 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            // note: these are fake values, not a real update.
-            "hits": 2000,
-            "nextDecayTime": 20000000,
-        }))
+                // note: these are fake values, not a real update.
+                "hits": 2000,
+                "nextDecayTime": 20000000,
+            }))
             .unwrap(),
         );
 

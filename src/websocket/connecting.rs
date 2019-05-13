@@ -1,7 +1,7 @@
 //! Websocket url utilities.
 use std::str;
 
-use rand::{self, Rng, seq::SliceRandom};
+use rand::{self, seq::SliceRandom, Rng};
 use url::Url;
 
 mod error {

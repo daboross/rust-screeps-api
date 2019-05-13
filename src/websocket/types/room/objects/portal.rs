@@ -133,9 +133,9 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "decayTime": 20197693,
-            "unstableDate": null,
-        }))
+                "decayTime": 20197693,
+                "unstableDate": null,
+            }))
             .unwrap(),
         );
 

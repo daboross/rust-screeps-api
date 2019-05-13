@@ -118,37 +118,37 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "spawning": {
-                "remainingTime": 4,
-            },
-        }))
+                "spawning": {
+                    "remainingTime": 4,
+                },
+            }))
             .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
-            "spawning": {
-                "remainingTime": 3,
-            },
-        }))
+                "spawning": {
+                    "remainingTime": 3,
+                },
+            }))
             .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
-            "spawning": {
-                "remainingTime": 2,
-            },
-        }))
+                "spawning": {
+                    "remainingTime": 2,
+                },
+            }))
             .unwrap(),
         );
 
         obj.update(
             serde_json::from_value(json!({
-            "spawning": {
-                "remainingTime": 1,
-            },
-        }))
+                "spawning": {
+                    "remainingTime": 1,
+                },
+            }))
             .unwrap(),
         );
 
@@ -163,8 +163,8 @@ mod test {
 
         obj.update(
             serde_json::from_value(json!({
-            "spawning": null,
-        }))
+                "spawning": null,
+            }))
             .unwrap(),
         );
 
