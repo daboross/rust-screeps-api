@@ -102,7 +102,6 @@ use std::{
     borrow::Cow,
     convert::AsRef,
     marker::PhantomData,
-    rc::Rc,
     sync::{Arc, PoisonError, RwLock},
 };
 
@@ -161,72 +160,23 @@ impl TokenStorage {
     }
 }
 
-/// A generic trait over hyper's Client which allows for references, owned clients, and
-/// `Arc<hyper::Client>` to be used.
-pub trait HyperClient<C>
-where
-    C: hyper::client::connect::Connect,
-{
-    /// Get a reference to this client.
-    fn client(&self) -> &hyper::Client<C>;
-}
-
-impl<C> HyperClient<C> for hyper::Client<C>
-where
-    C: hyper::client::connect::Connect,
-{
-    fn client(&self) -> &hyper::Client<C> {
-        self
-    }
-}
-
-impl<'a, C> HyperClient<C> for &'a hyper::Client<C>
-where
-    C: hyper::client::connect::Connect,
-{
-    fn client(&self) -> &hyper::Client<C> {
-        self
-    }
-}
-
-impl<C> HyperClient<C> for Arc<hyper::Client<C>>
-where
-    C: hyper::client::connect::Connect,
-{
-    fn client(&self) -> &hyper::Client<C> {
-        self
-    }
-}
-
-impl<C> HyperClient<C> for Rc<hyper::Client<C>>
-where
-    C: hyper::client::connect::Connect,
-{
-    fn client(&self) -> &hyper::Client<C> {
-        self
-    }
-}
-
 /// API Object, stores the current API token and allows access to making requests.
 #[derive(Debug)]
-pub struct Api<C, H = hyper::Client<C>> {
+pub struct Api<C> {
     /// The base URL for this API instance.
     pub url: Url,
     /// The authentication token.
     auth_token: TokenStorage,
     /// The hyper client.
-    client: H,
-    /// Phantom data required in order to have C bound here.
-    _phantom: PhantomData<C>,
+    client: hyper::Client<C>,
 }
 
-impl<C, H: Clone> Clone for Api<C, H> {
+impl<C> Clone for Api<C> {
     fn clone(&self) -> Self {
         Api {
             url: self.url.clone(),
             auth_token: self.auth_token.clone(),
             client: self.client.clone(),
-            _phantom: PhantomData,
         }
     }
 }
@@ -238,7 +188,7 @@ fn default_url() -> Url {
     Url::parse(DEFAULT_OFFICIAL_API_URL).expect("expected pre-set url to parse, parsing failed")
 }
 
-impl<C, H> Api<C, H> {
+impl<C> Api<C> {
     /// Creates a new API instance for the official server with the `https://screeps.com/api/` base
     /// url.
     ///
@@ -247,12 +197,11 @@ impl<C, H> Api<C, H> {
     /// The returned instance can be used to make anonymous calls. Use [`with_token`] or
     /// [`set_token`] to enable authenticated access.
     #[inline]
-    pub fn new(client: H) -> Self {
+    pub fn new(client: hyper::Client<C>) -> Self {
         Api {
             url: default_url(),
             client,
             auth_token: TokenStorage::default(),
-            _phantom: PhantomData,
         }
     }
 
@@ -298,13 +247,10 @@ impl<C, H> Api<C, H> {
     }
 }
 
-impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> {
+impl<C: hyper::client::connect::Connect + 'static> Api<C> {
     /// Starts preparing a POST or GET request to the given endpoint URL
     #[inline]
-    fn request<'a, R, S>(
-        &'a self,
-        endpoint: &'a str,
-    ) -> PartialRequest<'a, C, H, R, NoAuthRequired, S>
+    fn request<'a, R, S>(&'a self, endpoint: &'a str) -> PartialRequest<'a, C, R, NoAuthRequired, S>
     where
         R: EndpointResult,
         S: serde::Serialize,
@@ -324,7 +270,7 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
     fn get<'a, R>(
         &'a self,
         endpoint: &'a str,
-    ) -> PartialRequest<'a, C, H, R, NoAuthRequired, &'static str>
+    ) -> PartialRequest<'a, C, R, NoAuthRequired, &'static str>
     where
         R: EndpointResult,
     {
@@ -338,7 +284,7 @@ impl<C: hyper::client::connect::Connect + 'static, H: HyperClient<C>> Api<C, H> 
         &'a self,
         endpoint: &'a str,
         request_text: U,
-    ) -> PartialRequest<'a, C, H, R, NoAuthRequired, U>
+    ) -> PartialRequest<'a, C, R, NoAuthRequired, U>
     where
         U: serde::Serialize,
         R: EndpointResult,
@@ -645,30 +591,28 @@ impl<T> PartialRequestAuth<T> for AuthRequired {
     }
 }
 
-struct PartialRequest<'a, C, H, R, A = NoAuthRequired, S = &'static str>
+struct PartialRequest<'a, C, R, A = NoAuthRequired, S = &'static str>
 where
     C: hyper::client::connect::Connect,
-    H: HyperClient<C> + 'a,
     R: EndpointResult,
     A: PartialRequestAuth<FutureResponse<R>>,
     S: serde::Serialize + 'a,
 {
-    client: &'a Api<C, H>,
+    client: &'a Api<C>,
     endpoint: &'a str,
     query_params: Option<&'a [(&'static str, String)]>,
     post_body: Option<S>,
     _phantom: PhantomData<(R, A)>,
 }
 
-impl<'a, C, H, R, S> PartialRequest<'a, C, H, R, NoAuthRequired, S>
+impl<'a, C, R, S> PartialRequest<'a, C, R, NoAuthRequired, S>
 where
     C: hyper::client::connect::Connect + 'static,
-    H: HyperClient<C> + 'a,
     R: EndpointResult,
     S: serde::Serialize,
 {
     #[inline]
-    fn auth(self) -> PartialRequest<'a, C, H, R, AuthRequired, S> {
+    fn auth(self) -> PartialRequest<'a, C, R, AuthRequired, S> {
         PartialRequest {
             client: self.client,
             endpoint: self.endpoint,
@@ -679,17 +623,16 @@ where
     }
 }
 
-impl<'a, C, H, R, S> PartialRequest<'a, C, H, R, AuthRequired, S>
+impl<'a, C, R, S> PartialRequest<'a, C, R, AuthRequired, S>
 where
     C: hyper::client::connect::Connect + 'static,
-    H: HyperClient<C> + 'a,
     R: EndpointResult,
     S: serde::Serialize,
 {
     // This particular method should be a useful one to have around, even if just for completeness.
     #[allow(dead_code)]
     #[inline]
-    fn no_auth(self) -> PartialRequest<'a, C, H, R, NoAuthRequired, S> {
+    fn no_auth(self) -> PartialRequest<'a, C, R, NoAuthRequired, S> {
         PartialRequest {
             client: self.client,
             endpoint: self.endpoint,
@@ -700,10 +643,9 @@ where
     }
 }
 
-impl<'a, C, H, R, A, S> PartialRequest<'a, C, H, R, A, S>
+impl<'a, C, R, A, S> PartialRequest<'a, C, R, A, S>
 where
     C: hyper::client::connect::Connect + 'static,
-    H: HyperClient<C> + 'a,
     R: EndpointResult,
     A: PartialRequestAuth<FutureResponse<R>>,
     S: serde::Serialize,
@@ -793,7 +735,7 @@ where
         };
         let request = request.expect("building http request should never fail");
 
-        let hyper_future = client.client.client().request(request);
+        let hyper_future = client.client.request(request);
         let finished = connecting::interpret(client.auth_token.clone(), url, hyper_future);
 
         // turns into either `Result<FutureResponse<..>>` or `FutureResponse<..>` depending on

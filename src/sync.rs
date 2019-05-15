@@ -89,9 +89,9 @@ pub use self::error::SyncError;
 ///
 /// [`Api`]: ../struct.Api.html
 #[derive(Debug)]
-pub struct SyncApi<C: hyper::client::connect::Connect = HttpsConnector<HttpConnector>> {
+pub struct SyncApi<C = HttpsConnector<HttpConnector>> {
     runtime: TokioRuntime,
-    client: Api<C, Client<C>>,
+    client: Api<C>,
 }
 
 impl SyncApi<HttpsConnector<HttpConnector>> {
@@ -115,15 +115,15 @@ impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
     }
 }
 
-impl<C: hyper::client::connect::Connect> Deref for SyncApi<C> {
-    type Target = Api<C, Client<C>>;
+impl<C> Deref for SyncApi<C> {
+    type Target = Api<C>;
 
     fn deref(&self) -> &Self::Target {
         &self.client
     }
 }
 
-impl<C: hyper::client::connect::Connect> DerefMut for SyncApi<C> {
+impl<C> DerefMut for SyncApi<C> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.client
     }
