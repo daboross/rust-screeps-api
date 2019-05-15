@@ -55,6 +55,8 @@ pub use self::{
     wall::{StructureWall, StructureWallUpdate},
 };
 
+use crate::RoomName;
+
 use self::shared::ActionLogTarget;
 
 /// Enum describing all known room objects.
@@ -109,32 +111,62 @@ pub enum KnownRoomObject {
     Resource(Resource),
 }
 
+macro_rules! match_many_variants {
+    (
+        $src:ident, ($(
+            $enum_name:ident
+        ),*) ($name:ident) => $code:expr
+    ) => (
+        match $src {
+            $(
+                KnownRoomObject::$enum_name($name) => $code,
+            )*
+        }
+    )
+}
+
+macro_rules! match_obj_variants {
+    (
+        $src:ident, $name:ident => $code:expr
+    ) => (
+        match_many_variants!(
+            $src,
+            (Source, Mineral, Spawn, Extension, Wall, Road, Rampart, KeeperLair, Controller, Portal,
+            Link, Storage, Tower, Observer, PowerBank, PowerSpawn, Lab, Terminal, Container, Nuker,
+            Creep, Resource)
+            ($name) => $code
+        )
+    )
+}
+
 impl KnownRoomObject {
     /// Update this room object with a JSON update string.
     pub fn update(&mut self, input: serde_json::Value) -> Result<(), serde_json::Error> {
-        use self::KnownRoomObject::*;
-
-        macro_rules! large_match {
-            (
-                $(
-                    $enum_name:ident
-                ),*
-            ) => (
-                match *self {
-                    $(
-                        $enum_name(ref mut value) => value.update(serde_json::from_value(input)?),
-                    )*
-                }
-            )
-        }
-
-        large_match!(
-            Source, Mineral, Spawn, Extension, Wall, Road, Rampart, KeeperLair, Controller, Portal,
-            Link, Storage, Tower, Observer, PowerBank, PowerSpawn, Lab, Terminal, Container, Nuker,
-            Creep, Resource
+        match_obj_variants!(
+            self, value => value.update(serde_json::from_value(input)?)
         );
 
         Ok(())
+    }
+
+    /// Get this object's x position
+    pub fn x(&self) -> u16 {
+        match_obj_variants!(self, v => v.x)
+    }
+
+    /// Get this object's y position
+    pub fn y(&self) -> u16 {
+        match_obj_variants!(self, v => v.y)
+    }
+
+    /// Get this object's id
+    pub fn id(&self) -> &str {
+        match_obj_variants!(self, v => &v.id)
+    }
+
+    /// Get this object's room name
+    pub fn room(&self) -> RoomName {
+        match_obj_variants!(self, v => v.room)
     }
 }
 
