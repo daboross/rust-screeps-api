@@ -688,7 +688,7 @@ macro_rules! with_structure_fields_and_update_struct {
                 #[serde(default)]
                 pub hits: i32,
                 /// The maximum number of hit-points this structure has.
-                #[serde(rename = "hitsMax")]
+                #[serde(default, rename = "hitsMax")]
                 pub hits_max: i32,
                 $(
                     $( #[$field_attr] )*

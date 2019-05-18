@@ -45,8 +45,10 @@ with_structure_fields_and_update_struct! {
     #[serde(rename_all = "camelCase")]
     pub struct StructureController {
         /// The number of upgrade points the controller has.
+        #[serde(default)]
         pub progress: u64,
         /// The number of upgrade points needed before the next level is reached.
+        #[serde(default)]
         pub progress_total: u64,
         /// The current controller level (1-8 inclusive).
         pub level: u16,
@@ -340,6 +342,46 @@ mod test {
                 user: Some("57874d42d0ae911e3bd15bbc".to_owned()),
             },
             "signal failure text"
+        );
+    }
+
+    #[test]
+    fn parse_controller_with_very_few_fields() {
+        // real data I found on the live server in shard3
+        let json = json!(
+            {
+                "_id": "5bbcad499099fc012e6370bb",
+                "room": "E6S31",
+                "type": "controller",
+                "x": 35,
+                "y": 27,
+                "level": 0,
+                "reservation": null,
+            }
+        );
+        let obj = StructureController::deserialize(&json).unwrap();
+
+        assert_eq!(
+            obj,
+            StructureController {
+                id: "5bbcad499099fc012e6370bb".to_owned(),
+                room: RoomName::new("E6S31").unwrap(),
+                x: 35,
+                y: 27,
+                downgrade_time: None,
+                hits: 0,
+                hits_max: 0,
+                level: 0,
+                progress: 0,
+                progress_total: 0,
+                reservation: None,
+                safe_mode: None,
+                safe_mode_available: 0,
+                safe_mode_cooldown: 0,
+                upgrade_blocked: None,
+                user: None,
+                sign: None,
+            }
         );
     }
 }
