@@ -18,9 +18,9 @@ with_update_struct! {
         /// Room object is in.
         pub room: RoomName,
         /// X position within the room (0-50).
-        pub x: u16,
+        pub x: u32,
         /// Y position within the room (0-50).
-        pub y: u16,
+        pub y: u32,
         /// Resource type that this resource is.
         pub resource_type: ResourceType,
         /// Resource amount that this resource is.
@@ -33,8 +33,8 @@ with_update_struct! {
     pub struct ResourceUpdate {
         - id: String,
         - room: RoomName,
-        - x: u16,
-        - y: u16,
+        - x: u32,
+        - y: u32,
         - resource_type: ResourceType,
         - amount: i32,
     }
@@ -133,8 +133,8 @@ impl<'de> Deserialize<'de> for Resource {
             {
                 let mut id: Option<String> = None;
                 let mut room: Option<RoomName> = None;
-                let mut x: Option<u16> = None;
-                let mut y: Option<u16> = None;
+                let mut x: Option<u32> = None;
+                let mut y: Option<u32> = None;
                 let mut resource_type: Option<ResourceType> = None;
                 let mut resource_amount: Option<(ResourceType, i32)> = None;
                 while let Some(key) = access.next_key::<FieldName>()? {
@@ -155,13 +155,13 @@ impl<'de> Deserialize<'de> for Resource {
                             if Option::is_some(&x) {
                                 return Err(A::Error::duplicate_field("x"));
                             }
-                            x = Some(access.next_value::<u16>()?);
+                            x = Some(access.next_value::<u32>()?);
                         }
                         FieldName::Y => {
                             if Option::is_some(&y) {
                                 return Err(A::Error::duplicate_field("y"));
                             }
-                            y = Some(access.next_value::<u16>()?);
+                            y = Some(access.next_value::<u32>()?);
                         }
                         FieldName::ResourceType => {
                             if Option::is_some(&resource_type) {
@@ -245,8 +245,8 @@ impl<'de> Deserialize<'de> for ResourceUpdate {
             {
                 let mut id: Option<String> = None;
                 let mut room: Option<RoomName> = None;
-                let mut x: Option<u16> = None;
-                let mut y: Option<u16> = None;
+                let mut x: Option<u32> = None;
+                let mut y: Option<u32> = None;
                 let mut resource_type: Option<ResourceType> = None;
                 let mut amount: Option<i32> = None;
                 while let Some(key) = access.next_key::<FieldName>()? {
@@ -267,13 +267,13 @@ impl<'de> Deserialize<'de> for ResourceUpdate {
                             if Option::is_some(&x) {
                                 return Err(A::Error::duplicate_field("x"));
                             }
-                            x = Some(access.next_value::<u16>()?);
+                            x = Some(access.next_value::<u32>()?);
                         }
                         FieldName::Y => {
                             if Option::is_some(&y) {
                                 return Err(A::Error::duplicate_field("y"));
                             }
-                            y = Some(access.next_value::<u16>()?);
+                            y = Some(access.next_value::<u32>()?);
                         }
                         FieldName::ResourceType => {
                             if Option::is_some(&resource_type) {

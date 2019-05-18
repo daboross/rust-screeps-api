@@ -5,9 +5,9 @@ with_update_struct! {
     #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
     pub struct ActionLogTarget {
         /// The in-room x position of this target.
-        pub x: u16,
+        pub x: u32,
         /// The in-room x position of this target.
-        pub y: u16,
+        pub y: u32,
     }
 
     /// The update structure for an `ActionLogTarget`.

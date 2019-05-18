@@ -54,13 +54,13 @@ with_update_struct! {
     #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
     pub struct LabActionTarget {
         /// The x position of the first source lab.
-        pub x1: u16,
+        pub x1: u32,
         /// The y position of the first source lab.
-        pub y1: u16,
+        pub y1: u32,
         /// The x position of the second source lab.
-        pub x2: u16,
+        pub x2: u32,
         /// The y position of the second source lab.
-        pub y2: u16,
+        pub y2: u32,
     }
 
     /// The update structure for a `LabActionTarget`.

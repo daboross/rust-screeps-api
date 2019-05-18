@@ -150,12 +150,12 @@ impl KnownRoomObject {
     }
 
     /// Get this object's x position
-    pub fn x(&self) -> u16 {
+    pub fn x(&self) -> u32 {
         match_obj_variants!(self, v => v.x)
     }
 
     /// Get this object's y position
-    pub fn y(&self) -> u16 {
+    pub fn y(&self) -> u32 {
         match_obj_variants!(self, v => v.y)
     }
 

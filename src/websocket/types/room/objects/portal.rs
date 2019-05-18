@@ -8,9 +8,9 @@ with_update_struct! {
         /// The room name the other side of this portal ends at.
         pub room: RoomName,
         /// The in-room X position of the other side of this portal.
-        pub x: u16,
+        pub x: u32,
         /// The in-room Y position of the other side of this portal.
-        pub y: u16,
+        pub y: u32,
     }
 
     /// The update structure for a portal destination.

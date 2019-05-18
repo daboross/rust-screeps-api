@@ -159,4 +159,4 @@ macro_rules! str_mod {
 // str_mod!(i32_or_str_containing, optional_i32_or_str_containing, i32);
 str_mod!(u32_or_str_containing, optional_u32_or_str_containing, u32);
 // str_mod!(i16_or_str_containing, optional_i16_or_str_containing, i16);
-str_mod!(u16_or_str_containing, optional_u16_or_str_containing, u16);
+// str_mod!(u16_or_str_containing, optional_u16_or_str_containing, u16);

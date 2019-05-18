@@ -13,9 +13,9 @@ pub struct Flag {
     /// The secondary color of the flag.
     pub secondary_color: FlagColor,
     /// The X position of the flag.
-    pub x: i8,
+    pub x: u32,
     /// The Y position of the flag.
-    pub y: i8,
+    pub y: u32,
 }
 
 /// All possible colors a flag can have.

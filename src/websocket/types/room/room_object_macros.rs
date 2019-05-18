@@ -597,11 +597,11 @@ macro_rules! with_base_fields_and_update_struct {
                 /// Room object is in.
                 pub room: RoomName,
                 /// X position within the room (0-50).
-                #[serde(with = "crate::decoders::u16_or_str_containing")]
-                pub x: u16,
+                #[serde(with = "crate::decoders::u32_or_str_containing")]
+                pub x: u32,
                 /// Y position within the room (0-50).
-                #[serde(with = "crate::decoders::u16_or_str_containing")]
-                pub y: u16,
+                #[serde(with = "crate::decoders::u32_or_str_containing")]
+                pub y: u32,
                 $(
                     $( #[$field_attr] )*
                     $( ($field_extra:tt) )*
@@ -616,12 +616,12 @@ macro_rules! with_base_fields_and_update_struct {
                 #[serde(rename = "_id")]
                 - id: String,
                 - room: RoomName,
-                #[serde(default, with = "crate::decoders::optional_u16_or_str_containing")]
+                #[serde(default, with = "crate::decoders::optional_u32_or_str_containing")]
                 (no_extra_meta)
-                - x: u16,
-                #[serde(default, with = "crate::decoders::optional_u16_or_str_containing")]
+                - x: u32,
+                #[serde(default, with = "crate::decoders::optional_u32_or_str_containing")]
                 (no_extra_meta)
-                - y: u16,
+                - y: u32,
                 $( $update_field )*
             }
         }
