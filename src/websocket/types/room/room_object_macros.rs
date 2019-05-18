@@ -1,7 +1,7 @@
 //! Module containing macros which simplify making "updateable" structures.
 use time::Timespec;
 
-use crate::data::RoomName;
+use crate::data::{Badge, RoomName};
 
 /// Helper trait for the below macros, to help reduce boilerplate further.
 ///
@@ -19,28 +19,25 @@ pub(super) trait Updatable: Sized {
 }
 
 macro_rules! basic_updatable {
-    ($name: ident) => (
-        impl crate::websocket::types::room::room_object_macros::Updatable for $name {
-            type Update = $name;
+    ($($name:ty),*$(,)?) => (
+        $(
+            impl crate::websocket::types::room::room_object_macros::Updatable for $name {
+                type Update = $name;
 
-            fn apply_update(&mut self, update: Self::Update) {
-                *self = update;
-            }
+                fn apply_update(&mut self, update: Self::Update) {
+                    *self = update;
+                }
 
-            fn create_from_update(update: Self::Update) -> Option<Self> {
-                Some(update)
+                fn create_from_update(update: Self::Update) -> Option<Self> {
+                    Some(update)
+                }
             }
-        }
+        )*
     );
-    ($name: ident, $($extra_name:ident),*) => (
-        // nice recursive syntax.
-        basic_updatable!($name);
-        basic_updatable!($($extra_name),*);
-    )
 }
 
 basic_updatable!(bool, u8, u16, u32, u64, i8, i16, i32, i64, f32, f64);
-basic_updatable!(String, Timespec, RoomName);
+basic_updatable!(String, Timespec, RoomName, Badge, ());
 
 pub(crate) mod vec_update {
     use std::marker::PhantomData;
@@ -458,7 +455,7 @@ macro_rules! with_update_struct {
             $(
                 $( #[$field_attr:meta] )*
                 $( ($field_extra:tt) )*
-                pub $field:ident : $type:ty,
+                $field_vis:vis $field:ident : $type:ty,
             )*
         }
 
@@ -471,7 +468,7 @@ macro_rules! with_update_struct {
             pub struct $name {
                 $(
                     $( #[$field_attr] )*
-                    pub $field : $type,
+                    $field_vis $field : $type,
                 )*
             }
 
@@ -491,7 +488,7 @@ macro_rules! with_update_struct {
         pub struct $name:ident {
             $(
                 $( #[$field_attr:meta] )*
-                pub $field:ident : $type:ty,
+                $field_vis:vis $field:ident : $type:ty,
             )*
         }
 
@@ -509,7 +506,7 @@ macro_rules! with_update_struct {
         pub struct $name {
             $(
                 $( #[$field_attr] )*
-                pub $field: $type,
+                $field_vis $field: $type,
             )*
         }
 

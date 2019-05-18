@@ -12,7 +12,7 @@ pub use self::{
     parsing::{ScreepsMessage, SockjsMessage},
     types::{
         messages::{ConversationUpdate, Message, MessageUnreadUpdate, MessageUpdate},
-        room::{RoomUpdate, RoomUpdateInfo, RoomUpdateUserInfo},
+        room::{RoomUpdate, RoomUpdateInfo, RoomUserInfo, RoomUserInfoUpdate},
         room_map_view::RoomMapViewUpdate,
         user_console::UserConsoleUpdate,
         user_cpu::UserCpuUpdate,

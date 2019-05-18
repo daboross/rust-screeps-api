@@ -3,7 +3,7 @@
 //! This is made significantly more complicated by the fact that all updates besides the initial one are "partial" -
 //! they only contain changes, and each update to a specific room object will not contain the object's type, as it
 //! will not have changed.
-use std::{collections::HashMap, marker::PhantomData};
+use std::collections::HashMap;
 
 use crate::data::Badge;
 
@@ -47,10 +47,12 @@ pub struct RoomUpdate {
     /// TODO: parse this further.
     pub visual: Option<String>,
     /// Detailed information on all users that have things in this room.
-    pub users: Option<HashMap<String, RoomUpdateUserInfo>>,
+    ///
+    /// Parse using `RoomUserInfo`.
+    pub users: Option<HashMap<String, serde_json::Value>>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _phantom: (),
 }
 
 /// "info" struct to go with room update.
@@ -62,20 +64,26 @@ pub struct RoomUpdateInfo {
     pub mode: Option<String>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _phantom: (),
 }
 
-/// Information on a user which is packaged with a room update.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
-pub struct RoomUpdateUserInfo {
-    /// User ID
-    #[serde(rename = "_id")]
-    pub user_id: Option<String>,
-    /// Username
-    pub username: Option<String>,
-    /// Badge description
-    pub badge: Option<Badge>,
-    /// Phantom data in order to allow adding any additional fields in the future.
-    #[serde(skip)]
-    _phantom: PhantomData<()>,
+with_update_struct! {
+    /// Information on a user which is packaged with a room update.
+    #[derive(serde_derive::Deserialize, Clone, Hash, Debug, PartialEq)]
+    pub struct RoomUserInfo {
+        /// User ID
+        #[serde(rename = "_id")]
+        pub user_id: Option<String>,
+        /// Username
+        pub username: Option<String>,
+        /// Badge description
+        pub badge: Option<Badge>,
+        /// Phantom data in order to allow adding any additional fields in the future.
+        #[serde(skip)]
+        _phantom: (),
+    }
+
+    /// The update structure for RoomUpdateUserInfo
+    #[derive(serde_derive::Deserialize, Clone, Hash, Debug, PartialEq)]
+    pub struct RoomUserInfoUpdate { ... }
 }
