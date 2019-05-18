@@ -574,7 +574,11 @@ macro_rules! with_base_fields_and_update_struct {
     (
         $( #[$struct_attr:meta] )*
         pub struct $name:ident {
-            $( $struct_field:tt )*
+            $(
+                $(#[$field_attr:meta])*
+                $( ($field_extra:tt) )*
+                pub $field:ident : $type:ty,
+            )*
         }
 
         $( #[$update_struct_attr:meta] )*
@@ -598,7 +602,11 @@ macro_rules! with_base_fields_and_update_struct {
                 /// Y position within the room (0-50).
                 #[serde(with = "crate::decoders::u16_or_str_containing")]
                 pub y: u16,
-                $( $struct_field )*
+                $(
+                    $( #[$field_attr] )*
+                    $( ($field_extra:tt) )*
+                    pub $field : $type,
+                )*
             }
 
             $( #[$update_struct_attr] )*
@@ -626,33 +634,45 @@ macro_rules! with_structure_fields_and_update_struct {
     (
         $( #[$struct_attr:meta] )*
         pub struct $name:ident {
-            $( $struct_field:tt )*
+            $(
+                $(#[$field_attr:meta])*
+                $( ($field_extra:tt) )*
+                pub $field:ident : $type:ty,
+            )*
         }
 
         $( #[$update_struct_attr:meta] )*
         $( ($update_extra:tt) )*
         pub struct $update_name:ident { ... }
     ) => (
-        with_base_fields_and_update_struct! {
+        with_structure_fields_and_update_struct! {
             $( #[$struct_attr] )*
             pub struct $name {
-                /// The current number of hit points this room object has.
-                pub hits: i32,
-                /// The maximum number of hit points this room object can have.
-                #[serde(rename = "hitsMax")]
-                pub hits_max: i32,
-                $( $struct_field )*
+                $(
+                    $( #[$field_attr] )*
+                    $( ($field_extra:tt) )*
+                    pub $field : $type,
+                )*
             }
 
             $( #[$update_struct_attr] )*
             $( ($update_extra) )*
-            pub struct $update_name { ... }
+            pub struct $update_name {
+                $(
+                    $( #[$field_attr] )*
+                    - $field : $type,
+                )*
+            }
         }
     );
     (
         $( #[$struct_attr:meta] )*
         pub struct $name:ident {
-            $( $struct_field:tt )*
+            $(
+                $(#[$field_attr:meta])*
+                $( ($field_extra:tt) )*
+                pub $field:ident : $type:ty,
+            )*
         }
 
         $( #[$update_struct_attr:meta] )*
@@ -665,11 +685,16 @@ macro_rules! with_structure_fields_and_update_struct {
             $( #[$struct_attr] )*
             pub struct $name {
                 /// The current number of hit-points this structure has.
+                #[serde(default)]
                 pub hits: i32,
                 /// The maximum number of hit-points this structure has.
                 #[serde(rename = "hitsMax")]
                 pub hits_max: i32,
-                $( $struct_field )*
+                $(
+                    $( #[$field_attr] )*
+                    $( ($field_extra:tt) )*
+                    pub $field : $type,
+                )*
             }
 
             $( #[$update_struct_attr] )*
