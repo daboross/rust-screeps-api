@@ -10,6 +10,7 @@ pub mod container;
 pub mod controller;
 pub mod creep;
 pub mod extension;
+pub mod extractor;
 pub mod keeper_lair;
 pub mod lab;
 pub mod link;
@@ -35,6 +36,7 @@ pub use self::{
     controller::{StructureController, StructureControllerUpdate},
     creep::{Creep, CreepUpdate},
     extension::{StructureExtension, StructureExtensionUpdate},
+    extractor::{StructureExtractor, StructureExtractorUpdate},
     keeper_lair::{StructureKeeperLair, StructureKeeperLairUpdate},
     lab::{StructureLab, StructureLabUpdate},
     link::{StructureLink, StructureLinkUpdate},
@@ -71,6 +73,8 @@ pub enum KnownRoomObject {
     Spawn(StructureSpawn),
     /// Extension owned structure.
     Extension(StructureExtension),
+    /// Extractor owned structure.
+    Extractor(StructureExtractor),
     /// Wall unowned structure.
     #[serde(rename = "constructedWall")]
     Wall(StructureWall),
@@ -131,9 +135,8 @@ macro_rules! match_obj_variants {
     ) => (
         match_many_variants!(
             $src,
-            (Source, Mineral, Spawn, Extension, Wall, Road, Rampart, KeeperLair, Controller, Portal,
-            Link, Storage, Tower, Observer, PowerBank, PowerSpawn, Lab, Terminal, Container, Nuker,
-            Creep, Resource)
+            (Source, Mineral, Spawn, Extension, Extractor, Wall, Road, Rampart, KeeperLair, Controller, Portal,
+            Link, Storage, Tower, Observer, PowerBank, PowerSpawn, Lab, Terminal, Container, Nuker, Creep, Resource)
             ($name) => $code
         )
     )
