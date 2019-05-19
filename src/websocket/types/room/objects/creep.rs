@@ -209,6 +209,12 @@ with_resource_fields_and_update_struct! {
     #[derive(Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct Creep {
+        /// The current number of hit-points this structure has.
+        #[serde(default)]
+        pub hits: i32,
+        /// The maximum number of hit-points this structure has.
+        #[serde(default)]
+        pub hits_max: i32,
         /// The user ID of the owner of this creep.
         pub user: String,
         /// Whether or not this creep is currently being constructed 'inside' a spawner. If this is the case,
@@ -240,6 +246,8 @@ with_resource_fields_and_update_struct! {
     #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct CreepUpdate {
+        - hits: i32,
+        - hits_max: i32,
         - user: String,
         - spawning: bool,
         #[serde(rename = "energyCapacity")]

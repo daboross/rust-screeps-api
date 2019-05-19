@@ -105,6 +105,12 @@ with_resource_fields_and_update_struct! {
     #[derive(Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureContainer {
+        /// The current number of hit-points this structure has.
+        #[serde(default)]
+        pub hits: i32,
+        /// The maximum number of hit-points this structure has.
+        #[serde(default)]
+        pub hits_max: i32,
         /// Total capacity for this structure.
         #[serde(rename = "energyCapacity")]
         pub capacity: i32,
@@ -118,6 +124,8 @@ with_resource_fields_and_update_struct! {
     #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureContainerUpdate {
+        - hits: i32,
+        - hits_max: i32,
         #[serde(rename = "energyCapacity")]
         - capacity: i32,
         - next_decay_time: u32,

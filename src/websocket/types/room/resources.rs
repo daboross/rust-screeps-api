@@ -302,11 +302,6 @@ macro_rules! with_resource_fields_and_update_struct {
         with_base_fields_and_update_struct! {
             $( #[$struct_attr] )*
             pub struct $name {
-                /// The current number of hit-points this structure has.
-                pub hits: i32,
-                /// The maximum number of hit-points this structure has.
-                #[serde(rename = "hitsMax")]
-                pub hits_max: i32,
                 $(
                     /// The current amount of this resource held in this structure.
                     #[serde(default, rename = $serde_ident,
@@ -319,9 +314,6 @@ macro_rules! with_resource_fields_and_update_struct {
             $( #[$update_struct_attr] )*
             $( ($update_extra) )*
             pub struct $update_name {
-                - hits: i32,
-                #[serde(rename = "hitsMax")]
-                - hits_max: i32,
                 $(
                     #[serde(
                         default,

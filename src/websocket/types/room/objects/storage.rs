@@ -105,6 +105,12 @@ with_resource_fields_and_update_struct! {
     #[derive(Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureStorage {
+        /// The current number of hit-points this structure has.
+        #[serde(default)]
+        pub hits: i32,
+        /// The maximum number of hit-points this structure has.
+        #[serde(default)]
+        pub hits_max: i32,
         /// The user ID of the owner of this structure.
         pub user: String,
         /// Whether or not this structure is non-functional due to a degraded controller.
@@ -121,6 +127,8 @@ with_resource_fields_and_update_struct! {
     #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureStorageUpdate {
+        - hits: i32,
+        - hits_max: i32,
         - user: String,
         #[serde(rename = "off")]
         - disabled: bool,

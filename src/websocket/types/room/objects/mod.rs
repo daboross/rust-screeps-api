@@ -28,6 +28,7 @@ pub mod source;
 pub mod spawn;
 pub mod storage;
 pub mod terminal;
+pub mod tombstone;
 pub mod tower;
 pub mod wall;
 
@@ -53,6 +54,7 @@ pub use self::{
     spawn::{StructureSpawn, StructureSpawnUpdate},
     storage::{StructureStorage, StructureStorageUpdate},
     terminal::{StructureTerminal, StructureTerminalUpdate},
+    tombstone::{Tombstone, TombstoneUpdate},
     tower::{StructureTower, StructureTowerUpdate},
     wall::{StructureWall, StructureWallUpdate},
 };
@@ -108,9 +110,11 @@ pub enum KnownRoomObject {
     Container(StructureContainer),
     /// Nuker owned structure.
     Nuker(StructureNuker),
-    /// Creep owned creature.
+    /// Tombstone structure
+    Tombstone(Tombstone),
+    /// Creep
     Creep(Creep),
-    /// Resource dropped object.
+    /// Resource
     #[serde(rename = "energy")]
     Resource(Resource),
 }
@@ -136,7 +140,8 @@ macro_rules! match_obj_variants {
         match_many_variants!(
             $src,
             (Source, Mineral, Spawn, Extension, Extractor, Wall, Road, Rampart, KeeperLair, Controller, Portal,
-            Link, Storage, Tower, Observer, PowerBank, PowerSpawn, Lab, Terminal, Container, Nuker, Creep, Resource)
+            Link, Storage, Tower, Observer, PowerBank, PowerSpawn, Lab, Terminal, Container, Nuker, Tombstone, Creep,
+            Resource)
             ($name) => $code
         )
     )
