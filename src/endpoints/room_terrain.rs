@@ -32,7 +32,7 @@ struct InnerResponse {
 }
 
 /// Type of terrain
-#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Hash, Debug, PartialOrd, Ord)]
 pub enum TerrainType {
     /// Plains terrain type, easy to move through
     Plains,

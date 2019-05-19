@@ -62,7 +62,7 @@ use crate::RoomName;
 use self::shared::ActionLogTarget;
 
 /// Enum describing all known room objects.
-#[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
+#[derive(serde_derive::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum KnownRoomObject {
     /// Source object.

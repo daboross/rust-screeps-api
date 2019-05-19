@@ -4,7 +4,7 @@ use std::fmt;
 use serde::de::{Deserializer, Error, Unexpected, Visitor};
 
 /// Single flag.
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Flag {
     /// The name of the flag, unique per user.
     pub name: String,
