@@ -171,12 +171,13 @@ mod test {
             "y": 31
         });
 
-        let mut obj = Tombstone::deserialize(json).unwrap();
+        let obj = Tombstone::deserialize(json).unwrap();
 
         assert_eq!(obj.creep_id, "5ce08e9f184f823e92616faf");
         assert_eq!(obj.creep_name, "HeavyConsolidator6921549");
     }
 
+    #[test]
     fn parse_tombstone_with_energy() {
         let json = json!({
             "_id": "5ce0a4839c5bd560bebb03e9",
@@ -200,7 +201,7 @@ mod test {
             "y": 23
         });
 
-        let mut obj = Tombstone::deserialize(json).unwrap();
+        let obj = Tombstone::deserialize(json).unwrap();
 
         assert_eq!(obj.creep_id, "5ce098c5c4e055067fbf182e");
         assert_eq!(obj.creep_name, "6922398-0");
