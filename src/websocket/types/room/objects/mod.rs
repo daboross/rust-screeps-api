@@ -56,7 +56,7 @@ pub use self::{
     terminal::{StructureTerminal, StructureTerminalUpdate},
     tombstone::{Tombstone, TombstoneUpdate},
     tower::{StructureTower, StructureTowerUpdate},
-    wall::{StructureWall, StructureWallUpdate},
+    wall::{StructureWall, StructureWallUpdate, WallDecayTime, WallDecayTimeUpdate},
 };
 
 use crate::RoomName;
