@@ -373,6 +373,20 @@ pub(crate) mod always_some {
     }
 }
 
+pub(crate) mod always_some_but_null_is_default {
+    use serde::{Deserialize, Deserializer};
+
+    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
+    where
+        T: Deserialize<'de> + Default,
+        D: Deserializer<'de>,
+    {
+        let v: Option<T> = Deserialize::deserialize(deserializer)?;
+
+        Ok(Some(v.unwrap_or_default()))
+    }
+}
+
 /// Rule about adding metadata to a single field...
 macro_rules! add_metadata {
     (
@@ -394,6 +408,36 @@ macro_rules! add_metadata {
                     )*
 
                     #[serde(default, with = "crate::websocket::types::room::room_object_macros::always_some")]
+                    $( #[$field_attr] )*
+                    priv $field: $type,
+                >>
+                $($rest)*
+            }
+        }
+    );
+    (
+        $( #[$struct_attr:meta] )*
+        pub struct $update_name:ident {
+            <<$( $( #[$built_field_attr:meta] )* priv $built_field:ident: $built_type:ty, )*>>
+            $(#[$field_attr:meta])*
+            (null_is_default)
+            priv $field:ident : $type:ty,
+            $($rest:tt)*
+        }
+    ) => (
+        add_metadata!{
+            $(#[$struct_attr])*
+            pub struct $update_name {
+                <<
+                    $(
+                        $( #[$built_field_attr] )*
+                        priv $built_field: $built_type,
+                    )*
+
+                    #[serde(
+                        default,
+                        with = "crate::websocket::types::room::room_object_macros::always_some_but_null_is_default"
+                    )]
                     $( #[$field_attr] )*
                     priv $field: $type,
                 >>

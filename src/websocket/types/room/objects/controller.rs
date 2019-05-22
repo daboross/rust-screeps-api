@@ -80,12 +80,16 @@ with_structure_fields_and_update_struct! {
     #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureControllerUpdate {
+        (null_is_default)
         - progress: u64,
+        (null_is_default)
         - progress_total: u64,
         - level: u16,
         - reservation: Option<ControllerReservation>,
         - safe_mode: Option<u32>,
+        (null_is_default)
         - safe_mode_available: u32,
+        (null_is_default)
         - safe_mode_cooldown: u32,
         - downgrade_time: Option<u64>,
         - sign: Option<RoomSign>,
@@ -416,7 +420,6 @@ mod test {
             }
         );
         let obj = StructureController::deserialize(&json).unwrap();
-
         assert_eq!(
             obj,
             StructureController {
@@ -443,6 +446,57 @@ mod test {
                     user_id: "583e2a4c445866cb4ad3117e".to_owned(),
                 }),
             }
+        );
+    }
+
+    #[test]
+    fn handle_functionally_full_update() {
+        let mut obj = StructureController {
+            id: "5bbcad579099fc012e637271".to_owned(),
+            room: RoomName::new("E7S27").unwrap(),
+            x: 17,
+            y: 18,
+            downgrade_time: Some(7131716),
+            hits: 0,
+            hits_max: 0,
+            level: 6,
+            progress: 2722264,
+            progress_total: 0,
+            reservation: None,
+            safe_mode: Some(5990844),
+            safe_mode_available: 4,
+            safe_mode_cooldown: 0,
+            upgrade_blocked: None,
+            user: Some("5cad043ff77d0b62a38318e7".to_owned()),
+            sign: Some(RoomSign {
+                text: "Territory of Metyrio".to_owned(),
+                game_time_set: 508258,
+                time_set: time::Timespec::new(1540160091380, 0),
+                user_id: "583e2a4c445866cb4ad3117e".to_owned(),
+            }),
+        };
+
+        obj.update(
+            serde_json::from_value(json!({
+                "_id": "5bbcad579099fc012e637271",
+                "downgradeTime": null,
+                "hits": 0,
+                "hitsMax": 0,
+                "isPowerEnabled": false,
+                "level": 0,
+                "progress": 0,
+                "progressTotal": 0,
+                "room": "E7S27",
+                "safeMode": null,
+                "safeModeAvailable": 0,
+                "safeModeCooldown": null,
+                "type": "controller",
+                "upgradeBlocked": null,
+                "user": null,
+                "x": 10,
+                "y": 34,
+            }))
+            .unwrap(),
         );
     }
 }
