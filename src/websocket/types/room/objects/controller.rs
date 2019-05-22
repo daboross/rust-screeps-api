@@ -62,7 +62,7 @@ with_structure_fields_and_update_struct! {
         /// The game time that must be reached before safe mode can be used on the controller.
         ///
         /// May be in the past, in which safe mode may be used immediately.
-        #[serde(default)]
+        #[serde(default, with = "crate::decoders::null_as_default")]
         pub safe_mode_cooldown: u32,
         /// The number of game ticks without an upgrade needed before the controller downgrades.
         ///
@@ -381,6 +381,67 @@ mod test {
                 upgrade_blocked: None,
                 user: None,
                 sign: None,
+            }
+        );
+    }
+
+    #[test]
+    fn parse_controller_with_null_safe_mode_cooldown() {
+        let json = json!(
+            {
+                "_id": "5bbcad579099fc012e637271",
+                "downgradeTime": 7131716,
+                "hits": 0,
+                "hitsMax": 0,
+                "isPowerEnabled": false,
+                "level": 6,
+                "progress": 2722264,
+                "progressTotal": 0,
+                "reservation": null,
+                "room": "E7S27",
+                "safeMode": 5990844,
+                "safeModeAvailable": 4,
+                "safeModeCooldown": null,
+                "sign": {
+                    "datetime": 1540160091380i64,
+                    "text": "Territory of Metyrio",
+                    "time": 508258,
+                    "user": "583e2a4c445866cb4ad3117e",
+                },
+                "type": "controller",
+                "upgradeBlocked": null,
+                "user": "5cad043ff77d0b62a38318e7",
+                "x": 17,
+                "y": 18,
+            }
+        );
+        let obj = StructureController::deserialize(&json).unwrap();
+
+        assert_eq!(
+            obj,
+            StructureController {
+                id: "5bbcad579099fc012e637271".to_owned(),
+                room: RoomName::new("E7S27").unwrap(),
+                x: 17,
+                y: 18,
+                downgrade_time: Some(7131716),
+                hits: 0,
+                hits_max: 0,
+                level: 6,
+                progress: 2722264,
+                progress_total: 0,
+                reservation: None,
+                safe_mode: Some(5990844),
+                safe_mode_available: 4,
+                safe_mode_cooldown: 0,
+                upgrade_blocked: None,
+                user: Some("5cad043ff77d0b62a38318e7".to_owned()),
+                sign: Some(RoomSign {
+                    text: "Territory of Metyrio".to_owned(),
+                    game_time_set: 508258,
+                    time_set: time::Timespec::new(1540160091380, 0),
+                    user_id: "583e2a4c445866cb4ad3117e".to_owned(),
+                }),
             }
         );
     }

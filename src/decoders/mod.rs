@@ -160,3 +160,18 @@ macro_rules! str_mod {
 str_mod!(u32_or_str_containing, optional_u32_or_str_containing, u32);
 // str_mod!(i16_or_str_containing, optional_i16_or_str_containing, i16);
 // str_mod!(u16_or_str_containing, optional_u16_or_str_containing, u16);
+
+pub mod null_as_default {
+    use serde::{Deserialize, Deserializer};
+
+    /// Deserializes either a number or a string into an integer.
+    pub fn deserialize<'de, T, D>(deserializer: D) -> Result<T, D::Error>
+    where
+        Option<T>: Deserialize<'de>,
+        T: Default,
+        D: Deserializer<'de>,
+    {
+        let res: Option<T> = Deserialize::deserialize(deserializer)?;
+        Ok(res.unwrap_or_default())
+    }
+}
