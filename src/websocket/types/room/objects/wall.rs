@@ -1,5 +1,5 @@
 //! `StructureWall` data description.
-use crate::data::RoomName;
+use crate::data::{optional_timespec_seconds, timespec_seconds, RoomName};
 
 with_update_struct! {
     /// Describes the decay of a decaying wall.
@@ -7,13 +7,18 @@ with_update_struct! {
     #[serde(rename_all = "camelCase")]
     pub struct WallDecayTime {
         /// Unix timestamp of when this wall will decay.
-        pub timestamp: u64,
+        #[serde(with = "timespec_seconds")]
+        pub timestamp: time::Timespec,
     }
 
     /// The update structure for a wall decay description.
     #[derive(serde_derive::Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
-    pub struct WallDecayTimeUpdate { ... }
+    pub struct WallDecayTimeUpdate {
+        #[serde(with = "optional_timespec_seconds")]
+        (no_extra_meta)
+        - timestamp: time::Timespec,
+    }
 }
 
 with_structure_fields_and_update_struct! {
@@ -101,7 +106,7 @@ mod test {
                 hits_max: 0,
                 notify_when_attacked: false,
                 decay_time: Some(WallDecayTime {
-                    timestamp: 1559851447000u64
+                    timestamp: time::Timespec::new(1559851447000i64, 0)
                 }),
             }
         );
