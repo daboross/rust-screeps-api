@@ -6,6 +6,7 @@
 //! Reading the source code is definitely possible. But there may be some investment in reading
 //! each of the macros defined and used here, and it will be much easier to just read the documentation.
 
+pub mod construction_site;
 pub mod container;
 pub mod controller;
 pub mod creep;
@@ -33,6 +34,7 @@ pub mod tower;
 pub mod wall;
 
 pub use self::{
+    construction_site::{ConstructionSite, ConstructionSiteUpdate, StructureType},
     container::{StructureContainer, StructureContainerUpdate},
     controller::{StructureController, StructureControllerUpdate},
     creep::{Creep, CreepUpdate},
@@ -117,6 +119,8 @@ pub enum KnownRoomObject {
     /// Resource
     #[serde(rename = "energy")]
     Resource(Resource),
+    /// Construction site
+    ConstructionSite(ConstructionSite),
 }
 
 macro_rules! match_many_variants {
@@ -141,7 +145,7 @@ macro_rules! match_obj_variants {
             $src,
             (Source, Mineral, Spawn, Extension, Extractor, Wall, Road, Rampart, KeeperLair, Controller, Portal,
             Link, Storage, Tower, Observer, PowerBank, PowerSpawn, Lab, Terminal, Container, Nuker, Tombstone, Creep,
-            Resource)
+            Resource, ConstructionSite)
             ($name) => $code
         )
     )
