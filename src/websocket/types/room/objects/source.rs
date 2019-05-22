@@ -100,6 +100,7 @@ mod test {
         );
     }
 
+    #[test]
     fn handle_no_invader_harvested() {
         let json = json!({
             "_id": "5bbcad499099fc012e6370ab",
@@ -113,7 +114,7 @@ mod test {
             "y": 34,
         });
 
-        let mut obj = Source::deserialize(&json).unwrap();
+        let obj = Source::deserialize(&json).unwrap();
 
         assert_eq!(
             obj,
