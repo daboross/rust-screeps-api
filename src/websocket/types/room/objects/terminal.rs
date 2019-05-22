@@ -122,6 +122,7 @@ with_resource_fields_and_update_struct! {
         #[serde(rename = "energyCapacity")]
         pub capacity: i32,
         /// The game time at which this terminal will next be able to send minerals.
+        #[serde(default)]
         pub cooldown_time: u32,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
         pub notify_when_attacked: bool,
@@ -319,5 +320,26 @@ mod test {
                 expected
             }
         );
+    }
+
+    #[test]
+    fn parse_with_null_cooldown() {
+        let json = json!({
+            "_id": "5c78d9793b60c54624032734",
+            "energy": 0,
+            "energyCapacity": 300000,
+            "hits": 3000,
+            "hitsMax": 3000,
+            "notifyWhenAttacked": true,
+            "room": "E8S22",
+            "type": "terminal",
+            "user": "5867dc91c04c074e4f1bdd08",
+            "x": 18,
+            "y": 17,
+        });
+
+        let obj = StructureTerminal::deserialize(json).unwrap();
+
+        assert_eq!(obj.cooldown_time, 0);
     }
 }
