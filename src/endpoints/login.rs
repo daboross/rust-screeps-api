@@ -8,21 +8,21 @@ use crate::{EndpointResult, Token, TokenStorage};
 
 /// Login details
 #[derive(Serialize, Clone, Hash, Debug)]
-pub struct LoginDetails<'a> {
+pub struct LoginArgs<'a> {
     /// The email or username to log in with (either works)
     email: Cow<'a, str>,
     /// The password to log in with (steam auth is not supported)
     password: Cow<'a, str>,
 }
 
-impl<'a> LoginDetails<'a> {
+impl<'a> LoginArgs<'a> {
     /// Create a new login details with the given username and password
     pub fn new<T, U>(email: T, password: U) -> Self
     where
         T: Into<Cow<'a, str>>,
         U: Into<Cow<'a, str>>,
     {
-        LoginDetails {
+        LoginArgs {
             email: email.into(),
             password: password.into(),
         }

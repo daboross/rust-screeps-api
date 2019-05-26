@@ -78,7 +78,7 @@ fn perform_registration() -> Result<(), Box<dyn std::error::Error>> {
         username, http_url
     );
 
-    client.register(screeps_api::RegistrationDetails::new(username, password))?;
+    client.register(screeps_api::RegistrationArgs::new(username, password))?;
 
     println!("registration succeeded! attempting to verify via login.");
 

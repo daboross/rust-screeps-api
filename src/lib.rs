@@ -279,7 +279,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
     {
-        self.post("auth/signin", LoginDetails::new(username, password))
+        self.post("auth/signin", LoginArgs::new(username, password))
             .send()
     }
 
@@ -292,7 +292,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
     /// [screepsmod-auth]: https://github.com/ScreepsMods/screepsmod-auth
     pub fn register(
         &self,
-        details: RegistrationDetails,
+        details: RegistrationArgs,
     ) -> impl Future<Item = RegistrationSuccess, Error = Error> {
         self.post("register/submit", details).send()
     }
@@ -424,11 +424,11 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
     /// occurred since a certain game tick.
     pub fn recent_pvp(
         &self,
-        details: RecentPvpDetails,
+        details: RecentPvpArgs,
     ) -> impl Future<Item = RecentPvp, Error = Error> {
         let args = match details {
-            RecentPvpDetails::WithinLast { ticks } => [("interval", ticks.to_string())],
-            RecentPvpDetails::Since { time } => [("start", time.to_string())],
+            RecentPvpArgs::WithinLast { ticks } => [("interval", ticks.to_string())],
+            RecentPvpArgs::Since { time } => [("start", time.to_string())],
         };
 
         self.get("experimental/pvp").params(&args).send()

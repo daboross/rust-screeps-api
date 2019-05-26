@@ -11,7 +11,7 @@ use hyper_tls::HttpsConnector;
 
 use crate::{
     error::Error, Api, FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType,
-    MapStats, MyInfo, RecentPvp, RecentPvpDetails, RegistrationDetails, RegistrationSuccess,
+    MapStats, MyInfo, RecentPvp, RecentPvpArgs, RegistrationArgs, RegistrationSuccess,
     RoomOverview, RoomStatus, RoomTerrain, ShardInfo, Token, WorldStartRoom,
 };
 
@@ -173,7 +173,7 @@ impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
     /// works on the official server.
     ///
     /// [screepsmod-auth]: https://github.com/ScreepsMods/screepsmod-auth
-    pub fn register(&mut self, details: RegistrationDetails) -> Result<RegistrationSuccess, Error> {
+    pub fn register(&mut self, details: RegistrationArgs) -> Result<RegistrationSuccess, Error> {
         self.runtime.block_on(self.client.register(details))
     }
 
@@ -269,7 +269,7 @@ impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
     /// Experimental endpoint to get all rooms in which PvP has recently occurred.
     ///
     /// See [`Api::recent_pvp`](../struct.Api.html#method.recent_pvp) for more information.
-    pub fn recent_pvp(&mut self, details: RecentPvpDetails) -> Result<RecentPvp, Error> {
+    pub fn recent_pvp(&mut self, details: RecentPvpArgs) -> Result<RecentPvp, Error> {
         self.runtime.block_on(self.client.recent_pvp(details))
     }
 

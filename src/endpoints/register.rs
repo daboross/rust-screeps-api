@@ -9,7 +9,7 @@ use crate::{
 
 /// Registration details
 #[derive(Serialize, Clone, Hash, Debug)]
-pub struct RegistrationDetails<'a> {
+pub struct RegistrationArgs<'a> {
     /// The username to register.
     username: Cow<'a, str>,
     /// The email to register with, or None.
@@ -18,14 +18,14 @@ pub struct RegistrationDetails<'a> {
     password: Cow<'a, str>,
 }
 
-impl<'a> RegistrationDetails<'a> {
+impl<'a> RegistrationArgs<'a> {
     /// Create a new registration details with the given username and password
     pub fn new<T, U>(username: T, password: U) -> Self
     where
         T: Into<Cow<'a, str>>,
         U: Into<Cow<'a, str>>,
     {
-        RegistrationDetails {
+        RegistrationArgs {
             username: username.into(),
             email: None,
             password: password.into(),
@@ -38,7 +38,7 @@ impl<'a> RegistrationDetails<'a> {
         U: Into<Cow<'a, str>>,
         V: Into<Cow<'a, str>>,
     {
-        RegistrationDetails {
+        RegistrationArgs {
             username: username.into(),
             password: password.into(),
             email: Some(email.into()),

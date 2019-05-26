@@ -49,7 +49,7 @@ fn test_recent_pvp() {
     let mut api = SyncApi::new().unwrap();
 
     let pvp_results_a = api
-        .recent_pvp(screeps_api::RecentPvpDetails::within(15))
+        .recent_pvp(screeps_api::RecentPvpArgs::within(15))
         .unwrap();
 
     let reported_up_to = pvp_results_a
@@ -60,6 +60,6 @@ fn test_recent_pvp() {
         .unwrap();
 
     let _ = api
-        .recent_pvp(screeps_api::RecentPvpDetails::since(reported_up_to - 10))
+        .recent_pvp(screeps_api::RecentPvpArgs::since(reported_up_to - 10))
         .unwrap();
 }
