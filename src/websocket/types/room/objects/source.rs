@@ -7,9 +7,9 @@ with_base_fields_and_update_struct! {
     #[serde(rename_all = "camelCase")]
     pub struct Source {
         /// The source's current energy - available to be mined be creeps.
-        pub energy: u32,
+        pub energy: i32,
         /// The source's maximum energy - what `energy` resets to on regeneration.
-        pub energy_capacity: u32,
+        pub energy_capacity: i32,
         /// The amount of energy either harvested on this source specifically or for the room since
         /// the last invasion (not sure which it is).
         #[serde(default)]
@@ -26,8 +26,8 @@ with_base_fields_and_update_struct! {
     #[derive(Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct SourceUpdate {
-        - energy: u32,
-        - energy_capacity: u32,
+        - energy: i32,
+        - energy_capacity: i32,
         - invader_harvested: u32,
         - next_regeneration_time: Option<u32>,
         - ticks_to_regeneration: u32,
