@@ -9,7 +9,7 @@ use crate::{
 
 /// Call parameters for requesting recent pvp
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
-pub enum PvpArgs {
+pub enum RecentPvpDetails {
     /// Retrieves rooms where pvp has occurred recently, with a given number of game ticks.
     WithinLast {
         /// The interval of game ticks to request. It is unknown the maximum interval that may be requested.
@@ -22,21 +22,20 @@ pub enum PvpArgs {
     },
 }
 
-impl PvpArgs {
+impl RecentPvpDetails {
     /// Creates a new PvP call parameter to request any PvP occurring since the given game tick.
-    pub fn since(tick: u32) -> PvpArgs {
-        PvpArgs::Since { time: tick }
+    pub fn since(tick: u32) -> RecentPvpDetails {
+        RecentPvpDetails::Since { time: tick }
     }
     /// Creates a new PvP call parameter to request any PvP occurring within the last x ticks.
-    pub fn within(ticks: u32) -> PvpArgs {
-        PvpArgs::WithinLast { ticks: ticks }
+    pub fn within(ticks: u32) -> RecentPvpDetails {
+        RecentPvpDetails::WithinLast { ticks: ticks }
     }
 }
 
 /// Recent PvP raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
-#[doc(hidden)]
-pub struct Response {
+pub(crate) struct Response {
     ok: i32,
     #[serde(with = "::tuple_vec_map")]
     pvp: Vec<(String, InnerShard)>,

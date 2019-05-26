@@ -1,10 +1,10 @@
 //! Data structures that appear in multiple API endpoint results.
-pub mod errors;
-pub mod room_name;
-pub mod rooms;
-pub mod users;
+mod errors;
+mod room_name;
+mod rooms;
+mod users;
 
-pub use self::errors::ApiError;
-pub use self::room_name::RoomName;
+pub use self::errors::*;
+pub use self::room_name::*;
 pub use self::rooms::*;
-pub use self::users::Badge;
+pub use self::users::*;

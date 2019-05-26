@@ -68,12 +68,12 @@ extern crate serde_derive;
 #[cfg_attr(test, macro_use)]
 extern crate serde_json;
 
-pub mod connecting;
-pub mod data;
+mod connecting;
+mod data;
 mod decoders;
 #[cfg(feature = "protocol-docs")]
 pub mod docs;
-pub mod endpoints;
+mod endpoints;
 pub mod error;
 #[cfg(feature = "sync")]
 pub mod sync;
@@ -82,19 +82,8 @@ pub mod websocket;
 #[cfg(feature = "sync")]
 pub use crate::sync::SyncApi;
 pub use crate::{
-    data::RoomName,
-    endpoints::leaderboard::find_rank::FoundUserRank,
-    endpoints::leaderboard::page::LeaderboardPage,
-    endpoints::leaderboard::season_list::LeaderboardSeason,
-    endpoints::leaderboard::LeaderboardType,
-    endpoints::login::LoggedIn,
-    endpoints::recent_pvp::PvpArgs as RecentPvpDetails,
-    endpoints::register::{Details as RegistrationDetails, RegistrationSuccess},
-    endpoints::room_terrain::TerrainGrid,
-    endpoints::{
-        MapStats, MyInfo, RecentPvp, RoomOverview, RoomStatus, RoomTerrain, ShardInfo,
-        WorldStartRoom,
-    },
+    data::*,
+    endpoints::*,
     error::{Error, ErrorKind, NoToken},
 };
 
@@ -111,28 +100,14 @@ use hyper::header::{HeaderValue, CONTENT_TYPE};
 use url::Url;
 
 use crate::connecting::FutureResponse;
-use crate::endpoints::{login, map_stats, recent_pvp};
-use crate::sealed::EndpointResult;
 
-mod sealed {
-    use crate::error::Error;
+/// A trait for each endpoint
+pub(crate) trait EndpointResult: Sized + 'static {
+    type RequestResult: for<'de> serde::Deserialize<'de>;
+    type ErrorResult: for<'de> serde::Deserialize<'de> + Into<Error>;
 
-    /// A trait for each endpoint
-    pub trait EndpointResult: Sized + 'static {
-        type RequestResult: for<'de> serde::Deserialize<'de>;
-        type ErrorResult: for<'de> serde::Deserialize<'de> + Into<Error>;
-
-        fn from_raw(data: Self::RequestResult) -> Result<Self, Error>;
-    }
-
-    pub trait Sealed: crate::EndpointResult {}
-    impl<T> Sealed for T where T: crate::EndpointResult {}
+    fn from_raw(data: Self::RequestResult) -> Result<Self, Error>;
 }
-
-/// Sealed trait implemented for each endpoint.
-pub trait EndpointType: sealed::Sealed {}
-
-impl<T> EndpointType for T where T: sealed::Sealed {}
 
 /// An API token that allows for one-time authentication. Each use of an API token with the screeps
 /// API will cause the API to return a new token which should be stored in its place.
@@ -295,12 +270,16 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
     /// Logs in with the given username and password and returns a result containing the token.
     ///
     /// Use `client.set_token(logged_in.token)` to let the client use the token from logging in.
-    pub fn login<'b, U, V>(&self, username: U, password: V) -> FutureResponse<LoggedIn>
+    pub fn login<'b, U, V>(
+        &self,
+        username: U,
+        password: V,
+    ) -> impl Future<Item = LoggedIn, Error = Error>
     where
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
     {
-        self.post("auth/signin", login::Details::new(username, password))
+        self.post("auth/signin", LoginDetails::new(username, password))
             .send()
     }
 
@@ -356,7 +335,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         &'a V: IntoIterator<Item = U>,
     {
         // TODO: interpret for different stats.
-        let args = map_stats::MapStatsArgs::new(shard, rooms, map_stats::StatName::RoomOwner);
+        let args = MapStatsArgs::new(shard, rooms, MapStatName::RoomOwner);
 
         self.post("game/map-stats", args).auth().send()
     }
@@ -448,8 +427,8 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         details: RecentPvpDetails,
     ) -> impl Future<Item = RecentPvp, Error = Error> {
         let args = match details {
-            recent_pvp::PvpArgs::WithinLast { ticks } => [("interval", ticks.to_string())],
-            recent_pvp::PvpArgs::Since { time } => [("start", time.to_string())],
+            RecentPvpDetails::WithinLast { ticks } => [("interval", ticks.to_string())],
+            RecentPvpDetails::Since { time } => [("start", time.to_string())],
         };
 
         self.get("experimental/pvp").params(&args).send()

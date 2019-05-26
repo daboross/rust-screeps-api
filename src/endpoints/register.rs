@@ -9,23 +9,23 @@ use crate::{
 
 /// Registration details
 #[derive(Serialize, Clone, Hash, Debug)]
-pub struct Details<'a> {
+pub struct RegistrationDetails<'a> {
     /// The username to register.
-    pub username: Cow<'a, str>,
+    username: Cow<'a, str>,
     /// The email to register with, or None.
-    pub email: Option<Cow<'a, str>>,
+    email: Option<Cow<'a, str>>,
     /// The password to register with.
-    pub password: Cow<'a, str>,
+    password: Cow<'a, str>,
 }
 
-impl<'a> Details<'a> {
+impl<'a> RegistrationDetails<'a> {
     /// Create a new registration details with the given username and password
     pub fn new<T, U>(username: T, password: U) -> Self
     where
         T: Into<Cow<'a, str>>,
         U: Into<Cow<'a, str>>,
     {
-        Details {
+        RegistrationDetails {
             username: username.into(),
             email: None,
             password: password.into(),
@@ -38,7 +38,7 @@ impl<'a> Details<'a> {
         U: Into<Cow<'a, str>>,
         V: Into<Cow<'a, str>>,
     {
-        Details {
+        RegistrationDetails {
             username: username.into(),
             password: password.into(),
             email: Some(email.into()),
@@ -48,8 +48,7 @@ impl<'a> Details<'a> {
 
 /// Raw registration response.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
-#[doc(hidden)]
-pub struct Response {
+pub(crate) struct Response {
     ok: i32,
 }
 

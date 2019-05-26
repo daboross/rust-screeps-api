@@ -1,7 +1,7 @@
 //! Error types for the screeps api.
 use std::{error::Error as StdError, fmt, io, str};
 
-use crate::data::room_name::RoomNameParseError;
+use crate::data::RoomNameParseError;
 
 use self::ErrorKind::*;
 

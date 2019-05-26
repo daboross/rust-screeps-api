@@ -12,9 +12,8 @@ use crate::{
 
 /// User info raw result.
 #[derive(serde_derive::Deserialize, Clone, Debug)]
-#[doc(hidden)]
 #[serde(rename_all = "camelCase")]
-pub struct Response {
+pub(crate) struct Response {
     ok: i32,
     #[serde(rename = "_id")]
     user_id: String,
@@ -56,7 +55,7 @@ pub struct MyInfo {
     /// This user's current credit balance.
     pub credits: f64,
     /// Information on per-shard allocation. Unavailable on non-sharded servers.
-    pub shard_allocations: Option<CpuShardAllocations>,
+    pub shard_allocations: Option<UserCpuShardAllocation>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
     _phantom: PhantomData<()>,
@@ -64,7 +63,7 @@ pub struct MyInfo {
 
 /// Information on a user's per-shard CPU allocations.
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct CpuShardAllocations {
+pub struct UserCpuShardAllocation {
     /// CPU allocated to each shard in the server.
     pub allocations: HashMap<String, u32>,
     /// The last time the CPU was updated. Unknown unit.
@@ -101,7 +100,7 @@ impl EndpointResult for MyInfo {
             gcl_points: gcl,
             credits: money,
             shard_allocations: cpu_shard.and_then(|allocations| {
-                cpu_shard_updated_time.map(|last_update| CpuShardAllocations {
+                cpu_shard_updated_time.map(|last_update| UserCpuShardAllocation {
                     allocations,
                     last_update,
                 })

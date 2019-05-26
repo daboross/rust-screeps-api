@@ -3,8 +3,7 @@
 //! Logs in using the SCREEPS_API_USERNAME and SCREEPS_API_PASSWORD env variables.
 use std::borrow::Cow;
 
-use screeps_api::endpoints::leaderboard::page::LeaderboardPage;
-use screeps_api::LeaderboardType::*;
+use screeps_api::{LeaderboardPage, LeaderboardType::*};
 
 /// Set up dotenv and retrieve a specific variable, informatively panicking if it does not exist.
 fn env(var: &str) -> String {

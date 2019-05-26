@@ -8,7 +8,7 @@ use crate::EndpointResult;
 /// Raw result for when the API endpoint is called with a specific season id.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
-pub struct SingleResponse {
+pub(crate) struct SingleResponse {
     // I have no idea what this is for, so not including in the documented and expected response.
     // id: String,
     ok: i32,
@@ -21,7 +21,7 @@ pub struct SingleResponse {
 /// Raw result for when the API endpoint is called without a specific season id.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
-pub struct AllSeasonRanksResponse {
+pub(crate) struct AllSeasonRanksResponse {
     ok: i32,
     list: Vec<InnerAllSeasonsResponse>,
 }

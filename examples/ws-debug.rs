@@ -57,7 +57,7 @@ struct Config {
 impl Config {
     fn new<'a>(
         args: &'a clap::ArgMatches<'_>,
-    ) -> Result<Self, screeps_api::data::room_name::RoomNameParseError<'a>> {
+    ) -> Result<Self, screeps_api::RoomNameParseError<'a>> {
         Ok(Config {
             cpu: args.is_present("cpu"),
             messages: args.is_present("messages"),

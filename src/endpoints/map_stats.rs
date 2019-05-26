@@ -13,7 +13,7 @@ use crate::EndpointResult;
 
 /// Stat name argument to the map stats call. Only one possible argument implemented, more to come!
 #[derive(Serialize, Clone, Eq, PartialEq, Hash, Debug)]
-pub enum StatName {
+pub enum MapStatName {
     /// Gets the room owner (always gotten even if other stats are requested).
     #[serde(rename = "owner0")]
     RoomOwner,
@@ -34,7 +34,7 @@ where
 {
     rooms: MapStatsArgsInner<'a, T, I>,
     #[serde(rename = "statName")]
-    stat: StatName,
+    stat: MapStatName,
     shard: &'a str,
 }
 
@@ -54,7 +54,7 @@ where
     &'a T: IntoIterator<Item = I>,
 {
     /// Creates a new MapStatsArgs with the given iterator.
-    pub fn new(shard: &'a str, rooms: &'a T, stat: StatName) -> Self {
+    pub fn new(shard: &'a str, rooms: &'a T, stat: MapStatName) -> Self {
         MapStatsArgs {
             shard: shard,
             rooms: MapStatsArgsInner { rooms: rooms },
@@ -90,7 +90,7 @@ where
 /// Map stats raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
-pub struct Response {
+pub(crate) struct Response {
     ok: i32,
     #[serde(with = "::tuple_vec_map")]
     stats: Vec<(String, RoomResponse)>,

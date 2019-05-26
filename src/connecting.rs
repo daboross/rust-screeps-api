@@ -4,13 +4,13 @@ use std::fmt;
 use futures::{Future, Poll, Stream};
 use url::Url;
 
-use crate::{EndpointType, Error, TokenStorage};
+use crate::{EndpointResult, Error, TokenStorage};
 
 /// Struct mirroring `hyper`'s `FutureResponse`, but with parsing that happens after the request is finished.
 #[must_use = "futures do nothing unless polled"]
-pub struct FutureResponse<R: EndpointType>(Box<Future<Item = R, Error = Error>>);
+pub(crate) struct FutureResponse<R: EndpointResult>(Box<Future<Item = R, Error = Error>>);
 
-impl<R: EndpointType> fmt::Debug for FutureResponse<R> {
+impl<R: EndpointResult> fmt::Debug for FutureResponse<R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("ScreepsFutureResponse")
             .field("inner", &"<boxed future>")
@@ -20,7 +20,7 @@ impl<R: EndpointType> fmt::Debug for FutureResponse<R> {
 
 impl<R> Future for FutureResponse<R>
 where
-    R: EndpointType,
+    R: EndpointResult,
 {
     type Item = R;
     type Error = Error;
@@ -36,7 +36,7 @@ where
 ///
 /// - Wait for the hyper request to finish
 /// - Wait for hyper request body, collecting it into a single chunk
-/// - Parse JSON body as the given `EndpointType`, and return result/error.
+/// - Parse JSON body as the given `EndpointResult`, and return result/error.
 ///
 /// All errors returned will have the given `Url` contained as part of the context.
 ///
@@ -45,13 +45,13 @@ where
 /// - `url`: url that is being queried, used only for error and warning messages
 /// - `tokens`: where to put any tokens that were returned, if any
 /// - `response`: actual hyper response that we're interpreting
-pub fn interpret<R>(
+pub(crate) fn interpret<R>(
     tokens: TokenStorage,
     url: Url,
     response: hyper::client::ResponseFuture,
 ) -> FutureResponse<R>
 where
-    R: EndpointType,
+    R: EndpointResult,
 {
     FutureResponse(Box::new(
         response
@@ -108,7 +108,7 @@ where
     ))
 }
 
-fn deserialize_with_warnings<T: EndpointType>(
+fn deserialize_with_warnings<T: EndpointResult>(
     input: &serde_json::Value,
     url: &Url,
 ) -> Result<T::RequestResult, Error> {

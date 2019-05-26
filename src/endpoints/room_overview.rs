@@ -2,7 +2,7 @@
 use std::marker::PhantomData;
 
 use crate::{
-    data::{self, users::Badge},
+    data::{self, Badge},
     error::{ApiError, Result},
     EndpointResult,
 };
@@ -10,8 +10,7 @@ use crate::{
 /// Room overview raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
-#[doc(hidden)]
-pub struct Response {
+pub(crate) struct Response {
     ok: i32,
     owner: Option<OwnerResponse>,
     stats: Option<RoomStatsResponse>,

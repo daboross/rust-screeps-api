@@ -10,7 +10,7 @@ use crate::EndpointResult;
 /// Raw list results.
 #[derive(serde_derive::Deserialize, Clone, Debug)]
 #[doc(hidden)]
-pub struct Response {
+pub(crate) struct Response {
     ok: i32,
     count: u64,
     list: Vec<ResponseRankedUser>,

@@ -8,7 +8,7 @@ use crate::EndpointResult;
 /// Call raw result.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
-pub struct Response {
+pub(crate) struct Response {
     ok: i32,
     seasons: Vec<Season>,
 }

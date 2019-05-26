@@ -9,8 +9,7 @@ use crate::{
 
 /// Shard info raw result.
 #[derive(serde_derive::Deserialize, Clone, Debug)]
-#[doc(hidden)]
-pub struct Response {
+pub(crate) struct Response {
     ok: i32,
     shards: Vec<ShardResponse>,
 }
