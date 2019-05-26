@@ -21,7 +21,7 @@ pub(super) trait Updatable: Sized {
 macro_rules! basic_updatable {
     ($($name:ty),*$(,)?) => (
         $(
-            impl crate::websocket::types::room::room_object_macros::Updatable for $name {
+            impl crate::websocket::room_object_macros::Updatable for $name {
                 type Update = $name;
 
                 fn apply_update(&mut self, update: Self::Update) {
@@ -300,7 +300,7 @@ macro_rules! implement_update_for {
             }
         }
 
-        impl crate::websocket::types::room::room_object_macros::Updatable for $name {
+        impl crate::websocket::room_object_macros::Updatable for $name {
             type Update = $update_name;
 
             fn apply_update(&mut self, update: Self::Update) {
@@ -315,7 +315,7 @@ macro_rules! implement_update_for {
                 let finished = $name {
                     $(
                         $field: match update.$field.and_then(
-                                crate::websocket::types::room::room_object_macros::Updatable::create_from_update) {
+                                crate::websocket::room_object_macros::Updatable::create_from_update) {
                             Some(v) => v,
                             None => return None
                         },
@@ -407,7 +407,7 @@ macro_rules! add_metadata {
                         priv $built_field: $built_type,
                     )*
 
-                    #[serde(default, with = "crate::websocket::types::room::room_object_macros::always_some")]
+                    #[serde(default, with = "crate::websocket::room_object_macros::always_some")]
                     $( #[$field_attr] )*
                     priv $field: $type,
                 >>
@@ -436,7 +436,7 @@ macro_rules! add_metadata {
 
                     #[serde(
                         default,
-                        with = "crate::websocket::types::room::room_object_macros::always_some_but_null_is_default"
+                        with = "crate::websocket::room_object_macros::always_some_but_null_is_default"
                     )]
                     $( #[$field_attr] )*
                     priv $field: $type,
@@ -564,7 +564,7 @@ macro_rules! with_update_struct {
                     $( #[$update_field_attr] )*
                     $( ($update_field_extra) )*
                     priv $update_field:
-                        Option<<$update_type as crate::websocket::types::room::room_object_macros::Updatable>::Update>,
+                        Option<<$update_type as crate::websocket::room_object_macros::Updatable>::Update>,
                 )*
             }
         }
@@ -572,7 +572,7 @@ macro_rules! with_update_struct {
         impl $name {
             /// Updates this structure with all values present in the given update.
             pub fn update(&mut self, update: $update_name) {
-                <Self as crate::websocket::types::room::room_object_macros::Updatable>::apply_update(self, update);
+                <Self as crate::websocket::room_object_macros::Updatable>::apply_update(self, update);
             }
         }
     )

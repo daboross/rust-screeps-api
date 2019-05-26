@@ -9,17 +9,13 @@ use serde::{
 use crate::websocket::Channel;
 use crate::RoomName;
 
-use self::messages::{ConversationUpdate, MessageUpdate};
-use self::room::RoomUpdate;
-use self::room_map_view::RoomMapViewUpdate;
-use self::user_console::UserConsoleUpdate;
-use self::user_cpu::UserCpuUpdate;
+mod messages;
+mod room;
+mod room_map_view;
+mod user_console;
+mod user_cpu;
 
-pub mod messages;
-pub mod room;
-pub mod room_map_view;
-pub mod user_console;
-pub mod user_cpu;
+pub use self::{messages::*, room::*, room_map_view::*, user_console::*, user_cpu::*};
 
 /// An update to a Screeps server 'channel' that has been subscribed to.
 #[derive(Clone, Debug)]

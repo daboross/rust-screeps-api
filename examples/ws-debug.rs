@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use futures::{future, stream, Future, Sink, Stream};
 use log::{debug, info, warn};
 use screeps_api::{
-    websocket::{Channel, ChannelUpdate, ScreepsMessage, SockjsMessage},
+    websocket::{commands, Channel, ChannelUpdate, ScreepsMessage, SockjsMessage},
     RoomName, TokenStorage,
 };
 use websocket::OwnedMessage;
@@ -92,7 +92,7 @@ impl Config {
         &self,
         id: &str,
     ) -> Box<dyn Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
-        use screeps_api::websocket::subscribe;
+        use screeps_api::websocket::commands::subscribe;
 
         let mut messages = Vec::with_capacity(
             1 + self.cpu as usize
@@ -251,7 +251,7 @@ fn main() {
         my_info.username
     );
 
-    let ws_url = screeps_api::websocket::connecting::transform_url(&config.url)
+    let ws_url = screeps_api::websocket::transform_url(&config.url)
         .expect("expected server api url to parse into websocket url.");
 
     let connection = websocket::ClientBuilder::from_url(&ws_url).async_connect(None);
@@ -263,7 +263,7 @@ fn main() {
 
                 let (sink, stream) = client.split();
 
-                sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(
+                sink.send(OwnedMessage::Text(commands::authenticate(
                     &tokens.get().unwrap(),
                 )))
                 .and_then(|sink| {
@@ -353,7 +353,7 @@ impl Handler {
 
     fn handle_parsed_message(
         &self,
-        message: screeps_api::websocket::parsing::ScreepsMessage<'_>,
+        message: screeps_api::websocket::ScreepsMessage<'_>,
     ) -> Box<dyn Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         match message {
             ScreepsMessage::AuthFailed => panic!("authentication with stored token failed!"),

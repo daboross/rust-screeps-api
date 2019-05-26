@@ -9,7 +9,7 @@ use crate::data::Badge;
 
 pub mod flags;
 #[macro_use]
-mod room_object_macros;
+pub mod room_object_macros;
 #[macro_use]
 pub mod resources;
 pub mod objects;

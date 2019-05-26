@@ -5,65 +5,41 @@
 //!
 //! Reading the source code is definitely possible. But there may be some investment in reading
 //! each of the macros defined and used here, and it will be much easier to just read the documentation.
-
-pub mod construction_site;
-pub mod container;
-pub mod controller;
-pub mod creep;
-pub mod extension;
-pub mod extractor;
-pub mod keeper_lair;
-pub mod lab;
-pub mod link;
-pub mod mineral;
-pub mod nuker;
-pub mod observer;
-pub mod portal;
-pub mod power_bank;
-pub mod power_spawn;
-pub mod rampart;
-pub mod resource;
-pub mod road;
-pub mod shared;
-pub mod source;
-pub mod spawn;
-pub mod storage;
-pub mod terminal;
-pub mod tombstone;
-pub mod tower;
-pub mod wall;
-
-pub use self::{
-    construction_site::{ConstructionSite, ConstructionSiteUpdate, StructureType},
-    container::{StructureContainer, StructureContainerUpdate},
-    controller::{StructureController, StructureControllerUpdate},
-    creep::{Creep, CreepUpdate},
-    extension::{StructureExtension, StructureExtensionUpdate},
-    extractor::{StructureExtractor, StructureExtractorUpdate},
-    keeper_lair::{StructureKeeperLair, StructureKeeperLairUpdate},
-    lab::{StructureLab, StructureLabUpdate},
-    link::{StructureLink, StructureLinkUpdate},
-    mineral::{Mineral, MineralUpdate},
-    nuker::{StructureNuker, StructureNukerUpdate},
-    observer::{StructureObserver, StructureObserverUpdate},
-    portal::{StructurePortal, StructurePortalUpdate},
-    power_bank::{StructurePowerBank, StructurePowerBankUpdate},
-    power_spawn::{StructurePowerSpawn, StructurePowerSpawnUpdate},
-    rampart::{StructureRampart, StructureRampartUpdate},
-    resource::{Resource, ResourceUpdate},
-    road::{StructureRoad, StructureRoadUpdate},
-    source::{Source, SourceUpdate},
-    spawn::{StructureSpawn, StructureSpawnUpdate},
-    storage::{StructureStorage, StructureStorageUpdate},
-    terminal::{StructureTerminal, StructureTerminalUpdate},
-    tombstone::{Tombstone, TombstoneUpdate},
-    tower::{StructureTower, StructureTowerUpdate},
-    wall::{StructureWall, StructureWallUpdate, WallDecayTime, WallDecayTimeUpdate},
-};
-
 use crate::RoomName;
 
-use self::shared::ActionLogTarget;
+mod construction_site;
+mod container;
+mod controller;
+mod creep;
+mod extension;
+mod extractor;
+mod keeper_lair;
+mod lab;
+mod link;
+mod mineral;
+mod nuker;
+mod observer;
+mod portal;
+mod power_bank;
+mod power_spawn;
+mod rampart;
+mod resource;
+mod road;
+mod shared;
+mod source;
+mod spawn;
+mod storage;
+mod terminal;
+mod tombstone;
+mod tower;
+mod wall;
+
+pub use self::{
+    construction_site::*, container::*, controller::*, creep::*, extension::*, extractor::*,
+    keeper_lair::*, lab::*, link::*, mineral::*, nuker::*, observer::*, portal::*, power_bank::*,
+    power_spawn::*, rampart::*, resource::*, road::*, shared::*, source::*, spawn::*, storage::*,
+    terminal::*, tombstone::*, tower::*, wall::*,
+};
 
 /// Enum describing all known room objects.
 #[derive(serde_derive::Deserialize, Clone, Debug)]

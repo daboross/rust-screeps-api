@@ -64,7 +64,7 @@ fn setup_logging() {
 fn subscribe_with(
     id: &str,
 ) -> Box<dyn Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
-    use screeps_api::websocket::subscribe;
+    use screeps_api::websocket::commands::subscribe;
 
     let messages = vec![
         subscribe(&Channel::ServerMessages),
@@ -97,7 +97,7 @@ fn main() {
 
     info!("connecting - {}", my_info.username);
 
-    let ws_url = screeps_api::websocket::connecting::transform_url(&http_url)
+    let ws_url = screeps_api::websocket::transform_url(&http_url)
         .expect("expected server api url to parse into websocket url");
 
     let connection = websocket::ClientBuilder::from_url(&ws_url).async_connect(None);
@@ -109,9 +109,9 @@ fn main() {
 
                 let (sink, stream) = client.split();
 
-                sink.send(OwnedMessage::Text(screeps_api::websocket::authenticate(
-                    &tokens.get().unwrap(),
-                )))
+                sink.send(OwnedMessage::Text(
+                    screeps_api::websocket::commands::authenticate(&tokens.get().unwrap()),
+                ))
                 .and_then(|sink| {
                     let handler = Handler::new(tokens, my_info);
 
@@ -192,7 +192,7 @@ impl Handler {
 
     fn handle_parsed_message(
         &self,
-        message: screeps_api::websocket::parsing::ScreepsMessage<'_>,
+        message: screeps_api::websocket::ScreepsMessage<'_>,
     ) -> Box<dyn Stream<Item = OwnedMessage, Error = websocket::WebSocketError>> {
         match message {
             ScreepsMessage::AuthFailed => panic!("authentication with stored token failed!"),

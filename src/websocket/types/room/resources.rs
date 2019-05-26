@@ -146,7 +146,7 @@ impl ResourceType {
     /// Example:
     ///
     /// ```
-    /// # use screeps_api::websocket::types::room::resources::ResourceType;
+    /// # use screeps_api::websocket::resources::ResourceType;
     /// assert_eq!(ResourceType::Utrium.to_resource_string(), "U")
     /// ```
     pub fn to_resource_string(&self) -> &'static str {
@@ -305,7 +305,7 @@ macro_rules! with_resource_fields_and_update_struct {
                 $(
                     /// The current amount of this resource held in this structure.
                     #[serde(default, rename = $serde_ident,
-                        with = "crate::websocket::types::room::resources::null_is_default")]
+                        with = "crate::websocket::resources::null_is_default")]
                     pub $field_ident: i32,
                 )*
                 $( $struct_field )*
@@ -318,7 +318,7 @@ macro_rules! with_resource_fields_and_update_struct {
                     #[serde(
                         default,
                         rename = $serde_ident,
-                        with = "crate::websocket::types::room::resources\
+                        with = "crate::websocket::resources\
                                 ::null_is_default_and_always_some"
                     )]
                     (no_extra_meta)
@@ -395,7 +395,7 @@ macro_rules! resource_iterator_for {
 //     if last_line is not None:
 //         new_split = line.split('|')
 //
-//         print(last_line.strip() + '|Some(::websocket::types::room::resources::ResourceType::' + new_split[0] + ')')
+//         print(last_line.strip() + '|Some(::websocket::resources::ResourceType::' + new_split[0] + ')')
 //     last_line = line
 // print(last_line.strip() + '|None')
 // ```
@@ -403,92 +403,92 @@ macro_rules! resource_iterator_for {
 #[allow(unused_macros)]
 macro_rules! resource_list {
     () => (
-        ::websocket::types::room::resources::ResourceType;
+        ::websocket::resources::ResourceType;
 
         Energy => energy => "energy"
-            => Some(::websocket::types::room::resources::ResourceType::Power);
+            => Some(::websocket::resources::ResourceType::Power);
         Power => power => "power"
-            => Some(::websocket::types::room::resources::ResourceType::Hydrogen);
+            => Some(::websocket::resources::ResourceType::Hydrogen);
         Hydrogen => hydrogen => "H"
-            => Some(::websocket::types::room::resources::ResourceType::Oxygen);
+            => Some(::websocket::resources::ResourceType::Oxygen);
         Oxygen => oxygen => "O"
-            => Some(::websocket::types::room::resources::ResourceType::Utrium);
+            => Some(::websocket::resources::ResourceType::Utrium);
         Utrium => utrium => "U"
-            => Some(::websocket::types::room::resources::ResourceType::Lemergium);
+            => Some(::websocket::resources::ResourceType::Lemergium);
         Lemergium => lemergium => "L"
-            => Some(::websocket::types::room::resources::ResourceType::Keanium);
+            => Some(::websocket::resources::ResourceType::Keanium);
         Keanium => keanium => "K"
-            => Some(::websocket::types::room::resources::ResourceType::Zynthium);
+            => Some(::websocket::resources::ResourceType::Zynthium);
         Zynthium => zynthium => "Z"
-            => Some(::websocket::types::room::resources::ResourceType::Catalyst);
+            => Some(::websocket::resources::ResourceType::Catalyst);
         Catalyst => catalyst => "X"
-            => Some(::websocket::types::room::resources::ResourceType::Ghodium);
+            => Some(::websocket::resources::ResourceType::Ghodium);
         Ghodium => ghodium => "G"
-            => Some(::websocket::types::room::resources::ResourceType::Hydroxide);
+            => Some(::websocket::resources::ResourceType::Hydroxide);
         Hydroxide => hydroxide => "OH"
-            => Some(::websocket::types::room::resources::ResourceType::ZynthiumKeanite);
+            => Some(::websocket::resources::ResourceType::ZynthiumKeanite);
         ZynthiumKeanite => zynthium_keanite => "ZK"
-            => Some(::websocket::types::room::resources::ResourceType::UtriumLemergite);
+            => Some(::websocket::resources::ResourceType::UtriumLemergite);
         UtriumLemergite => utrium_lemergite => "UL"
-            => Some(::websocket::types::room::resources::ResourceType::UtriumHydride);
+            => Some(::websocket::resources::ResourceType::UtriumHydride);
         UtriumHydride => utrium_hydride => "UH"
-            => Some(::websocket::types::room::resources::ResourceType::UtriumOxide);
+            => Some(::websocket::resources::ResourceType::UtriumOxide);
         UtriumOxide => utrium_oxide => "UO"
-            => Some(::websocket::types::room::resources::ResourceType::KeaniumHydride);
+            => Some(::websocket::resources::ResourceType::KeaniumHydride);
         KeaniumHydride => keanium_hydride => "KH"
-            => Some(::websocket::types::room::resources::ResourceType::KeaniumOxide);
+            => Some(::websocket::resources::ResourceType::KeaniumOxide);
         KeaniumOxide => keanium_oxide => "KO"
-            => Some(::websocket::types::room::resources::ResourceType::LemergiumHydride);
+            => Some(::websocket::resources::ResourceType::LemergiumHydride);
         LemergiumHydride => lemergium_hydride => "LH"
-            => Some(::websocket::types::room::resources::ResourceType::LemergiumOxide);
+            => Some(::websocket::resources::ResourceType::LemergiumOxide);
         LemergiumOxide => lemergium_oxide => "LO"
-            => Some(::websocket::types::room::resources::ResourceType::ZynthiumHydride);
+            => Some(::websocket::resources::ResourceType::ZynthiumHydride);
         ZynthiumHydride => zynthium_hydride => "ZH"
-            => Some(::websocket::types::room::resources::ResourceType::ZynthiumOxide);
+            => Some(::websocket::resources::ResourceType::ZynthiumOxide);
         ZynthiumOxide => zynthium_oxide => "ZO"
-            => Some(::websocket::types::room::resources::ResourceType::GhodiumHydride);
+            => Some(::websocket::resources::ResourceType::GhodiumHydride);
         GhodiumHydride => ghodium_hydride => "GH"
-            => Some(::websocket::types::room::resources::ResourceType::GhodiumOxide);
+            => Some(::websocket::resources::ResourceType::GhodiumOxide);
         GhodiumOxide => ghodium_oxide => "GO"
-            => Some(::websocket::types::room::resources::ResourceType::UtriumAcid);
+            => Some(::websocket::resources::ResourceType::UtriumAcid);
         UtriumAcid => utrium_acid => "UH2O"
-            => Some(::websocket::types::room::resources::ResourceType::UtriumAlkalide);
+            => Some(::websocket::resources::ResourceType::UtriumAlkalide);
         UtriumAlkalide => utrium_alkalide => "UHO2"
-            => Some(::websocket::types::room::resources::ResourceType::KeaniumAcid);
+            => Some(::websocket::resources::ResourceType::KeaniumAcid);
         KeaniumAcid => keanium_acid => "KH2O"
-            => Some(::websocket::types::room::resources::ResourceType::KeaniumAlkalide);
+            => Some(::websocket::resources::ResourceType::KeaniumAlkalide);
         KeaniumAlkalide => keanium_alkalide => "KHO2"
-            => Some(::websocket::types::room::resources::ResourceType::LemergiumAcid);
+            => Some(::websocket::resources::ResourceType::LemergiumAcid);
         LemergiumAcid => lemergium_acid => "LH2O"
-            => Some(::websocket::types::room::resources::ResourceType::LemergiumAlkalide);
+            => Some(::websocket::resources::ResourceType::LemergiumAlkalide);
         LemergiumAlkalide => lemergium_alkalide => "LHO2"
-            => Some(::websocket::types::room::resources::ResourceType::ZynthiumAcid);
+            => Some(::websocket::resources::ResourceType::ZynthiumAcid);
         ZynthiumAcid => zynthium_acid => "ZH2O"
-            => Some(::websocket::types::room::resources::ResourceType::ZynthiumAlkalide);
+            => Some(::websocket::resources::ResourceType::ZynthiumAlkalide);
         ZynthiumAlkalide => zynthium_alkalide => "ZHO2"
-            => Some(::websocket::types::room::resources::ResourceType::GhodiumAcid);
+            => Some(::websocket::resources::ResourceType::GhodiumAcid);
         GhodiumAcid => ghodium_acid => "GH2O"
-            => Some(::websocket::types::room::resources::ResourceType::GhodiumAlkalide);
+            => Some(::websocket::resources::ResourceType::GhodiumAlkalide);
         GhodiumAlkalide => ghodium_alkalide => "GHO2"
-            => Some(::websocket::types::room::resources::ResourceType::CatalyzedUtriumAcid);
+            => Some(::websocket::resources::ResourceType::CatalyzedUtriumAcid);
         CatalyzedUtriumAcid => catalyzed_utrium_acid => "XUH2O"
-            => Some(::websocket::types::room::resources::ResourceType::CatalyzedUtriumAlkalide);
+            => Some(::websocket::resources::ResourceType::CatalyzedUtriumAlkalide);
         CatalyzedUtriumAlkalide => catalyzed_utrium_alkalide => "XUHO2"
-            => Some(::websocket::types::room::resources::ResourceType::CatalyzedKeaniumAcid);
+            => Some(::websocket::resources::ResourceType::CatalyzedKeaniumAcid);
         CatalyzedKeaniumAcid => catalyzed_keanium_acid => "XKH2O"
-            => Some(::websocket::types::room::resources::ResourceType::CatalyzedKeaniumAlkalide);
+            => Some(::websocket::resources::ResourceType::CatalyzedKeaniumAlkalide);
         CatalyzedKeaniumAlkalide => catalyzed_keanium_alkalide => "XKHO2"
-            => Some(::websocket::types::room::resources::ResourceType::CatalyzedLemergiumAcid);
+            => Some(::websocket::resources::ResourceType::CatalyzedLemergiumAcid);
         CatalyzedLemergiumAcid => catalyzed_lemergium_acid => "XLH2O"
-            => Some(::websocket::types::room::resources::ResourceType::CatalyzedLemergiumAlkalide);
+            => Some(::websocket::resources::ResourceType::CatalyzedLemergiumAlkalide);
         CatalyzedLemergiumAlkalide => catalyzed_lemergium_alkalide => "XLHO2"
-            => Some(::websocket::types::room::resources::ResourceType::CatalyzedZynthiumAcid);
+            => Some(::websocket::resources::ResourceType::CatalyzedZynthiumAcid);
         CatalyzedZynthiumAcid => catalyzed_zynthium_acid => "XZH2O"
-            => Some(::websocket::types::room::resources::ResourceType::CatalyzedZynthiumAlkalide);
+            => Some(::websocket::resources::ResourceType::CatalyzedZynthiumAlkalide);
         CatalyzedZynthiumAlkalide => catalyzed_zynthium_alkalide => "XZHO2"
-            => Some(::websocket::types::room::resources::ResourceType::CatalyzedGhodiumAcid);
+            => Some(::websocket::resources::ResourceType::CatalyzedGhodiumAcid);
         CatalyzedGhodiumAcid => catalyzed_ghodium_acid => "XGH2O"
-            => Some(::websocket::types::room::resources::ResourceType::CatalyzedGhodiumAlkalide);
+            => Some(::websocket::resources::ResourceType::CatalyzedGhodiumAlkalide);
         CatalyzedGhodiumAlkalide => catalyzed_ghodium_alkalide => "XGHO2"
             => None;
     )
