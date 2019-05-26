@@ -16,7 +16,7 @@ with_base_fields_and_update_struct! {
         pub invader_harvested: u32,
         /// The game time at which the source will next regenerate. `None` when waiting on a creep to
         /// first harvest it.
-        pub next_regeneration_time: Option<u64>,
+        pub next_regeneration_time: Option<u32>,
         /// The number of ticks between when a source is first harvested after regeneration and when it next
         /// regenerates.
         pub ticks_to_regeneration: u32,
