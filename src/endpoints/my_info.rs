@@ -5,7 +5,7 @@ use time::Timespec;
 
 use crate::{
     data::{self, Badge},
-    data::{optional_timespec_seconds, timespec_seconds},
+    decoders::{optional_timespec_seconds, timespec_seconds},
     error::{ApiError, Result},
     EndpointResult,
 };

@@ -5,8 +5,8 @@ use std::{convert::AsRef, marker::PhantomData};
 
 use serde::{Serialize, Serializer};
 
-use crate::data::{self, optional_timespec_seconds, RoomName};
-
+use crate::data::{self, RoomName};
+use crate::decoders::optional_timespec_seconds;
 use crate::error::ApiError;
 use crate::error::Result as ScapiResult;
 use crate::EndpointResult;

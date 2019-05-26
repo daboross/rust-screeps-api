@@ -1,5 +1,8 @@
 //! `StructureController` data description.
-use crate::data::{optional_timespec_seconds, RoomName, RoomSign};
+use crate::{
+    data::{RoomName, RoomSign},
+    decoders::optional_timespec_seconds,
+};
 
 implement_update_for! {
     RoomSign;

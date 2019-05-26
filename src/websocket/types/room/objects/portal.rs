@@ -1,5 +1,8 @@
 //! `StructurePortal` data description.
-use crate::data::{double_optional_timespec_seconds, optional_timespec_seconds, RoomName};
+use crate::{
+    data::RoomName,
+    decoders::{double_optional_timespec_seconds, optional_timespec_seconds},
+};
 
 with_update_struct! {
     /// The destination for a portal structure.

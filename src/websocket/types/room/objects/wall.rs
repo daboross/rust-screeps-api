@@ -1,5 +1,8 @@
 //! `StructureWall` data description.
-use crate::data::{optional_timespec_seconds, timespec_seconds, RoomName};
+use crate::{
+    data::RoomName,
+    decoders::{optional_timespec_seconds, timespec_seconds},
+};
 
 with_update_struct! {
     /// Describes the decay of a decaying wall.
