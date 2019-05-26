@@ -1,5 +1,5 @@
 //! Interpreting user self information.
-use std::{collections::HashMap, marker::PhantomData};
+use std::collections::HashMap;
 
 use time::Timespec;
 
@@ -58,7 +58,7 @@ pub struct MyInfo {
     pub shard_allocations: Option<UserCpuShardAllocation>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 /// Information on a user's per-shard CPU allocations.
@@ -105,7 +105,7 @@ impl EndpointResult for MyInfo {
                     last_update,
                 })
             }),
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }

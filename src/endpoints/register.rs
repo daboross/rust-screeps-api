@@ -1,5 +1,5 @@
 //! Creating registration calls and interpreting registration results.
-use std::{borrow::Cow, marker::PhantomData};
+use std::borrow::Cow;
 
 use crate::{
     data,
@@ -56,7 +56,7 @@ pub(crate) struct Response {
 #[derive(Clone, Hash, Debug)]
 pub struct RegistrationSuccess {
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl EndpointResult for RegistrationSuccess {
@@ -71,7 +71,7 @@ impl EndpointResult for RegistrationSuccess {
         }
 
         Ok(RegistrationSuccess {
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }

@@ -1,5 +1,4 @@
 //! Interpreting room overview results.
-use std::marker::PhantomData;
 
 use crate::{
     data::{self, Badge},
@@ -73,7 +72,7 @@ pub struct StatPoint {
     pub end_time: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl From<StatPointResponse> for StatPoint {
@@ -81,7 +80,7 @@ impl From<StatPointResponse> for StatPoint {
         StatPoint {
             amount: stat.value,
             end_time: stat.end_time,
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         }
     }
 }
@@ -105,7 +104,7 @@ pub struct TotalStats {
     creep_parts_lost: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 /// Various statistics about a single room, returned as a result from `room_overview` calls.
@@ -131,7 +130,7 @@ pub struct RoomOverview {
     pub total_stats: Vec<TotalStats>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl EndpointResult for RoomOverview {
@@ -184,7 +183,7 @@ impl EndpointResult for RoomOverview {
                     energy_spent_construction: stats_max.energy_construction_8,
                     creep_parts_produced: stats_max.creeps_produced_8,
                     creep_parts_lost: stats_max.creeps_lost_8,
-                    _phantom: PhantomData,
+                    _non_exhaustive: (),
                 },
                 TotalStats {
                     time_period: 180,
@@ -194,7 +193,7 @@ impl EndpointResult for RoomOverview {
                     energy_spent_construction: stats_max.energy_construction_180,
                     creep_parts_produced: stats_max.creeps_produced_180,
                     creep_parts_lost: stats_max.creeps_lost_180,
-                    _phantom: PhantomData,
+                    _non_exhaustive: (),
                 },
                 TotalStats {
                     time_period: 1440,
@@ -204,10 +203,10 @@ impl EndpointResult for RoomOverview {
                     energy_spent_construction: stats_max.energy_construction_1440,
                     creep_parts_produced: stats_max.creeps_produced_1440,
                     creep_parts_lost: stats_max.creeps_lost_1440,
-                    _phantom: PhantomData,
+                    _non_exhaustive: (),
                 },
             ],
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }

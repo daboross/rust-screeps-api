@@ -1,7 +1,7 @@
 //! Interpreting bulk room statistics (map stats).
 //!
 //! Note: currently only supports "owner0" stats, not any other statistic that can also be retrieved with the same API.
-use std::{convert::AsRef, marker::PhantomData};
+use std::convert::AsRef;
 
 use serde::{Serialize, Serializer};
 
@@ -133,7 +133,7 @@ pub struct RoomOwner {
     pub room_controller_level: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 /// Statistics on a number of rooms.
@@ -148,7 +148,7 @@ pub struct MapStats {
     /// A list of user information for each user who either owns or signed a room that was requested.
     pub users: Vec<UserInfo>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 /// Information on a room.
@@ -166,7 +166,7 @@ pub struct RoomInfo {
     pub hard_sign: Option<data::HardSign>,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 /// Information on a user.
@@ -180,7 +180,7 @@ pub struct UserInfo {
     pub badge: data::Badge,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl EndpointResult for MapStats {
@@ -227,7 +227,7 @@ impl EndpointResult for MapStats {
                         // turn Option<Result<A, B>> into Result<Option<A>, B>
                         sign: sign,
                         hard_sign: hard_sign,
-                        _phantom: PhantomData,
+                        _non_exhaustive: (),
                     };
 
                     Ok(Some(info))
@@ -259,13 +259,13 @@ impl EndpointResult for MapStats {
                         user_id: user_id,
                         username: username,
                         badge: badge,
-                        _phantom: PhantomData,
+                        _non_exhaustive: (),
                     };
 
                     Ok(info)
                 })
                 .collect::<ScapiResult<_>>()?,
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }

@@ -1,5 +1,4 @@
 //! Interpreting room terrain results.
-use std::marker::PhantomData;
 
 use arrayvec::ArrayVec;
 
@@ -64,7 +63,7 @@ pub struct RoomTerrain {
     /// You can use terrain[y_pos][x_pos] to get any individual terrain square.
     pub terrain: TerrainGrid,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl EndpointResult for RoomTerrain {
@@ -140,7 +139,7 @@ impl EndpointResult for RoomTerrain {
                         .collect::<Result<_>>()
                 })
                 .collect::<Result<_>>()?,
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }

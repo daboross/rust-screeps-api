@@ -1,5 +1,4 @@
 //! Interpreting the result of finding the rank of a specific user.
-use std::marker::PhantomData;
 
 use crate::data;
 use crate::error::{ApiError, Result};
@@ -50,9 +49,8 @@ pub struct FoundUserRank {
     /// The user's raw score for this season for the requested leaderboard type.
     pub raw_score: u64,
     /// Phantom data in order to allow adding any additional fields in the future.
-    #[doc(hidden)]
     #[serde(skip)]
-    pub _phantom: PhantomData<()>,
+    pub(super) _non_exhaustive: (),
 }
 
 // This is the result when specifying one season.
@@ -78,7 +76,7 @@ impl EndpointResult for FoundUserRank {
             user_id: user,
             rank: rank,
             raw_score: score,
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }
@@ -112,7 +110,7 @@ impl EndpointResult for Vec<FoundUserRank> {
                     user_id: user,
                     rank: rank,
                     raw_score: score,
-                    _phantom: PhantomData,
+                    _non_exhaustive: (),
                 }
             })
             .collect())

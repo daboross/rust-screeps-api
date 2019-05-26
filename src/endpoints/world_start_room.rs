@@ -1,5 +1,4 @@
 //! Interpreting generic template calls.
-use std::marker::PhantomData;
 
 use crate::{
     data,
@@ -22,7 +21,7 @@ pub struct WorldStartRoom {
     /// The shard name to start viewing, or None if a shard was provided for the query or the server is out of date.
     pub shard: Option<String>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl EndpointResult for WorldStartRoom {
@@ -58,7 +57,7 @@ impl EndpointResult for WorldStartRoom {
         Ok(WorldStartRoom {
             room_name: room_name,
             shard: shard,
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }

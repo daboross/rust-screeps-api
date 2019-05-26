@@ -1,6 +1,5 @@
 //! Interpreting user leaderboard page results.
 use std::collections::HashMap;
-use std::marker::PhantomData;
 
 use super::find_rank;
 use crate::data;
@@ -46,7 +45,7 @@ pub struct LeaderboardPage {
     #[serde(with = "::tuple_vec_map")]
     pub user_details: Vec<(String, UserDetails)>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 /// Alias since the format is the same for the inner user ranks and found user ranks.
@@ -64,7 +63,7 @@ pub struct UserDetails {
     /// The user's username.
     pub username: String,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl EndpointResult for LeaderboardPage {
@@ -92,7 +91,7 @@ impl EndpointResult for LeaderboardPage {
                     user_id: info.user,
                     rank: info.rank,
                     raw_score: info.score,
-                    _phantom: PhantomData,
+                    _non_exhaustive: (),
                 })
                 .collect(),
             user_details: user_details
@@ -105,12 +104,12 @@ impl EndpointResult for LeaderboardPage {
                             badge: data.badge,
                             gcl_points: data.gcl,
                             username: data.username,
-                            _phantom: PhantomData,
+                            _non_exhaustive: (),
                         },
                     )
                 })
                 .collect(),
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }

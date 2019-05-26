@@ -1,6 +1,5 @@
 //! Interpreting login responses.
 use std::borrow::Cow;
-use std::marker::PhantomData;
 
 use crate::data;
 use crate::error::{ApiError, Result};
@@ -44,7 +43,7 @@ pub struct LoggedIn {
     /// The token which can be used to make future authenticated API calls.
     pub token: Token,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl LoggedIn {
@@ -67,7 +66,7 @@ impl EndpointResult for LoggedIn {
         match token {
             Some(token) => Ok(LoggedIn {
                 token: token.into(),
-                _phantom: PhantomData,
+                _non_exhaustive: (),
             }),
             None => Err(ApiError::MissingField("token").into()),
         }

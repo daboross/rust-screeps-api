@@ -1,5 +1,4 @@
 //! Interpreting rooms in which PvP recently occurred. This is an "experimental" endpoint.
-use std::marker::PhantomData;
 
 use crate::{
     data,
@@ -59,7 +58,7 @@ pub struct RecentPvp {
     /// A list of shard names and the recent pvp within that shard.
     pub shards: Vec<(String, ShardRecentPvp)>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 /// Result storing recent pvp matches for a particular shard.
@@ -70,7 +69,7 @@ pub struct ShardRecentPvp {
     /// The current game time of the server when the call was completed, the tick up to which pvp has been reported.
     pub reported_up_to: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl EndpointResult for RecentPvp {
@@ -97,12 +96,12 @@ impl EndpointResult for RecentPvp {
                                 .map(|r| Ok((data::RoomName::new(&r._id)?, r.last_pvp_time)))
                                 .collect::<Result<_>>()?,
                             reported_up_to: data.time,
-                            _phantom: PhantomData,
+                            _non_exhaustive: (),
                         },
                     ))
                 })
                 .collect::<Result<_>>()?,
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }

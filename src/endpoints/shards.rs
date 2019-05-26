@@ -1,5 +1,4 @@
 //! Interpreting shard info calls.
-use std::marker::PhantomData;
 
 use crate::{
     data,
@@ -34,7 +33,7 @@ pub struct ShardInfo {
     /// The average millisecond tick this shard has for some past period of time (TODO: more detail).
     pub tick_avg_milliseconds: f64,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl AsRef<str> for ShardInfo {
@@ -68,7 +67,7 @@ impl EndpointResult for Vec<ShardInfo> {
                     room_count: rooms,
                     user_count: users,
                     tick_avg_milliseconds: tick,
-                    _phantom: PhantomData,
+                    _non_exhaustive: (),
                 }
             })
             .collect())

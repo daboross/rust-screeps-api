@@ -35,7 +35,7 @@ pub struct RoomMapViewUpdate {
     /// more information on what type of object (creep or building, or type of building).
     pub users_objects: Vec<(String, Vec<(u32, u32)>)>,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 struct RoomMapViewUpdateVisitor {
@@ -191,7 +191,7 @@ impl<'de> Visitor<'de> for RoomMapViewUpdateVisitor {
             controllers: controllers.unwrap_or_default(),
             keeper_lairs: keeper_lairs.unwrap_or_default(),
             users_objects: users_objects,
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         };
 
         Ok(finished)

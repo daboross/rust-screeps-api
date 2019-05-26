@@ -1,6 +1,4 @@
 //! Interpreting generic template calls.
-use std::marker::PhantomData;
-
 use crate::{
     data,
     error::{ApiError, Result},
@@ -18,7 +16,7 @@ pub(crate) struct Response {
 #[derive(Clone, Hash, Debug)]
 pub struct CallInfo {
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl EndpointResult for CallInfo {
@@ -33,7 +31,7 @@ impl EndpointResult for CallInfo {
         }
 
         Ok(CallInfo {
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }

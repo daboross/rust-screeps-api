@@ -1,5 +1,4 @@
 //! Parsing for user CPU/memory updates.
-use std::marker::PhantomData;
 
 /// Notification for Update for a user's last tick CPU usage and total memory usage.
 #[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
@@ -15,5 +14,5 @@ pub struct UserCpuUpdate {
     pub memory_usage_bytes: u32,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }

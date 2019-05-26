@@ -1,5 +1,4 @@
 //! Interpreting leaderboard season list results.
-use std::marker::PhantomData;
 
 use crate::data;
 use crate::error::{ApiError, Result};
@@ -33,7 +32,7 @@ pub struct LeaderboardSeason {
     /// The date when the leaderboard season ended, in the format like 2017-03-04T05:38:04.012Z.
     pub end_date: String,
     /// Phantom data in order to allow adding any additional fields in the future.
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl EndpointResult for Vec<LeaderboardSeason> {
@@ -53,7 +52,7 @@ impl EndpointResult for Vec<LeaderboardSeason> {
                 name: s.name,
                 season_id: s._id,
                 end_date: s.date,
-                _phantom: PhantomData,
+                _non_exhaustive: (),
             })
             .collect())
     }

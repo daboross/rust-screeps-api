@@ -1,5 +1,4 @@
 //! Interpreting room status results.
-use std::marker::PhantomData;
 
 use crate::{
     data::{self, RoomName, RoomState},
@@ -42,7 +41,7 @@ pub struct RoomStatus {
     pub state: RoomState,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 impl EndpointResult for RoomStatus {
@@ -67,7 +66,7 @@ impl EndpointResult for RoomStatus {
                 return Ok(RoomStatus {
                     room_name: None,
                     state: RoomState::non_existant(),
-                    _phantom: PhantomData,
+                    _non_exhaustive: (),
                 });
             }
         };
@@ -86,7 +85,7 @@ impl EndpointResult for RoomStatus {
         Ok(RoomStatus {
             room_name: Some(RoomName::new(&room_name)?),
             state: state,
-            _phantom: PhantomData,
+            _non_exhaustive: (),
         })
     }
 }

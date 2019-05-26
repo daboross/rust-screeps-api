@@ -1,5 +1,4 @@
 //! Update parsing for user messages and conversation updates.
-use std::marker::PhantomData;
 
 /// Specification on whether a message is incoming or outgoing.
 #[derive(serde_derive::Deserialize, Copy, Clone, Eq, PartialEq, Hash, Debug)]
@@ -44,7 +43,7 @@ pub struct Message {
     pub respondent_id: String,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 /// Update for a newly received message.
@@ -54,7 +53,7 @@ pub struct MessageUpdate {
     pub message: Message,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 /// Update on whether a message is unread or not.
@@ -68,7 +67,7 @@ pub struct MessageUnreadUpdate {
     pub unread: bool,
     /// Phantom data in order to allow adding any additional fields in the future.
     #[serde(skip)]
-    _phantom: PhantomData<()>,
+    _non_exhaustive: (),
 }
 
 /// Update on a conversation between two specific users. This is either a new message sent by one of the users
