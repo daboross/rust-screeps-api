@@ -29,7 +29,7 @@ with_base_fields_and_update_struct! {
         - energy: u32,
         - energy_capacity: u32,
         - invader_harvested: u32,
-        - next_regeneration_time: Option<u64>,
+        - next_regeneration_time: Option<u32>,
         - ticks_to_regeneration: u32,
     }
 }
