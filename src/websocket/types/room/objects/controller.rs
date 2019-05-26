@@ -101,6 +101,55 @@ with_structure_fields_and_update_struct! {
     }
 }
 
+impl StructureController {
+    /// The progress required for this controller's level (100% dependent on `level`).
+    ///
+    /// Returns `None` if level is outside of 1..=7.
+    ///
+    /// See also [`StructureController::progress_required_at_level`].
+    pub fn progress_required(&self) -> Option<u32> {
+        Self::progress_required_at_level(self.level)
+    }
+
+    /// Progress required for a level.
+    pub fn progress_required_at_level(level: u16) -> Option<u32> {
+        match level {
+            1 => Some(200),
+            2 => Some(45000),
+            3 => Some(135000),
+            4 => Some(405000),
+            5 => Some(1215000),
+            6 => Some(3645000),
+            7 => Some(10935000),
+            _ => None,
+        }
+    }
+
+    /// The total downgrade time for this controller's level (100% dependent on `level`)
+    ///
+    /// Returns `None` if level is outside of 1..=8.
+    ///
+    /// See also [`StructureController::total_downgrade_time_at_level`]
+    pub fn total_downgrade_time(&self) -> Option<u32> {
+        Self::total_downgrade_time_at_level(self.level)
+    }
+
+    /// Total downgrade time for a level (game ticks since the last upgrade that this controller will loose a level).
+    pub fn total_downgrade_time_at_level(level: u16) -> Option<u32> {
+        match level {
+            1 => Some(20000),
+            2 => Some(5000),
+            3 => Some(10000),
+            4 => Some(20000),
+            5 => Some(40000),
+            6 => Some(60000),
+            7 => Some(100000),
+            8 => Some(150000),
+            _ => None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use serde::Deserialize;
