@@ -167,10 +167,10 @@ impl<C> Api<C> {
     /// Creates a new API instance for the official server with the `https://screeps.com/api/` base
     /// url.
     ///
-    /// Use [`with_url`] or [`set_url`] to change to a custom server.
+    /// Use [`Api::with_url`] or [`Api::set_url`] to change to a custom server.
     ///
-    /// The returned instance can be used to make anonymous calls. Use [`with_token`] or
-    /// [`set_token`] to enable authenticated access.
+    /// The returned instance can be used to make anonymous calls. Use [`Api::with_token`] or
+    /// [`Api::set_token`] to enable authenticated access.
     #[inline]
     pub fn new(client: hyper::Client<C>) -> Self {
         Api {
@@ -182,7 +182,7 @@ impl<C> Api<C> {
 
     /// Sets the server url this api client will use.
     ///
-    /// See also [`with_url`].
+    /// See also [`Api::with_url`].
     #[inline]
     pub fn set_url<U: AsRef<str>>(&mut self, url: U) -> Result<(), url::ParseError> {
         self.url = Url::parse(url.as_ref())?;
@@ -191,7 +191,7 @@ impl<C> Api<C> {
 
     /// Sets the server url this api client will use, and returns the client.
     ///
-    /// See also [`set_url`].
+    /// See also [`Api::set_url`].
     #[inline]
     pub fn with_url<U: AsRef<str>>(mut self, url: U) -> Result<Self, url::ParseError> {
         self.set_url(url)?;
@@ -200,7 +200,7 @@ impl<C> Api<C> {
 
     /// Sets the auth token this api client will use.
     ///
-    /// See also [`with_token`].
+    /// See also [`Api::with_token`].
     #[inline]
     pub fn set_token<T: Into<Token>>(&mut self, token: T) {
         self.auth_token.set(token.into());
@@ -208,7 +208,7 @@ impl<C> Api<C> {
 
     /// Sets the auth token this api client will use, and returns the client.
     ///
-    /// See also [`set_token`].
+    /// See also [`Api::set_token`].
     #[inline]
     pub fn with_token<T: Into<Token>>(mut self, token: T) -> Self {
         self.set_token(token);

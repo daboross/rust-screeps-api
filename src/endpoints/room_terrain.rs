@@ -57,10 +57,10 @@ pub struct RoomTerrain {
     /// Cache ID? Not sure exactly...
     pub response_id: String,
     /// A 50x50 grid of terrain squares. When coming from the API, this is guaranteed to be
-    /// completely filled, and accessing any square between (0, 0) and (49, 49) inclusive will
+    /// completely filled, and accessing any square between `(0, 0)` and `(49, 49)` inclusive will
     /// succeed.
     ///
-    /// You can use terrain[y_pos][x_pos] to get any individual terrain square.
+    /// You can use `terrain[y_pos][x_pos]` to get any individual terrain square.
     pub terrain: TerrainGrid,
     /// Phantom data in order to allow adding any additional fields in the future.
     _non_exhaustive: (),

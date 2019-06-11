@@ -97,7 +97,7 @@ pub struct SyncApi<C = HttpsConnector<HttpConnector>> {
 impl SyncApi<HttpsConnector<HttpConnector>> {
     /// Creates a sync API client using an Https connector.
     ///
-    /// Use [`new_with_connector`] to set another backend, such as an HTTP only backend.
+    /// Use [`SyncApi::new_with_connector`] to set another backend, such as an HTTP only backend.
     pub fn new() -> Result<Self, SyncError> {
         Ok(Self::new_with_connector(HttpsConnector::new(4)?)?)
     }
