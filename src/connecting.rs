@@ -8,7 +8,7 @@ use crate::{EndpointResult, Error, TokenStorage};
 
 /// Struct mirroring `hyper`'s `FutureResponse`, but with parsing that happens after the request is finished.
 #[must_use = "futures do nothing unless polled"]
-pub(crate) struct FutureResponse<R: EndpointResult>(Box<Future<Item = R, Error = Error>>);
+pub(crate) struct FutureResponse<R: EndpointResult>(Box<dyn Future<Item = R, Error = Error>>);
 
 impl<R: EndpointResult> fmt::Debug for FutureResponse<R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

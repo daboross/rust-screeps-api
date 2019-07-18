@@ -247,7 +247,7 @@ impl fmt::Display for Error {
 }
 
 impl StdError for Error {
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match self.err {
             SerdeJson(ref err) => Some(err),
             Hyper(ref err) => Some(err),
@@ -355,7 +355,7 @@ impl StdError for ApiError {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         None
     }
 }

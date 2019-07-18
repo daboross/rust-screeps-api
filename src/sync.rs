@@ -70,7 +70,7 @@ mod error {
             }
         }
 
-        fn cause(&self) -> Option<&::std::error::Error> {
+        fn cause(&self) -> Option<&dyn (::std::error::Error)> {
             match *self {
                 SyncError::Io(ref e) => Some(e),
                 SyncError::Url(ref e) => Some(e),

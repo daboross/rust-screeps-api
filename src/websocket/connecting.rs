@@ -70,7 +70,7 @@ mod error {
             }
         }
 
-        fn cause(&self) -> Option<&error::Error> {
+        fn cause(&self) -> Option<&dyn error::Error> {
             match *self {
                 Error::Parse { ref err, .. } => Some(err),
                 Error::WrongScheme { .. } => None,
