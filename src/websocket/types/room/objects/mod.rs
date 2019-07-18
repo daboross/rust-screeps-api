@@ -21,6 +21,7 @@ mod nuker;
 mod observer;
 mod portal;
 mod power_bank;
+mod power_creep;
 mod power_spawn;
 mod rampart;
 mod resource;
@@ -37,8 +38,8 @@ mod wall;
 pub use self::{
     construction_site::*, container::*, controller::*, creep::*, extension::*, extractor::*,
     keeper_lair::*, lab::*, link::*, mineral::*, nuker::*, observer::*, portal::*, power_bank::*,
-    power_spawn::*, rampart::*, resource::*, road::*, shared::*, source::*, spawn::*, storage::*,
-    terminal::*, tombstone::*, tower::*, wall::*,
+    power_creep::*, power_spawn::*, rampart::*, resource::*, road::*, shared::*, source::*,
+    spawn::*, storage::*, terminal::*, tombstone::*, tower::*, wall::*,
 };
 
 /// Enum describing all known room objects.
@@ -80,6 +81,8 @@ pub enum KnownRoomObject {
     PowerBank(StructurePowerBank),
     /// Power spawn owned structure.
     PowerSpawn(StructurePowerSpawn),
+    /// Power creep.
+    PowerSpawn(PowerCreep),
     /// Lab owned structure.
     Lab(StructureLab),
     /// Terminal owned structure.
