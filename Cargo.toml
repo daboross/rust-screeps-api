@@ -57,6 +57,8 @@ num = { version = "0.2", default-features = false }
 sync = ["tokio", "hyper-tls"]
 protocol-docs = []
 default = ["sync"]
+# enables tests which modify game state (temporarily, but still)
+destructive-tests = []
 
 [dev-dependencies]
 # .env parsing

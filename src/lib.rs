@@ -529,6 +529,56 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
             ])
             .send()
     }
+
+    /// Gets the player's memory segment on a given shard
+    pub fn memory_segment<'b, U>(
+        &self,
+        shard: Option<U>,
+        segment: u32,
+    ) -> Result<impl Future<Item = String, Error = Error>, NoToken>
+    where
+        U: Into<Cow<'b, str>>,
+    {
+        match shard {
+            Some(shard) => self
+                .get::<MemorySegment>("user/memory-segment")
+                .params(&[
+                    ("segment", segment.to_string()),
+                    ("shard", shard.into().into_owned()),
+                ])
+                .auth()
+                .send(),
+            None => self
+                .get::<MemorySegment>("user/memory-segment")
+                .params(&[("segment", segment.to_string())])
+                .auth()
+                .send(),
+        }
+        .map(|fut| fut.map(|res| res.data))
+    }
+
+    /// Sets the player's memory segment on a given shard
+    pub fn set_memory_segment<'b, U, V>(
+        &self,
+        shard: Option<U>,
+        segment: u32,
+        data: V,
+    ) -> Result<impl Future<Item = (), Error = Error>, NoToken>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
+    {
+        let args = SetMemorySegmentArgs {
+            segment,
+            shard: shard.map(Into::into),
+            data: data.into(),
+        };
+
+        self.post("user/memory-segment", args)
+            .auth()
+            .send()
+            .map(|fut| fut.map(|_: SetMemorySegment| ()))
+    }
 }
 
 trait PartialRequestAuth<T> {

@@ -341,4 +341,28 @@ impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
             offset,
         )?)
     }
+
+    /// Gets a player's memory segment
+    pub fn memory_segment<'b, U>(&mut self, shard: Option<U>, segment: u32) -> Result<String, Error>
+    where
+        U: Into<Cow<'b, str>>,
+    {
+        self.runtime
+            .block_on(self.client.memory_segment(shard, segment)?)
+    }
+
+    /// Sets a player's memory segment
+    pub fn set_memory_segment<'b, U, V>(
+        &mut self,
+        shard: Option<U>,
+        segment: u32,
+        data: V,
+    ) -> Result<(), Error>
+    where
+        U: Into<Cow<'b, str>>,
+        V: Into<Cow<'b, str>>,
+    {
+        self.runtime
+            .block_on(self.client.set_memory_segment(shard, segment, data)?)
+    }
 }

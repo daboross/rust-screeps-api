@@ -193,3 +193,20 @@ fn test_auth_leaderboard_limit_parameter_error() {
         }
     }
 }
+
+#[test]
+#[cfg(feature = "destructive-tests")]
+fn test_memory_segment() {
+    let mut api = logged_in();
+
+    let orig = api.memory_segment(Some("shard0"), 1).unwrap();
+
+    api.set_memory_segment(Some("shard0"), 1, "hi, you!")
+        .unwrap();
+
+    let retrieved = api.memory_segment(Some("shard0"), 1).unwrap();
+
+    api.set_memory_segment(Some("shard0"), 1, orig).unwrap();
+
+    assert_eq!(&retrieved, "hi, you!");
+}
