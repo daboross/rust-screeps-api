@@ -141,6 +141,8 @@ impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
 
     /// Sets the auth token this api client will use, and returns the client.
     ///
+    /// See [the screeps docs page](https://docs.screeps.com/auth-tokens.html) for information on tokens.
+    ///
     /// See also [`Api::set_token`].
     #[inline]
     pub fn with_token<T: Into<Token>>(mut self, token: T) -> Self {
@@ -148,10 +150,15 @@ impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
         self
     }
 
-    /// Logs in with the given username and password and gets an authentication token as the
-    /// result.
+    /// Logs in with the given username and password and stores the authenticated token in self.
     ///
-    /// The authentication token will then be stored in this client.
+    /// *Note:* since [the official server implemented auth tokens][blog], this method has only
+    /// worked for private servers with the [screepsmod-auth] mod.
+    ///
+    /// Use [`Api::set_token`] instead for the official server.
+    ///
+    /// [blog]: https://blog.screeps.com/2017/12/auth-tokens/
+    /// [screepsmod-auth]: https://github.com/ScreepsMods/screepsmod-auth
     pub fn login<'b, U, V>(&mut self, username: U, password: V) -> Result<(), Error>
     where
         U: Into<Cow<'b, str>>,

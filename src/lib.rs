@@ -164,7 +164,7 @@ fn default_url() -> Url {
 }
 
 impl<C> Api<C> {
-    /// Creates a new API instance for the official server with the `https://screeps.com/api/` base
+    /// Creates a new API instance for the official server with the `"https://screeps.com/api/"` base
     /// url.
     ///
     /// Use [`Api::with_url`] or [`Api::set_url`] to change to a custom server.
@@ -200,6 +200,8 @@ impl<C> Api<C> {
 
     /// Sets the auth token this api client will use.
     ///
+    /// See [the screeps docs page](https://docs.screeps.com/auth-tokens.html) for information on tokens.
+    ///
     /// See also [`Api::with_token`].
     #[inline]
     pub fn set_token<T: Into<Token>>(&mut self, token: T) {
@@ -207,6 +209,8 @@ impl<C> Api<C> {
     }
 
     /// Sets the auth token this api client will use, and returns the client.
+    ///
+    /// See [the screeps docs page](https://docs.screeps.com/auth-tokens.html) for information on tokens.
     ///
     /// See also [`Api::set_token`].
     #[inline]
@@ -267,9 +271,15 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         self.request(endpoint).post(request_text)
     }
 
-    /// Logs in with the given username and password and returns a result containing the token.
+    /// Logs in with the given username and password and stores the authenticated token in self.
     ///
-    /// Use `client.set_token(logged_in.token)` to let the client use the token from logging in.
+    /// *Note:* since [the official server implemented auth tokens][blog], this method has only
+    /// worked for private servers with the [screepsmod-auth] mod.
+    ///
+    /// Use [`Api::set_token`] instead for the official server.
+    ///
+    /// [blog]: https://blog.screeps.com/2017/12/auth-tokens/
+    /// [screepsmod-auth]: https://github.com/ScreepsMods/screepsmod-auth
     pub fn login<'b, U, V>(
         &self,
         username: U,
