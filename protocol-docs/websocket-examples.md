@@ -1,7 +1,7 @@
 Example channel messages
 ========================
 
-```
+```text
 room:W0S0
 {
   "flags": null,

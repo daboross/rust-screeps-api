@@ -235,7 +235,7 @@ You'll only get users which exist in the room. Each objects properties are exact
 
 The subsequent updates will be in the exact same format, except with any properties which are the same missing. If, for example, someone added some "H" to that terminal and nothing else happened, the update would be:
 
-```
+```json
 {
   "objects": {
     "57cd3a30c0551957424a1f38": {
