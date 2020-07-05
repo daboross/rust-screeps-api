@@ -277,7 +277,7 @@ mod test {
             } => {
                 if user != "57874d42d0ae911e3bd15bbc"
                     || id != "5e117142fadd09a383ffdc99"
-                    || *room != RoomName::new("E33S19").unwrap()
+                    || *room != RoomName::new("E44S19").unwrap()
                     || name != "w9g1gpnN"
                     || body
                         .iter()
@@ -324,6 +324,6 @@ mod test {
             other => panic!("expected pre-set Creep to match, found {:#?}", other),
         }
 
-        assert_eq!(obj.carry_contents().collect::<Vec<_>>(), vec![]);
+        assert_eq!(obj.store, store! { Energy: 13 });
     }
 }
