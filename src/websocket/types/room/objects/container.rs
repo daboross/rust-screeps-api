@@ -84,8 +84,9 @@ mod test {
                 x: 19,
                 y: 22,
                 ref id,
+                ref store,
                 ..
-            } if id == "58cc8143050a8f701678f22e" && store == store! {energy: 2000} => (),
+            } if id == "58cc8143050a8f701678f22e" && *store == store! {Energy: 2000} => (),
             other => panic!(
                 "expected pre-set StructureContainer to match, found {:#?}",
                 other

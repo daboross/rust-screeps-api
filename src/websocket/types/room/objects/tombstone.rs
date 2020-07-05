@@ -49,7 +49,7 @@ impl Tombstone {
 mod test {
     use serde::Deserialize;
 
-    use super::Tombstone;
+    use super::{ResourceType, Tombstone};
 
     #[test]
     fn parse_simple_tombstone() {
@@ -119,6 +119,6 @@ mod test {
 
         assert_eq!(obj.creep_id, "5ce098c5c4e055067fbf182e");
         assert_eq!(obj.creep_name, "6922398-0");
-        assert_eq!(obj.energy, 44);
+        assert_eq!(obj.store.get(ResourceType::Energy), 44);
     }
 }

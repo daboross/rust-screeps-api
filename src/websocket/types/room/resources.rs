@@ -262,7 +262,7 @@ macro_rules! store {
             let mut store = crate::websocket::types::room::resources::Store::default();
 
             $(
-                store.0.insert(stringify!($name).to_owned(), $val);
+                store.0.insert(crate::websocket::types::room::resources::ResourceType::$name, $val);
             )*
 
             store

@@ -180,7 +180,7 @@ mod test {
 
     use crate::data::RoomName;
 
-    use super::{Creep, CreepActions, CreepPartType};
+    use super::{ActionLogTarget, Creep, CreepActions, CreepPartType};
 
     #[test]
     fn parse_creep() {
@@ -269,7 +269,7 @@ mod test {
                         repair: None,
                         reserve_controller: None,
                         say: None,
-                        upgrade_controller: ActionLogTarget { x: 27, y: 8 },
+                        upgrade_controller: Some(ActionLogTarget { x: 27, y: 8 }),
                     },
                 ref body,
                 ref user,

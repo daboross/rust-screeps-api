@@ -104,7 +104,7 @@ mod test {
                 ..
             } if user == "57874d42d0ae911e3bd15bbc"
                 && id == "59675fbfb554456b195342e7"
-                && store == store! {energy: 1321} =>
+                && *store == store! {Energy: 1321} =>
             {
                 ()
             }
