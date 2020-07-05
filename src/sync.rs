@@ -15,7 +15,7 @@ use crate::{
     RoomOverview, RoomStatus, RoomTerrain, ShardInfo, Token, WorldStartRoom,
 };
 
-type TokioRuntime = tokio::runtime::current_thread::Runtime;
+type TokioRuntime = tokio::runtime::Runtime;
 
 mod error {
     use std::{fmt, io};
@@ -29,8 +29,6 @@ mod error {
         Io(io::Error),
         /// The URL failed to parse.
         Url(url::ParseError),
-        /// The TLS connector failed.
-        Tls(hyper_tls::Error),
     }
 
     impl From<io::Error> for SyncError {
@@ -45,18 +43,11 @@ mod error {
         }
     }
 
-    impl From<hyper_tls::Error> for SyncError {
-        fn from(e: hyper_tls::Error) -> Self {
-            SyncError::Tls(e)
-        }
-    }
-
     impl fmt::Display for SyncError {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             match *self {
                 SyncError::Io(ref e) => e.fmt(f),
                 SyncError::Url(ref e) => e.fmt(f),
-                SyncError::Tls(ref e) => e.fmt(f),
             }
         }
     }
@@ -66,7 +57,6 @@ mod error {
             match *self {
                 SyncError::Io(ref e) => Some(e),
                 SyncError::Url(ref e) => Some(e),
-                SyncError::Tls(ref e) => Some(e),
             }
         }
     }
@@ -91,11 +81,14 @@ impl SyncApi<HttpsConnector<HttpConnector>> {
     ///
     /// Use [`SyncApi::new_with_connector`] to set another backend, such as an HTTP only backend.
     pub fn new() -> Result<Self, SyncError> {
-        Ok(Self::new_with_connector(HttpsConnector::new(4)?)?)
+        Ok(Self::new_with_connector(HttpsConnector::new())?)
     }
 }
 
-impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
+impl<C> SyncApi<C>
+where
+    C: hyper::client::connect::Connect + Clone + Send + Sync + 'static,
+{
     /// Creates a sync API client using a custom connector.
     pub fn new_with_connector(connector: C) -> Result<Self, io::Error> {
         let runtime = TokioRuntime::new()?;
@@ -121,7 +114,10 @@ impl<C> DerefMut for SyncApi<C> {
     }
 }
 
-impl<C: hyper::client::connect::Connect + 'static> SyncApi<C> {
+impl<C> SyncApi<C>
+where
+    C: hyper::client::connect::Connect + Clone + Send + Sync + 'static,
+{
     /// Sets the server url this api client will use, and returns the client.
     ///
     /// See also [`Api::set_url`].

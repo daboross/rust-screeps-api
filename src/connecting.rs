@@ -1,34 +1,8 @@
 //! Semi-internal functionality related to networking.
-use std::fmt;
-
-use futures::{Future, Poll, Stream};
+use futures::stream::TryStreamExt;
 use url::Url;
 
 use crate::{EndpointResult, Error, TokenStorage};
-
-/// Struct mirroring `hyper`'s `FutureResponse`, but with parsing that happens after the request is finished.
-#[must_use = "futures do nothing unless polled"]
-pub(crate) struct FutureResponse<R: EndpointResult>(Box<dyn Future<Item = R, Error = Error>>);
-
-impl<R: EndpointResult> fmt::Debug for FutureResponse<R> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("ScreepsFutureResponse")
-            .field("inner", &"<boxed future>")
-            .finish()
-    }
-}
-
-impl<R> Future for FutureResponse<R>
-where
-    R: EndpointResult,
-{
-    type Item = R;
-    type Error = Error;
-
-    fn poll(&mut self) -> Poll<R, Error> {
-        self.0.poll()
-    }
-}
 
 /// Interpret a hyper result as the result from a specific endpoint.
 ///
@@ -45,67 +19,56 @@ where
 /// - `url`: url that is being queried, used only for error and warning messages
 /// - `tokens`: where to put any tokens that were returned, if any
 /// - `response`: actual hyper response that we're interpreting
-pub(crate) fn interpret<R>(
+pub(crate) async fn interpret<R>(
     tokens: TokenStorage,
     url: Url,
     response: hyper::client::ResponseFuture,
-) -> FutureResponse<R>
+) -> Result<R, Error>
 where
     R: EndpointResult,
 {
-    FutureResponse(Box::new(
-        response
-            .then(move |result| match result {
-                Ok(v) => Ok((tokens, url, v)),
-                Err(e) => Err(Error::with_url(e, Some(url))),
-            })
-            .and_then(|(tokens, url, response)| {
-                if let Some(token) = response.headers().get("X-Token") {
-                    debug!(
-                        "replacing stored auth_token with token returned from API: {:?}",
-                        token.to_str()
-                    );
-                    tokens.set(token.as_bytes().into());
-                }
-                Ok((url, response))
-            })
-            .and_then(|(url, response)| {
-                let status = response.status();
+    let response = response
+        .await
+        .map_err(|e| Error::with_url(e, Some(url.clone())))?;
+    if let Some(token) = response.headers().get("X-Token") {
+        debug!(
+            "replacing stored auth_token with token returned from API: {:?}",
+            token.to_str()
+        );
+        tokens.set(token.as_bytes().to_owned().into());
+    }
+    let status = response.status();
 
-                response
-                    .into_body()
-                    .concat2()
-                    .then(move |result| match result {
-                        Ok(v) => Ok((status, url, v)),
-                        Err(e) => Err(Error::with_url(e, Some(url))),
-                    })
-            })
-            .and_then(
-                |(status, url, data): (hyper::StatusCode, _, hyper::Chunk)| {
-                    let json_result = serde_json::from_slice(&data);
+    let data: Vec<u8> = response
+        .into_body()
+        .try_fold(Vec::new(), |mut data, chunk| async move {
+            data.extend_from_slice(&chunk);
+            Ok(data)
+        })
+        .await
+        .map_err(|e| Error::with_url(e, Some(url.clone())))?;
+    let data = bytes::Bytes::from(data);
+    let json_result = serde_json::from_slice(&data);
 
-                    // insert this check here so we can include response body in status errors.
-                    if !status.is_success() {
-                        if let Ok(json) = json_result {
-                            return Err(Error::with_json(status, Some(url), Some(json)));
-                        } else {
-                            return Err(Error::with_body(status, Some(url), Some(data)));
-                        }
-                    }
+    // insert this check here so we can include response body in status errors.
+    if !status.is_success() {
+        if let Ok(json) = json_result {
+            return Err(Error::with_json(status, Some(url), Some(json)));
+        } else {
+            return Err(Error::with_body(status, Some(url), Some(data)));
+        }
+    }
 
-                    let json = match json_result {
-                        Ok(v) => v,
-                        Err(e) => return Err(Error::with_body(e, Some(url), Some(data))),
-                    };
-                    let parsed = match deserialize_with_warnings::<R>(&json, &url) {
-                        Ok(v) => v,
-                        Err(e) => return Err(Error::with_json(e, Some(url), Some(json))),
-                    };
+    let json = match json_result {
+        Ok(v) => v,
+        Err(e) => return Err(Error::with_body(e, Some(url), Some(data))),
+    };
+    let parsed = match deserialize_with_warnings::<R>(&json, &url) {
+        Ok(v) => v,
+        Err(e) => return Err(Error::with_json(e, Some(url), Some(json))),
+    };
 
-                    R::from_raw(parsed).map_err(|e| Error::with_json(e, Some(url), Some(json)))
-                },
-            ),
-    ))
+    R::from_raw(parsed).map_err(|e| Error::with_json(e, Some(url), Some(json)))
 }
 
 fn deserialize_with_warnings<T: EndpointResult>(

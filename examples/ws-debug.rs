@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use futures::{future, stream, Future, Sink, Stream};
+use futures01::{future, stream, Future, Sink, Stream};
 use log::{debug, info, warn};
 use screeps_api::{
     websocket::{commands, Channel, ChannelUpdate, ScreepsMessage, SockjsMessage},
@@ -254,9 +254,10 @@ fn main() {
     let ws_url = screeps_api::websocket::transform_url(&config.url)
         .expect("expected server api url to parse into websocket url.");
 
-    let connection = websocket::ClientBuilder::from_url(&ws_url).async_connect(None);
+    let connection =
+        websocket::ClientBuilder::from_url(&ws_url.as_str().parse().unwrap()).async_connect(None);
 
-    tokio::runtime::current_thread::run(
+    tokio01::runtime::current_thread::run(
         connection
             .then(|result| {
                 let (client, _) = result.expect("connecting to server failed");

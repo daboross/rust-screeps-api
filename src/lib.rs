@@ -90,16 +90,14 @@ pub use crate::{
 use std::{
     borrow::Cow,
     convert::AsRef,
+    future::Future,
     marker::PhantomData,
     sync::{Arc, PoisonError, RwLock},
 };
 
-use bytes::Bytes;
-use futures::Future;
+use futures::future::{BoxFuture, FutureExt, TryFutureExt};
 use hyper::header::{HeaderValue, CONTENT_TYPE};
 use url::Url;
-
-use crate::connecting::FutureResponse;
 
 /// A trait for each endpoint
 pub(crate) trait EndpointResult: Sized + 'static {
@@ -111,7 +109,7 @@ pub(crate) trait EndpointResult: Sized + 'static {
 
 /// An API token that allows for one-time authentication. Each use of an API token with the screeps
 /// API will cause the API to return a new token which should be stored in its place.
-pub type Token = Bytes;
+pub type Token = bytes::Bytes;
 
 /// Storage for the token inside the client, so that async requests can update the client's token if
 /// an updated token is returned.
@@ -122,12 +120,12 @@ pub struct TokenStorage(Arc<RwLock<Option<Token>>>);
 
 impl TokenStorage {
     /// Overwrites the previously stored token with the given token.
-    pub fn set(&self, token: Bytes) {
+    pub fn set(&self, token: Token) {
         *self.0.write().unwrap_or_else(PoisonError::into_inner) = Some(token);
     }
 
     /// Gets the current stored token.
-    pub fn get(&self) -> Option<Bytes> {
+    pub fn get(&self) -> Option<Token> {
         self.0
             .read()
             .unwrap_or_else(PoisonError::into_inner)
@@ -146,7 +144,10 @@ pub struct Api<C> {
     client: hyper::Client<C>,
 }
 
-impl<C> Clone for Api<C> {
+impl<C> Clone for Api<C>
+where
+    C: Clone,
+{
     fn clone(&self) -> Self {
         Api {
             url: self.url.clone(),
@@ -175,7 +176,7 @@ impl<C> Api<C> {
     pub fn new(client: hyper::Client<C>) -> Self {
         Api {
             url: default_url(),
-            client,
+            client: client,
             auth_token: TokenStorage::default(),
         }
     }
@@ -226,7 +227,10 @@ impl<C> Api<C> {
     }
 }
 
-impl<C: hyper::client::connect::Connect + 'static> Api<C> {
+impl<C> Api<C>
+where
+    C: hyper::client::connect::Connect + Clone + Send + Sync + 'static,
+{
     /// Starts preparing a POST or GET request to the given endpoint URL
     #[inline]
     fn request<'a, R, S>(&'a self, endpoint: &'a str) -> PartialRequest<'a, C, R, NoAuthRequired, S>
@@ -284,7 +288,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         &self,
         username: U,
         password: V,
-    ) -> impl Future<Item = LoggedIn, Error = Error>
+    ) -> impl Future<Output = Result<LoggedIn, Error>>
     where
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
@@ -303,19 +307,19 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
     pub fn register(
         &self,
         details: RegistrationArgs,
-    ) -> impl Future<Item = RegistrationSuccess, Error = Error> {
+    ) -> impl Future<Output = Result<RegistrationSuccess, Error>> {
         self.post("register/submit", details).send()
     }
 
     /// Gets user information on the user currently logged in, including username and user id.
-    pub fn my_info(&self) -> Result<impl Future<Item = MyInfo, Error = Error>, NoToken> {
+    pub fn my_info(&self) -> Result<impl Future<Output = Result<MyInfo, Error>>, NoToken> {
         self.get("auth/me").auth().send()
     }
 
     /// Gets the world shard and room name the server thinks the client should start with viewing.
     pub fn world_start_room(
         &self,
-    ) -> Result<impl Future<Item = WorldStartRoom, Error = Error>, NoToken> {
+    ) -> Result<impl Future<Output = Result<WorldStartRoom, Error>>, NoToken> {
         self.get("user/world-start-room").auth().send()
     }
 
@@ -324,7 +328,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
     pub fn shard_start_room<'b, U>(
         &self,
         shard: U,
-    ) -> Result<impl Future<Item = WorldStartRoom, Error = Error>, NoToken>
+    ) -> Result<impl Future<Output = Result<WorldStartRoom, Error>>, NoToken>
     where
         U: Into<Cow<'b, str>>,
     {
@@ -339,7 +343,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         &self,
         shard: &'a str,
         rooms: &'a V,
-    ) -> Result<impl Future<Item = MapStats, Error = Error>, NoToken>
+    ) -> Result<impl Future<Output = Result<MapStats, Error>>, NoToken>
     where
         U: AsRef<str>,
         &'a V: IntoIterator<Item = U>,
@@ -362,7 +366,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         shard: U,
         room_name: V,
         request_interval: u32,
-    ) -> Result<impl Future<Item = RoomOverview, Error = Error>, NoToken>
+    ) -> Result<impl Future<Output = Result<RoomOverview, Error>>, NoToken>
     where
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
@@ -384,7 +388,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         &self,
         shard: Option<U>,
         room_name: V,
-    ) -> impl Future<Item = RoomTerrain, Error = Error>
+    ) -> impl Future<Output = Result<RoomTerrain, Error>>
     where
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
@@ -412,7 +416,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
     /// a non-sharded server.
     ///
     /// Does not require authentication.
-    pub fn shard_list(&self) -> impl Future<Item = Vec<ShardInfo>, Error = Error> {
+    pub fn shard_list(&self) -> impl Future<Output = Result<Vec<ShardInfo>, Error>> {
         self.get("game/shards/info").send()
     }
 
@@ -420,7 +424,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
     pub fn room_status<'b, U>(
         &self,
         room_name: U,
-    ) -> Result<impl Future<Item = RoomStatus, Error = Error>, NoToken>
+    ) -> Result<impl Future<Output = Result<RoomStatus, Error>>, NoToken>
     where
         U: Into<Cow<'b, str>>,
     {
@@ -435,7 +439,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
     pub fn recent_pvp(
         &self,
         details: RecentPvpArgs,
-    ) -> impl Future<Item = RecentPvp, Error = Error> {
+    ) -> impl Future<Output = Result<RecentPvp, Error>> {
         let args = match details {
             RecentPvpArgs::WithinLast { ticks } => [("interval", ticks.to_string())],
             RecentPvpArgs::Since { time } => [("start", time.to_string())],
@@ -455,7 +459,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
     /// any of the ids of which can then be used to retrieve more information.
     pub fn leaderboard_season_list(
         &self,
-    ) -> Result<impl Future<Item = Vec<LeaderboardSeason>, Error = Error>, NoToken> {
+    ) -> Result<impl Future<Output = Result<Vec<LeaderboardSeason>, Error>>, NoToken> {
         self.get("leaderboard/seasons").auth().send()
     }
 
@@ -474,7 +478,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         leaderboard_type: LeaderboardType,
         username: U,
         season: V,
-    ) -> Result<impl Future<Item = FoundUserRank, Error = Error>, NoToken>
+    ) -> Result<impl Future<Output = Result<FoundUserRank, Error>>, NoToken>
     where
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
@@ -499,7 +503,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         &self,
         leaderboard_type: LeaderboardType,
         username: U,
-    ) -> Result<impl Future<Item = Vec<FoundUserRank>, Error = Error>, NoToken>
+    ) -> Result<impl Future<Output = Result<Vec<FoundUserRank>, Error>>, NoToken>
     where
         U: Into<Cow<'b, str>>,
     {
@@ -525,7 +529,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         season: U,
         limit: u32,
         offset: u32,
-    ) -> Result<impl Future<Item = LeaderboardPage, Error = Error>, NoToken>
+    ) -> Result<impl Future<Output = Result<LeaderboardPage, Error>>, NoToken>
     where
         U: Into<Cow<'b, str>>,
     {
@@ -545,7 +549,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         &self,
         shard: Option<U>,
         segment: u32,
-    ) -> Result<impl Future<Item = String, Error = Error>, NoToken>
+    ) -> Result<impl Future<Output = Result<String, Error>>, NoToken>
     where
         U: Into<Cow<'b, str>>,
     {
@@ -564,7 +568,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
                 .auth()
                 .send(),
         }
-        .map(|fut| fut.map(|res| res.data))
+        .map(|fut| fut.map_ok(|res| res.data))
     }
 
     /// Sets the player's memory segment on a given shard
@@ -573,7 +577,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         shard: Option<U>,
         segment: u32,
         data: V,
-    ) -> Result<impl Future<Item = (), Error = Error>, NoToken>
+    ) -> Result<impl Future<Output = Result<(), Error>>, NoToken>
     where
         U: Into<Cow<'b, str>>,
         V: Into<Cow<'b, str>>,
@@ -587,7 +591,7 @@ impl<C: hyper::client::connect::Connect + 'static> Api<C> {
         self.post("user/memory-segment", args)
             .auth()
             .send()
-            .map(|fut| fut.map(|_: SetMemorySegment| ()))
+            .map(|fut| fut.map_ok(|_: SetMemorySegment| ()))
     }
 }
 
@@ -634,7 +638,6 @@ struct PartialRequest<'a, C, R, A = NoAuthRequired, S = &'static str>
 where
     C: hyper::client::connect::Connect,
     R: EndpointResult,
-    A: PartialRequestAuth<FutureResponse<R>>,
     S: serde::Serialize + 'a,
 {
     client: &'a Api<C>,
@@ -664,7 +667,7 @@ where
 
 impl<'a, C, R, S> PartialRequest<'a, C, R, AuthRequired, S>
 where
-    C: hyper::client::connect::Connect + 'static,
+    C: hyper::client::connect::Connect + Clone + Send + Sync + 'static,
     R: EndpointResult,
     S: serde::Serialize,
 {
@@ -684,9 +687,9 @@ where
 
 impl<'a, C, R, A, S> PartialRequest<'a, C, R, A, S>
 where
-    C: hyper::client::connect::Connect + 'static,
+    C: hyper::client::connect::Connect + Clone + Send + Sync + 'static,
     R: EndpointResult,
-    A: PartialRequestAuth<FutureResponse<R>>,
+    A: PartialRequestAuth<BoxFuture<'static, Result<R, Error>>>,
     S: serde::Serialize,
 {
     #[inline]
@@ -703,7 +706,7 @@ where
 
     /// Result type here _so hacky!_ Glad this is an internal API.
     ///
-    /// Returns either `connecting::impl Future<Item=R, Error=Error>` or `Result<connecting::FutureResponse<R>, NoToken>`
+    /// Returns either `connecting::impl Future<Output=Result< Error=Error>` or `Result<connecting::FutureResponse<R>, NoToken>`
     /// depending on if auth() has been called.
     fn send(self) -> A::Result {
         let PartialRequest {
@@ -754,13 +757,18 @@ where
 
         let mut request = hyper::Request::builder();
 
-        request.method(method).uri(url.as_str());
+        request = request.method(method).uri(url.as_str());
 
         // headers
-        request.header(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        request = request.header(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
         if let Some(token) = auth_token {
-            request.header("X-Token", token.clone());
+            request = request.header(
+                "X-Token",
+                HeaderValue::from_maybe_shared(token.clone())
+                    // TODO: turn this into a non-expect error (how the heck does this function return errors?)
+                    .expect("tokens should always be valid headers"),
+            );
         }
 
         let request = if let Some(ref serializable) = post_body {
@@ -779,7 +787,7 @@ where
 
         // turns into either `Result<FutureResponse<..>>` or `FutureResponse<..>` depending on
         // if we required auth.
-        A::successful_result(finished)
+        A::successful_result(finished.boxed())
     }
 }
 

@@ -48,7 +48,7 @@ pub struct Error {
 #[derive(Debug)]
 enum AdditionalData {
     Json(serde_json::Value),
-    Body(hyper::Chunk),
+    Body(bytes::Bytes),
     None,
 }
 
@@ -60,8 +60,8 @@ impl From<Option<serde_json::Value>> for AdditionalData {
         }
     }
 }
-impl From<Option<hyper::Chunk>> for AdditionalData {
-    fn from(value: Option<hyper::Chunk>) -> Self {
+impl From<Option<bytes::Bytes>> for AdditionalData {
+    fn from(value: Option<bytes::Bytes>) -> Self {
         match value {
             Some(v) => AdditionalData::Body(v),
             None => AdditionalData::None,
@@ -83,7 +83,7 @@ impl AdditionalData {
             _ => None,
         }
     }
-    fn body(&self) -> Option<&hyper::Chunk> {
+    fn body(&self) -> Option<&bytes::Bytes> {
         match *self {
             AdditionalData::Body(ref v) => Some(v),
             _ => None,
@@ -114,7 +114,7 @@ impl Error {
     pub fn with_body<T: Into<Error>>(
         err: T,
         url: Option<url::Url>,
-        body: Option<hyper::Chunk>,
+        body: Option<bytes::Bytes>,
     ) -> Error {
         let err = err.into();
         Error {
@@ -140,7 +140,7 @@ impl Error {
     }
 
     /// Retrieves the body data associated with this error, if any.
-    pub fn body(&self) -> Option<&hyper::Chunk> {
+    pub fn body(&self) -> Option<&bytes::Bytes> {
         self.data.body()
     }
 }
