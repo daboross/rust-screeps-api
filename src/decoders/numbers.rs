@@ -1,3 +1,4 @@
+#[rustfmt::skip]
 macro_rules! str_mod {
     (
         $mod_name:ident,
@@ -14,24 +15,26 @@ macro_rules! str_mod {
                 $group_ty:ident
             ) => {
                 #[inline]
-                fn $method_name <E>(self, value: $method_type) -> Result<Self::Value, E>
+                fn $method_name<E>(self, value: $method_type) -> Result<Self::Value, E>
                 where
                     E: Error,
                 {
                     match ::num::cast::FromPrimitive::$from_method(value) {
                         Some(v) => Ok($surround(v)),
-                        None => Err(Error::invalid_value(Unexpected::$group(value as $group_ty), &self))
+                        None => Err(Error::invalid_value(
+                            Unexpected::$group(value as $group_ty),
+                            &self,
+                        )),
                     }
                 }
-            }
+            };
         }
-
 
         #[allow(dead_code)]
         pub mod $mod_name {
-            use serde::{Deserializer, Serializer, Serialize};
-            use std::fmt;
             use serde::de::{Error, Unexpected, Visitor};
+            use serde::{Deserializer, Serialize, Serializer};
+            use std::fmt;
 
             struct StringOrNumberVisitor;
 
@@ -39,7 +42,11 @@ macro_rules! str_mod {
                 type Value = $ty;
 
                 fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                    formatter.write_str(concat!(stringify!($ty), " or string containing ", stringify!($ty)))
+                    formatter.write_str(concat!(
+                        stringify!($ty),
+                        " or string containing ",
+                        stringify!($ty)
+                    ))
                 }
 
                 #[inline]
@@ -52,11 +59,10 @@ macro_rules! str_mod {
                         .map_err(|_| E::invalid_value(Unexpected::Str(value), &self))
                 }
 
-
                 // Idea roughly taken from: https://github.com/serde-rs/serde/
                 // blob/4751627f1cd14cacdf216188ccbb9ab0831e2b3f/serde/src/de/impls.rs#L136
                 visit_method!(i8, visit_i8, from_i8, |x| x, Signed, i64);
-                visit_method!(i16, visit_i16, from_i16, |x| x,  Signed, i64);
+                visit_method!(i16, visit_i16, from_i16, |x| x, Signed, i64);
                 visit_method!(i32, visit_i32, from_i32, |x| x, Signed, i64);
                 visit_method!(i64, visit_i64, from_i64, |x| x, Signed, i64);
 
@@ -85,9 +91,9 @@ macro_rules! str_mod {
 
         #[allow(dead_code)]
         pub mod $optional_mod_name {
-            use serde::{Deserializer, Serializer, Serialize};
-            use std::fmt;
             use serde::de::{Error, Unexpected, Visitor};
+            use serde::{Deserializer, Serialize, Serializer};
+            use std::fmt;
 
             struct OptionalStringOrNumberVisitor;
 
@@ -119,7 +125,7 @@ macro_rules! str_mod {
 
                 // Idea roughly taken from: https://github.com/serde-rs/serde/
                 // blob/4751627f1cd14cacdf216188ccbb9ab0831e2b3f/serde/src/de/impls.rs#L136
-                visit_method!(i8, visit_i8, from_i8, Some,  Signed, i64);
+                visit_method!(i8, visit_i8, from_i8, Some, Signed, i64);
                 visit_method!(i16, visit_i16, from_i16, Some, Signed, i64);
                 visit_method!(i32, visit_i32, from_i32, Some, Signed, i64);
                 visit_method!(i64, visit_i64, from_i64, Some, Signed, i64);
@@ -151,7 +157,7 @@ macro_rules! str_mod {
                 deserializer.deserialize_any(OptionalStringOrNumberVisitor)
             }
         }
-    }
+    };
 }
 
 // str_mod!(i64_or_str_containing, optional_i64_or_str_containing, i64);

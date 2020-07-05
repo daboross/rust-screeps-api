@@ -1,7 +1,7 @@
 //! `Tombstone` data description.
-use crate::data::RoomName;
 use super::super::resources::ResourceType;
 use super::super::resources::Store;
+use crate::data::RoomName;
 
 use super::creep::CreepPartType;
 
@@ -37,10 +37,9 @@ with_base_fields_and_update_struct! {
     pub struct TombstoneUpdate { ... }
 }
 
-
 impl Tombstone {
     /// Iterates over this structure's resources.
-    pub fn resources(&self) -> impl Iterator<Item=(ResourceType, i32)> + '_ {
+    pub fn resources(&self) -> impl Iterator<Item = (ResourceType, i32)> + '_ {
         self.store.iter()
     }
 }

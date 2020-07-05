@@ -88,11 +88,7 @@ mod test {
                 y: 13,
                 ref store,
                 ..
-            } if *store
-                == store! { Energy: 913026 } =>
-            {
-                ()
-            }
+            } if *store == store! { Energy: 913026 } => (),
             other => panic!(
                 "expected pre-set StructureStorage to match, found {:#?}",
                 other
