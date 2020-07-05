@@ -75,6 +75,12 @@ Use:
 - `cargo test parse` to only perform parsing unit tests. This can be performed offline.
 - `cargo test -- --skip auth` to test both parsing and all unauthenticated calls to the official server.
 
+## Updating / Contributing
+
+To keep working, this library needs to be periodically updated to match the
+screeps protocools. Since I might not be doing the updating, I've written up
+some barebone notes on how to do that at [CONTRIBUTING.md]
+
 [travis-image]: https://travis-ci.org/daboross/rust-screeps-api.svg?branch=master
 [travis-builds]: https://travis-ci.org/daboross/rust-screeps-api
 [appveyor-image]: https://ci.appveyor.com/api/projects/status/github/daboross/rust-screeps-api?branch=master&svg=true
@@ -84,3 +90,4 @@ Use:
 [hyper]: https://github.com/hyperium/hyper/
 [serde]: https://github.com/serde-rs/json/
 [`serde_json::Value`]: https://docs.serde.rs/serde_json/value/enum.Value.html
+[CONTRIBUTING.md]: https://github.com/daboross/rust-screeps-api/blob/master/CONTRIBUTING.md
