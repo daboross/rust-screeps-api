@@ -53,71 +53,91 @@ mod test {
     #[test]
     fn parse_simple_tombstone() {
         let json = json!({
-            "_id": "5ce0a11dcd8deb5a978cb216",
-            "creepBody": [
-                "carry",
-                "carry",
-                "carry",
-                "carry",
-                "carry",
-                "carry",
-                "carry",
-                "carry",
-                "carry",
-                "carry",
-                "move",
-                "move",
-                "move",
-                "move",
-                "move"
-            ],
-            "creepId": "5ce08e9f184f823e92616faf",
-            "creepName": "HeavyConsolidator6921549",
-            "creepSaying": null,
-            "creepTicksToLive": 1,
-            "deathTime": 6923092,
-            "decayTime": 6923167,
-            "room": "E8S29",
-            "type": "tombstone",
-            "user": "5ca80c8f3c33e30c8e85555d",
-            "x": 30,
-            "y": 31
-        });
-
-        let obj = Tombstone::deserialize(json).unwrap();
-
-        assert_eq!(obj.creep_id, "5ce08e9f184f823e92616faf");
-        assert_eq!(obj.creep_name, "HeavyConsolidator6921549");
-    }
-
-    #[test]
-    fn parse_tombstone_with_energy() {
-        let json = json!({
-            "_id": "5ce0a4839c5bd560bebb03e9",
+            "_id": "5f025c6070eb1e39990f1622",
             "creepBody": [
                 "move",
                 "move",
                 "carry",
                 "work"
             ],
-            "creepId": "5ce098c5c4e055067fbf182e",
-            "creepName": "6922398-0",
+            "creepId": "5f025b3706ec7d5f6e3cd7a3",
+            "creepName": "38445073-0",
             "creepSaying": null,
-            "creepTicksToLive": 532,
-            "deathTime": 6923377,
-            "decayTime": 6923397,
-            "energy": 44,
-            "room": "E9S31",
+            "creepTicksToLive": 1457,
+            "deathTime": 38445127,
+            "decayTime": 38445147,
+            "room": "W41N48",
+            "store": {
+                "energy": 48
+            },
             "type": "tombstone",
             "user": "57874d42d0ae911e3bd15bbc",
-            "x": 33,
-            "y": 23
+            "x": 12,
+            "y": 24
         });
 
         let obj = Tombstone::deserialize(json).unwrap();
 
-        assert_eq!(obj.creep_id, "5ce098c5c4e055067fbf182e");
-        assert_eq!(obj.creep_name, "6922398-0");
-        assert_eq!(obj.store.get(ResourceType::Energy), 44);
+        assert_eq!(obj.creep_id, "5f025b3706ec7d5f6e3cd7a3");
+        assert_eq!(obj.creep_name, "38445073-0");
+    }
+
+    #[test]
+    fn parse_tombstone_with_energy() {
+        let json = json!({
+            "_id": "5f023c25557c806c615bf76d",
+            "creepBody": [
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "carry",
+                "move",
+                "move",
+                "move",
+                "move",
+                "move",
+                "move",
+                "move",
+                "move",
+                "move",
+                "move"
+            ],
+            "creepId": "5f021a8c0a816c111ff81006",
+            "creepName": "W31N48_transport_20200",
+            "creepSaying": null,
+            "creepTicksToLive": 1,
+            "deathTime": 38443608,
+            "decayTime": 38443758,
+            "room": "W31N48",
+            "store": {
+                "energy": 1000
+            },
+            "type": "tombstone",
+            "user": "57cd3be0559868c84d297d87",
+            "x": 20,
+            "y": 33
+        });
+
+        let obj = Tombstone::deserialize(json).unwrap();
+
+        assert_eq!(obj.creep_id, "5f021a8c0a816c111ff81006");
+        assert_eq!(obj.creep_name, "W31N48_transport_20200");
+        assert_eq!(obj.store, store! { Energy: 1000 });
     }
 }
