@@ -201,32 +201,6 @@ impl ResourceType {
     }
 }
 
-pub(crate) mod null_is_default {
-    use serde::de::{Deserialize, Deserializer};
-
-    pub fn deserialize<'de, T, D>(d: D) -> Result<T, D::Error>
-    where
-        T: Default + Deserialize<'de>,
-        D: Deserializer<'de>,
-    {
-        Deserialize::deserialize(d).map(|x: Option<T>| x.unwrap_or(T::default()))
-    }
-}
-
-pub(crate) mod null_is_default_and_always_some {
-    use serde::de::{Deserialize, Deserializer};
-
-    pub fn deserialize<'de, T, D>(d: D) -> Result<Option<T>, D::Error>
-    where
-        T: Default + Deserialize<'de>,
-        D: Deserializer<'de>,
-    {
-        Deserialize::deserialize(d)
-            .map(|x: Option<T>| x.unwrap_or_default())
-            .map(Some)
-    }
-}
-
 /// The resources and amounts of each resource some game object holds.
 #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq, Eq)]
 #[serde(transparent)]
