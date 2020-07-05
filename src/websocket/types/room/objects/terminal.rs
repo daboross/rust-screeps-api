@@ -63,27 +63,27 @@ mod test {
     use serde::Deserialize;
 
     use super::StructureTerminal;
-    use crate::websocket::types::room::resources::ResourceType;
 
     #[test]
     fn parse_terminal() {
         let json = json!({
-            "store": {
-                "XLHO2": 0,
-                "XZH2O": 0,
-                "energy": 1321,
-            },
-            "_id": "59675fbfb554456b195342e7",
-            "cooldownTime": 20236024,
-            "energyCapacity": 300000,
+            "_id": "59a5cc4f4733bb4c785ec4e7",
+            "cooldownTime": 38432852,
             "hits": 3000,
             "hitsMax": 3000,
             "notifyWhenAttacked": true,
-            "room": "W65N19",
+            "room": "W39N49",
+            "send": null,
+            "store": {
+                "X": 50189,
+                "XGH2O": 0,
+                "energy": 25000
+            },
+            "storeCapacity": 300000,
             "type": "terminal",
-            "user": "57874d42d0ae911e3bd15bbc",
-            "x": 30,
-            "y": 35
+            "user": "5788389e3fd9069e6b546e2d",
+            "x": 4,
+            "y": 9
         });
 
         let obj = StructureTerminal::deserialize(json).unwrap();
@@ -94,17 +94,17 @@ mod test {
                 hits: 3000,
                 hits_max: 3000,
                 notify_when_attacked: true,
-                cooldown_time: 20236024,
+                cooldown_time: 38432852,
                 disabled: false,
-                x: 30,
-                y: 35,
+                x: 4,
+                y: 9,
                 ref user,
                 ref id,
                 ref store,
                 ..
-            } if user == "57874d42d0ae911e3bd15bbc"
-                && id == "59675fbfb554456b195342e7"
-                && *store == store! {Energy: 1321} =>
+            } if user == "5788389e3fd9069e6b546e2d"
+                && id == "59a5cc4f4733bb4c785ec4e7"
+                && *store == store! {Energy: 25000, Catalyst: 50189, CatalyzedGhodiumAcid: 0} =>
             {
                 ()
             }
@@ -114,35 +114,25 @@ mod test {
                 other
             ),
         }
-
-        assert_eq!(
-            {
-                let mut contents = obj.resources().collect::<Vec<_>>();
-                contents.sort();
-                contents
-            },
-            {
-                let mut expected = vec![(ResourceType::Energy, 1321)];
-                expected.sort();
-                expected
-            }
-        );
     }
 
     #[test]
     fn parse_with_null_cooldown() {
+        // note: not actual server data, reconstructed from two instances
+        //  - it's hard to find a null terminal cooldown.
         let json = json!({
-            "_id": "5c78d9793b60c54624032734",
-            "energy": 0,
-            "energyCapacity": 300000,
+            "_id": "59a5cc4f4733bb4c785ec4e7",
             "hits": 3000,
             "hitsMax": 3000,
             "notifyWhenAttacked": true,
-            "room": "E8S22",
+            "room": "W39N49",
+            "send": null,
+            "store": {},
+            "storeCapacity": 300000,
             "type": "terminal",
-            "user": "5867dc91c04c074e4f1bdd08",
-            "x": 18,
-            "y": 17,
+            "user": "5788389e3fd9069e6b546e2d",
+            "x": 4,
+            "y": 9
         });
 
         let obj = StructureTerminal::deserialize(json).unwrap();
