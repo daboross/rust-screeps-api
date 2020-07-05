@@ -273,11 +273,7 @@ impl fmt::Display for NoToken {
     }
 }
 
-impl StdError for NoToken {
-    fn description(&self) -> &str {
-        NO_TOKEN
-    }
-}
+impl StdError for NoToken {}
 
 /// Error representing some abnormal response from the API.
 #[derive(Debug, Clone)]
@@ -320,42 +316,21 @@ impl fmt::Display for ApiError {
                 write!(f, "malformed field from api result: {}", desc)
             }
             ApiError::GenericError(ref err) => write!(f, "api call resulted in error: {}", err),
-            ApiError::InvalidRoom
-            | ApiError::InvalidShard
-            | ApiError::ResultNotFound
-            | ApiError::UserNotFound
-            | ApiError::InvalidParameters
-            | ApiError::ServerDown
-            | ApiError::RegistrationNotAllowed
-            | ApiError::UsernameAlreadyExists => write!(f, "{}", self.description()),
-            ApiError::__Nonexhaustive => unreachable!(),
-        }
-    }
-}
-
-impl StdError for ApiError {
-    fn description(&self) -> &str {
-        match *self {
-            ApiError::NotOk(_) => "non-ok result from api call",
-            ApiError::MissingField(_) => "missing field in api result",
-            ApiError::MalformedResponse(_) => "malformed field in api result",
-            ApiError::GenericError(_) => "api call resulted in error",
-            ApiError::InvalidRoom => "malformed api call: invalid room",
-            ApiError::InvalidShard => "malformed apic all: invalid shard",
-            ApiError::ResultNotFound => "specific data requested was not found",
-            ApiError::UserNotFound => "the user requested was not found",
-            ApiError::RegistrationNotAllowed => {
-                "registering users via the API is disabled: \
-                 a server password has been set"
+            ApiError::InvalidRoom => "malformed api call: invalid room".fmt(f),
+            ApiError::InvalidShard => "malformed apic all: invalid shard".fmt(f),
+            ApiError::ResultNotFound => "specific data requested was not found".fmt(f),
+            ApiError::UserNotFound => "the user requested was not found".fmt(f),
+            ApiError::RegistrationNotAllowed => "registering users via the API is disabled: \
+                                                 a server password has been set.fmt(f)"
+                .fmt(f),
+            ApiError::UsernameAlreadyExists => "the username used already exists".fmt(f),
+            ApiError::InvalidParameters => {
+                "one or more parameters to the function were invalid".fmt(f)
             }
-            ApiError::UsernameAlreadyExists => "the username used already exists",
-            ApiError::InvalidParameters => "one or more parameters to the function were invalid",
-            ApiError::ServerDown => "the server requested is offline",
+            ApiError::ServerDown => "the server requested is offline".fmt(f),
             ApiError::__Nonexhaustive => unreachable!(),
         }
     }
-
-    fn cause(&self) -> Option<&dyn StdError> {
-        None
-    }
 }
+
+impl StdError for ApiError {}

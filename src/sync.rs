@@ -62,14 +62,6 @@ mod error {
     }
 
     impl ::std::error::Error for SyncError {
-        fn description(&self) -> &str {
-            match *self {
-                SyncError::Io(ref e) => e.description(),
-                SyncError::Url(ref e) => e.description(),
-                SyncError::Tls(ref e) => e.description(),
-            }
-        }
-
         fn cause(&self) -> Option<&dyn (::std::error::Error)> {
             match *self {
                 SyncError::Io(ref e) => Some(e),
