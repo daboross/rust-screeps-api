@@ -21,7 +21,7 @@ with_base_fields_and_update_struct! {
         #[serde(default, rename = "off")]
         pub disabled: bool,
         /// Total capacity for this structure.
-        #[serde(rename = "energyCapacity")]
+        #[serde(rename = "storeCapacity")]
         pub capacity: i32,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
         pub notify_when_attacked: bool,
@@ -57,31 +57,23 @@ mod test {
     use serde::Deserialize;
 
     use super::StructureStorage;
-    use crate::websocket::types::room::resources::ResourceType;
 
     #[test]
     fn parse_storage() {
         let json = json!({
-            "GO": 0,
-            "KO": 0,
-            "O": 0,
-            "U": 33581,
-            "XGHO2": 5400,
-            "XKHO2": 4249,
-            "XLHO2": 2554,
-            "XZH2O": 2660,
-            "ZH": 0,
-            "_id": "57f376603bbada4a68f0135c",
-            "energy": 631112,
-            "energyCapacity": 1000000,
+            "_id": "599ca7f2e48c09254b443791",
             "hits": 10000,
             "hitsMax": 10000,
             "notifyWhenAttacked": true,
-            "room": "E17N55",
+            "room": "W39N49",
+            "store": {
+                "energy": 913026
+            },
+            "storeCapacity": 1000000,
             "type": "storage",
-            "user": "57874d42d0ae911e3bd15bbc",
-            "x": 7,
-            "y": 16
+            "user": "5788389e3fd9069e6b546e2d",
+            "x": 6,
+            "y": 13
         });
 
         let obj = StructureStorage::deserialize(json).unwrap();
@@ -92,12 +84,12 @@ mod test {
                 hits: 10000,
                 hits_max: 10000,
                 notify_when_attacked: true,
-                x: 7,
-                y: 16,
+                x: 6,
+                y: 13,
                 ref store,
                 ..
             } if *store
-                == store! { Energy: 631112, Utrium: 33581, CatalyzedGhodiumAlkalide: 5400 } =>
+                == store! { Energy: 913026 } =>
             {
                 ()
             }
@@ -106,25 +98,5 @@ mod test {
                 other
             ),
         }
-
-        assert_eq!(
-            {
-                let mut contents = obj.resources().collect::<Vec<_>>();
-                contents.sort();
-                contents
-            },
-            {
-                let mut expected = vec![
-                    (ResourceType::Utrium, 33581),
-                    (ResourceType::CatalyzedGhodiumAlkalide, 5400),
-                    (ResourceType::CatalyzedKeaniumAlkalide, 4249),
-                    (ResourceType::CatalyzedLemergiumAlkalide, 2554),
-                    (ResourceType::CatalyzedZynthiumAcid, 2660),
-                    (ResourceType::Energy, 631112),
-                ];
-                expected.sort();
-                expected
-            }
-        );
     }
 }
