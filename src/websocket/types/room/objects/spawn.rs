@@ -69,6 +69,51 @@ mod test {
     use super::{SpawningCreep, StructureSpawn};
 
     #[test]
+    fn parse_empty_spawn() {
+        let json = json!({
+            "_id": "5f0236153187fd5e3dfa814a",
+            "hits": 5000,
+            "hitsMax": 5000,
+            "name": "Spawn1",
+            "notifyWhenAttacked": true,
+            "off": false,
+            "room": "W41N48",
+            "spawning": null,
+            "store": {
+                "energy": 300
+            },
+            "storeCapacityResource": {
+                "energy": 300
+            },
+            "type": "spawn",
+            "user": "57874d42d0ae911e3bd15bbc",
+            "x": 26,
+            "y": 28
+        });
+
+        let mut obj = StructureSpawn::deserialize(json).unwrap();
+
+        assert_eq!(
+            obj,
+            StructureSpawn {
+                id: "5f0236153187fd5e3dfa814a".to_owned(),
+                room: RoomName::new("W31N48").unwrap(),
+                x: 26,
+                y: 28,
+                energy: 300,
+                energy_capacity: 300,
+                hits: 5000,
+                hits_max: 5000,
+                name: "Spawn1".to_owned(),
+                notify_when_attacked: true,
+                disabled: false,
+                spawning: None,
+                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+            }
+        );
+    }
+
+    #[test]
     fn parse_spawn_and_update() {
         let json = json!({
             "_id": "58a23b6c4370e6302d758099",
