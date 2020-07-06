@@ -48,7 +48,7 @@ impl Tombstone {
 mod test {
     use serde::Deserialize;
 
-    use super::{ResourceType, Tombstone};
+    use super::{Tombstone};
 
     #[test]
     fn parse_simple_tombstone() {

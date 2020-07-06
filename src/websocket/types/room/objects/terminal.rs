@@ -104,7 +104,7 @@ mod test {
                 ..
             } if user == "5788389e3fd9069e6b546e2d"
                 && id == "59a5cc4f4733bb4c785ec4e7"
-                && *store == store! {Energy: 25000, Catalyst: 50189, CatalyzedGhodiumAcid: 0} =>
+                && *store == store! {Energy: 25000, Catalyst: 50189} =>
             {
                 ()
             }
@@ -138,5 +138,30 @@ mod test {
         let obj = StructureTerminal::deserialize(json).unwrap();
 
         assert_eq!(obj.cooldown_time, 0);
+    }
+
+    #[test]
+    fn parse_npc_terminal_with_null_store() {
+        let json = json!({
+            "_id": "57cd3a30c0551957424a1f0b",
+            "room": "E40N40",
+            "store": {
+                "H": null,
+                "K": null,
+                "L": null,
+                "O": null,
+                "U": null,
+                "X": null,
+                "Z": null,
+                "energy": 0,
+                "power": null
+            },
+            "storeCapacity": 0,
+            "type": "terminal",
+            "x": 35,
+            "y": 45
+        });
+        let obj = StructureTerminal::deserialize(json).unwrap();
+        assert_eq!(obj.store, store!());
     }
 }

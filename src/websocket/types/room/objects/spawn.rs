@@ -91,7 +91,7 @@ mod test {
             "y": 28
         });
 
-        let mut obj = StructureSpawn::deserialize(json).unwrap();
+        let obj = StructureSpawn::deserialize(json).unwrap();
 
         assert_eq!(
             obj,
