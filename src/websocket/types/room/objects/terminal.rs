@@ -18,7 +18,7 @@ with_base_fields_and_update_struct! {
         #[serde(default)]
         pub hits_max: i32,
         /// The user ID of the owner of this structure.
-        pub user: String,
+        pub user: Option<String>,
         /// Whether or not this structure is non-functional due to a degraded controller.
         #[serde(default, rename = "off")]
         pub disabled: bool,
@@ -29,7 +29,7 @@ with_base_fields_and_update_struct! {
         #[serde(default)]
         pub cooldown_time: u32,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
-        pub notify_when_attacked: bool,
+        pub notify_when_attacked: Option<bool>,
         /// The resources and amounts of each resource some game object holds.
         pub store: Store,
     }
@@ -40,13 +40,13 @@ with_base_fields_and_update_struct! {
     pub struct StructureTerminalUpdate {
         - hits: i32,
         - hits_max: i32,
-        - user: String,
+        - user: Option<String>,
         #[serde(rename = "off")]
         - disabled: bool,
         #[serde(rename = "energyCapacity")]
         - capacity: i32,
         - cooldown_time: u32,
-        - notify_when_attacked: bool,
+        - notify_when_attacked: Option<bool>,
         - store: Store,
     }
 }
@@ -93,7 +93,7 @@ mod test {
                 capacity: 300000,
                 hits: 3000,
                 hits_max: 3000,
-                notify_when_attacked: true,
+                notify_when_attacked: Some(true),
                 cooldown_time: 38432852,
                 disabled: false,
                 x: 4,
@@ -102,7 +102,7 @@ mod test {
                 ref id,
                 ref store,
                 ..
-            } if user == "5788389e3fd9069e6b546e2d"
+            } if *user == Some("5788389e3fd9069e6b546e2d".to_string())
                 && id == "59a5cc4f4733bb4c785ec4e7"
                 && *store == store! {Energy: 25000, Catalyst: 50189} =>
             {
