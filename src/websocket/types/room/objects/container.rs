@@ -16,7 +16,7 @@ with_base_fields_and_update_struct! {
         #[serde(default)]
         pub hits_max: i32,
         /// Total capacity for this structure.
-        #[serde(rename = "energyCapacity")]
+        #[serde(rename = "storeCapacity")]
         pub capacity: i32,
         /// The next game tick when this structure's hits will decrease naturally.
         pub next_decay_time: u32,
@@ -32,7 +32,7 @@ with_base_fields_and_update_struct! {
     pub struct StructureContainerUpdate {
         - hits: i32,
         - hits_max: i32,
-        #[serde(rename = "energyCapacity")]
+        #[serde(rename = "storeCapacity")]
         - capacity: i32,
         - next_decay_time: u32,
         - notify_when_attacked: bool,
@@ -57,19 +57,29 @@ mod test {
     #[test]
     fn parse_container() {
         let json = json!({
-            "_id": "58cc8143050a8f701678f22e",
-            "store": {
-                "energy": 2000,
-            },
-            "energyCapacity": 2000,
-            "hits": 250000,
-            "hitsMax": 250000,
-            "nextDecayTime": 20233841,
-            "notifyWhenAttacked": true,
-            "room": "E9N23",
-            "type": "container",
-            "x": 19,
-            "y": 22
+          "_id": "5c229f613f9ca9206752338c",
+          "type": "container",
+          "x": 20,
+          "y": 24,
+          "room": "E9S32",
+          "notifyWhenAttacked": true,
+          "hits": 230000,
+          "hitsMax": 250000,
+          "nextDecayTime": 30246717,
+          "store": {
+            "energy": 447,
+            "XLHO2": 0,
+            "Z": 5,
+            "XGHO2": 0,
+            "XUH2O": 0,
+            "XZHO2": 0,
+            "GO": 0,
+            "KO": 0,
+            "ZH": 0,
+            "UH": 0,
+            "UO": 0
+          },
+          "storeCapacity": 2000
         });
 
         let obj = StructureContainer::deserialize(json).unwrap();
@@ -77,16 +87,16 @@ mod test {
         match obj {
             StructureContainer {
                 capacity: 2000,
-                hits: 250000,
+                hits: 230000,
                 hits_max: 250000,
-                next_decay_time: 20233841,
+                next_decay_time: 30246717,
                 notify_when_attacked: true,
-                x: 19,
-                y: 22,
+                x: 20,
+                y: 24,
                 ref id,
                 ref store,
                 ..
-            } if id == "58cc8143050a8f701678f22e" && *store == store! {Energy: 2000} => (),
+            } if id == "5c229f613f9ca9206752338c" && *store == store! {Energy: 447, Zynthium: 5} => (),
             other => panic!(
                 "expected pre-set StructureContainer to match, found {:#?}",
                 other
@@ -100,7 +110,7 @@ mod test {
                 contents
             },
             {
-                let mut expected = vec![(ResourceType::Energy, 2000)];
+                let mut expected = vec![(ResourceType::Energy, 447), (ResourceType::Zynthium, 5)];
                 expected.sort();
                 expected
             }
