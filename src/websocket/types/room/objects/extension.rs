@@ -1,5 +1,6 @@
 //! `StructureExtension` data description.
 use crate::data::RoomName;
+use super::super::resources::Store;
 
 with_structure_fields_and_update_struct! {
     /// An extension structure - a structure that can be filled with extra energy spawns can use.
@@ -12,9 +13,10 @@ with_structure_fields_and_update_struct! {
         #[serde(default, rename = "off")]
         pub disabled: bool,
         /// The current amount of energy held in this structure.
-        pub energy: i32,
+        pub store: Store,
         /// The maximum amount of energy that can be held in this structure.
-        pub energy_capacity: i32,
+        #[serde(rename = "storeCapacityResource")]
+        pub store_capacity: Store,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
         pub notify_when_attacked: bool,
     }
@@ -26,8 +28,8 @@ with_structure_fields_and_update_struct! {
         - user: String,
         #[serde(rename = "off")]
         - disabled: bool,
-        - energy: i32,
-        - energy_capacity: i32,
+        - store: Store,
+        - store_capacity: Store,
         - notify_when_attacked: bool,
     }
 }
@@ -44,18 +46,22 @@ mod test {
     #[test]
     fn parse_extension_and_update() {
         let json = json!({
-            "_id": "594cac66e1dd5c8d2eb7df9d",
-            "energy": 200,
-            "energyCapacity": 200,
-            "hits": 1000,
-            "hitsMax": 1000,
-            "notifyWhenAttacked": true,
-            "off": false,
-            "room": "E4S61",
-            "type": "extension",
-            "user": "57874d42d0ae911e3bd15bbc",
-            "x": 27,
-            "y": 3,
+          "_id": "5bef67919e7eaa3015aadfe2",
+          "type": "extension",
+          "x": 21,
+          "y": 24,
+          "room": "E9S32",
+          "notifyWhenAttacked": true,
+          "user": "589f5265d25357e8253e3ee8",
+          "hits": 1000,
+          "hitsMax": 1000,
+          "off": false,
+          "store": {
+            "energy": 200
+          },
+          "storeCapacityResource": {
+            "energy": 200
+          }
         });
 
         let mut obj = StructureExtension::deserialize(json).unwrap();
@@ -63,23 +69,25 @@ mod test {
         assert_eq!(
             obj,
             StructureExtension {
-                room: RoomName::new("E4S61").unwrap(),
-                x: 27,
-                y: 3,
-                id: "594cac66e1dd5c8d2eb7df9d".to_owned(),
-                energy: 200,
-                energy_capacity: 200,
+                room: RoomName::new("E9S32").unwrap(),
+                x: 21,
+                y: 24,
+                id: "5bef67919e7eaa3015aadfe2".to_owned(),
+                store: store! { Energy: 200 },
+                store_capacity: store! { Energy: 200 },
                 hits: 1000,
                 hits_max: 1000,
                 notify_when_attacked: true,
                 disabled: false,
-                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+                user: "589f5265d25357e8253e3ee8".to_owned(),
             }
         );
 
         obj.update(
             serde_json::from_value(json!({
-                "energy": 0,
+                "store": {
+                    "energy": 0,
+                },
                 "notifyWhenAttacked": false,
             }))
             .unwrap(),
@@ -88,17 +96,17 @@ mod test {
         assert_eq!(
             obj,
             StructureExtension {
-                room: RoomName::new("E4S61").unwrap(),
-                x: 27,
-                y: 3,
-                id: "594cac66e1dd5c8d2eb7df9d".to_owned(),
-                energy: 0,
-                energy_capacity: 200,
+                room: RoomName::new("E9S32").unwrap(),
+                x: 21,
+                y: 24,
+                id: "5bef67919e7eaa3015aadfe2".to_owned(),
+                store: store! { Energy: 200 },
+                store_capacity: store! { Energy: 200 },
                 hits: 1000,
                 hits_max: 1000,
                 notify_when_attacked: false,
                 disabled: false,
-                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+                user: "589f5265d25357e8253e3ee8".to_owned(),
             }
         );
     }
