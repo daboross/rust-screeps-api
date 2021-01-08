@@ -1,4 +1,5 @@
 //! `StructureLink` data description.
+use super::super::resources::Store;
 use super::ActionLogTarget;
 use crate::data::RoomName;
 
@@ -13,10 +14,11 @@ with_structure_fields_and_update_struct! {
         /// Whether or not this structure is non-functional due to a degraded controller.
         #[serde(default, rename = "off")]
         pub disabled: bool,
-        /// The current amount of energy held in this structure.
-        pub energy: i32,
-        /// The maximum amount of energy that can be held in this structure.
-        pub energy_capacity: i32,
+        /// The resources and amounts of each resource some game object holds.
+        pub store: Store,
+        /// The maximum amount of each resource that can be held in this structure.
+        #[serde(rename = "storeCapacityResource")]
+        pub store_capacity: Store,
         /// The number of ticks till this link can be used to send energy again.
         pub cooldown: i32,
         /// A record of all actions this structure performed last tick.
@@ -32,8 +34,8 @@ with_structure_fields_and_update_struct! {
         - user: String,
         #[serde(rename = "off")]
         - disabled: bool,
-        - energy: i32,
-        - energy_capacity: i32,
+        - store: Store,
+        - store_capacity: Store,
         - cooldown: i32,
         - action_log: StructureLinkActions,
         - notify_when_attacked: bool,
@@ -72,8 +74,12 @@ mod test {
                 "transferEnergy": null
             },
             "cooldown": 3,
-            "energy": 100,
-            "energyCapacity": 800,
+            "store": {
+                "energy": 100
+            },
+            "storeCapacityResource": {
+                "energy": 800,
+            },
             "hits": 1000,
             "hitsMax": 1000,
             "notifyWhenAttacked": true,
@@ -93,8 +99,8 @@ mod test {
                 x: 9,
                 y: 6,
                 id: "57fdb3ea3dad49a17265ecea".to_owned(),
-                energy: 100,
-                energy_capacity: 800,
+                store: store! { Energy: 100 },
+                store_capacity: store! { Energy: 800 },
                 hits: 1000,
                 hits_max: 1000,
                 notify_when_attacked: true,
@@ -139,7 +145,9 @@ mod test {
                     }
                 },
                 "cooldown": 11,
-                "energy": 0
+                "store": {
+                    "energy": 0
+                }
             }))
             .unwrap(),
         );
@@ -157,7 +165,9 @@ mod test {
                     "transferEnergy": null
                 },
                 "cooldown": 10,
-                "energy": 50
+                "store": {
+                    "energy": 50
+                }
             }))
             .unwrap(),
         );
@@ -169,8 +179,8 @@ mod test {
                 x: 9,
                 y: 6,
                 id: "57fdb3ea3dad49a17265ecea".to_owned(),
-                energy: 50,
-                energy_capacity: 800,
+                store: store! { Energy: 50 },
+                store_capacity: store! { Energy: 800 },
                 hits: 1000,
                 hits_max: 1000,
                 notify_when_attacked: true,
