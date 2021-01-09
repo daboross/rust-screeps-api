@@ -1,5 +1,6 @@
 //! `StructureNuker` data description.
 use crate::data::RoomName;
+use super::super::resources::Store;
 
 with_structure_fields_and_update_struct! {
     /// An nuker structure - a structure which can be loaded with energy and ghodium, and then
@@ -12,16 +13,11 @@ with_structure_fields_and_update_struct! {
         /// Whether or not this structure is non-functional due to a degraded controller.
         #[serde(default, rename = "off")]
         pub disabled: bool,
-        /// The current amount of energy held in this structure.
-        pub energy: i32,
-        /// The maximum amount of energy that can be held in this structure.
-        pub energy_capacity: i32,
-        /// The current amount of ghodium held in this structure.
-        #[serde(rename = "G")]
-        pub ghodium: i32,
-        /// The maximum amount of ghodium that can be held in this structure.
-        #[serde(rename = "GCapacity")]
-        pub ghodium_capacity: i32,
+        /// The current amount of energy and ghodium held in this structure.
+        pub store: Store,
+        /// The maximum amount of energy and ghodium that can be held in this structure.
+        #[serde(rename = "storeCapacityResource")]
+        pub capacity_resource: Store,
         /// The game time at which this nuker will next be able to launch a missile.
         pub cooldown_time: u32,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
@@ -35,12 +31,9 @@ with_structure_fields_and_update_struct! {
         - user: String,
         #[serde(rename = "off")]
         - disabled: bool,
-        - energy: i32,
-        - energy_capacity: i32,
-        #[serde(rename = "G")]
-        - ghodium: i32,
-        #[serde(rename = "GCapacity")]
-        - ghodium_capacity: i32,
+        - store: Store,
+        #[serde(rename = "storeCapacityResource")]
+        - capacity_resource: Store,
         - cooldown_time: u32,
         - notify_when_attacked: bool,
     }
@@ -57,20 +50,24 @@ mod test {
     #[test]
     fn parse_nuker() {
         let json = json!({
-            "G": 5000,
-            "GCapacity": 5000,
-            "_id": "582582913105cae9690e9cb6",
-            "cooldownTime": 19516631,
+          "_id": "5df45e27d1ba60a873688d18",
+          "type": "nuker",
+          "x": 25,
+          "y": 19,
+          "room": "E17S38",
+          "notifyWhenAttacked": false,
+          "user": "589f5265d25357e8253e3ee8",
+          "store": {
             "energy": 300000,
-            "energyCapacity": 300000,
-            "hits": 1000,
-            "hitsMax": 1000,
-            "notifyWhenAttacked": true,
-            "room": "E9N23",
-            "type": "nuker",
-            "user": "561e4d4645f3f7244a7622e8",
-            "x": 19,
-            "y": 13
+            "G": 5000
+          },
+          "storeCapacityResource": {
+            "energy": 300000,
+            "G": 5000
+          },
+          "hits": 1000,
+          "hitsMax": 1000,
+          "cooldownTime": 30260100
         });
 
         let obj = StructureNuker::deserialize(json).unwrap();
@@ -78,20 +75,24 @@ mod test {
         assert_eq!(
             obj,
             StructureNuker {
-                room: RoomName::new("E9N23").unwrap(),
-                x: 19,
-                y: 13,
-                id: "582582913105cae9690e9cb6".to_owned(),
+                room: RoomName::new("E17S38").unwrap(),
+                x: 25,
+                y: 19,
+                id: "5df45e27d1ba60a873688d18".to_owned(),
                 hits: 1000,
                 hits_max: 1000,
-                energy: 300000,
-                energy_capacity: 300000,
-                ghodium: 5000,
-                ghodium_capacity: 5000,
-                cooldown_time: 19516631,
-                notify_when_attacked: true,
+                store: store! {
+                    Energy: 300000,
+                    Ghodium: 5000
+                },
+                capacity_resource: store! {
+                    Energy: 300000,
+                    Ghodium: 5000
+                },
+                cooldown_time: 30260100,
+                notify_when_attacked: false,
                 disabled: false,
-                user: "561e4d4645f3f7244a7622e8".to_owned(),
+                user: "589f5265d25357e8253e3ee8".to_owned(),
             }
         );
     }
