@@ -1,5 +1,5 @@
 //! `StructureLab` data description.
-use super::super::resources::{ResourceType, Store};
+use super::super::resources::Store;
 use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
@@ -82,7 +82,7 @@ mod test {
 
     use crate::data::RoomName;
 
-    use super::{LabActionTarget, ResourceType, StructureLab, StructureLabActions};
+    use super::{LabActionTarget, StructureLab, StructureLabActions};
 
     #[test]
     fn parse_lab_and_updates() {
