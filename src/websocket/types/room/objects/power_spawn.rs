@@ -1,4 +1,5 @@
 //! `StructurePowerSpawn` data description.
+use super::super::resources::Store;
 use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
@@ -12,14 +13,11 @@ with_structure_fields_and_update_struct! {
         /// Whether or not this structure is non-functional due to a degraded controller.
         #[serde(default, rename = "off")]
         pub disabled: bool,
-        /// The current amount of energy held in this structure.
-        pub energy: i32,
-        /// The maximum amount of energy that can be held in this structure.
-        pub energy_capacity: i32,
-        /// The current amount of power held in this structure.
-        pub power: i32,
-        /// The maximum amount of power that can be held in this structure.
-        pub power_capacity: i32,
+        /// The current amount of energy and power held in this structure.
+        pub store: Store,
+        /// The maximum amount of energy and power that can be held in this structure.
+        #[serde(rename = "storeCapacityResource")]
+        pub capacity_resource: Store,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
         pub notify_when_attacked: bool,
     }
@@ -31,10 +29,9 @@ with_structure_fields_and_update_struct! {
         - user: String,
         #[serde(rename = "off")]
         - disabled: bool,
-        - energy: i32,
-        - energy_capacity: i32,
-        - power: i32,
-        - power_capacity: i32,
+        - store: Store,
+        #[serde(rename = "storeCapacityResource")]
+        - capacity_resource: Store,
         - notify_when_attacked: bool,
     }
 }
@@ -50,19 +47,23 @@ mod test {
     #[test]
     fn parse_power_spawn() {
         let json = json!({
-            "_id": "5825874e440f3fbd2caf30b5",
-            "energy": 4944,
-            "energyCapacity": 5000,
-            "hits": 5000,
-            "hitsMax": 5000,
-            "notifyWhenAttacked": true,
-            "power": 94,
-            "powerCapacity": 100,
-            "room": "E9N23",
-            "type": "powerSpawn",
-            "user": "561e4d4645f3f7244a7622e8",
-            "x": 19,
-            "y": 14
+          "_id": "5c4f9dfdad370f697474ed5b",
+          "type": "powerSpawn",
+          "x": 33,
+          "y": 24,
+          "room": "W15S43",
+          "notifyWhenAttacked": true,
+          "user": "589f5265d25357e8253e3ee8",
+          "hits": 5000,
+          "hitsMax": 5000,
+          "store": {
+            "energy": 369,
+            "power": 27
+          },
+          "storeCapacityResource": {
+            "energy": 5000,
+            "power": 100
+          }
         });
 
         let obj = StructurePowerSpawn::deserialize(json).unwrap();
@@ -70,19 +71,23 @@ mod test {
         assert_eq!(
             obj,
             StructurePowerSpawn {
-                id: "5825874e440f3fbd2caf30b5".to_owned(),
-                room: RoomName::new("E9N23").unwrap(),
-                x: 19,
-                y: 14,
-                energy: 4944,
-                energy_capacity: 5000,
-                power: 94,
-                power_capacity: 100,
+                id: "5c4f9dfdad370f697474ed5b".to_owned(),
+                room: RoomName::new("W15S43").unwrap(),
+                x: 33,
+                y: 24,
+                store: store! {
+                    Energy: 369,
+                    Power: 27
+                },
+                capacity_resource: store! {
+                    Energy: 5000,
+                    Power: 100
+                },
                 hits: 5000,
                 hits_max: 5000,
                 notify_when_attacked: true,
                 disabled: false,
-                user: "561e4d4645f3f7244a7622e8".to_owned(),
+                user: "589f5265d25357e8253e3ee8".to_owned(),
             }
         );
     }
