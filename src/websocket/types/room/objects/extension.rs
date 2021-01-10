@@ -1,6 +1,6 @@
 //! `StructureExtension` data description.
-use crate::data::RoomName;
 use super::super::resources::Store;
+use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
     /// An extension structure - a structure that can be filled with extra energy spawns can use.
@@ -100,7 +100,7 @@ mod test {
                 x: 21,
                 y: 24,
                 id: "5bef67919e7eaa3015aadfe2".to_owned(),
-                store: store! { Energy: 200 },
+                store: store! {},
                 capacity_resource: store! { Energy: 200 },
                 hits: 1000,
                 hits_max: 1000,
