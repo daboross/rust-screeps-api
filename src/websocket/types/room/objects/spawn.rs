@@ -1,4 +1,5 @@
 //! `StructureSpawn` data description.
+use super::super::resources::Store;
 use crate::data::RoomName;
 
 with_update_struct! {
@@ -11,8 +12,8 @@ with_update_struct! {
         /// The total number of game ticks needed to spawn this creep.
         #[serde(rename = "needTime")]
         pub total_time: u32,
-        /// The number of game ticks left before this creep is spawned.
-        pub remaining_time: u32,
+        /// The game tick on which the creep will be spawned.
+        pub spawn_time: u32,
     }
 
     /// The update structure for a spawning creep.
@@ -32,9 +33,10 @@ with_structure_fields_and_update_struct! {
         #[serde(default, rename = "off")]
         pub disabled: bool,
         /// The current amount of energy held in this structure.
-        pub energy: i32,
+        pub store: Store,
         /// The maximum amount of energy that can be held in this structure.
-        pub energy_capacity: i32,
+        #[serde(rename = "storeCapacityResource")]
+        pub capacity_resource: Store,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
         pub notify_when_attacked: bool,
         /// The name of this spawn, unique per player.
@@ -50,8 +52,9 @@ with_structure_fields_and_update_struct! {
         - user: String,
         #[serde(rename = "off")]
         - disabled: bool,
-        - energy: i32,
-        - energy_capacity: i32,
+        - store: Store,
+        #[serde(rename = "storeCapacityResource")]
+        - capacity_resource: Store,
         - notify_when_attacked: bool,
         - name: String,
         - spawning: Option<SpawningCreep>,
@@ -97,11 +100,11 @@ mod test {
             obj,
             StructureSpawn {
                 id: "5f0236153187fd5e3dfa814a".to_owned(),
-                room: RoomName::new("W31N48").unwrap(),
+                room: RoomName::new("W41N48").unwrap(),
                 x: 26,
                 y: 28,
-                energy: 300,
-                energy_capacity: 300,
+                store: store! { Energy: 300 },
+                capacity_resource: store! { Energy: 300 },
                 hits: 5000,
                 hits_max: 5000,
                 name: "Spawn1".to_owned(),
@@ -116,24 +119,28 @@ mod test {
     #[test]
     fn parse_spawn_and_update() {
         let json = json!({
-            "_id": "58a23b6c4370e6302d758099",
-            "energy": 300,
-            "energyCapacity": 300,
-            "hits": 5000,
-            "hitsMax": 5000,
-            "name": "Spawn36",
-            "notifyWhenAttacked": true,
-            "off": false,
-            "room": "E4S61",
-            "spawning": {
-                "name": "5599",
-                "needTime": 126,
-                "remainingTime": 5,
-            },
-            "type": "spawn",
-            "user": "57874d42d0ae911e3bd15bbc",
-            "x": 24,
-            "y": 6,
+          "_id": "5d25a0b8e52ab5700a3747ab",
+          "type": "spawn",
+          "room": "W44S12",
+          "x": 28,
+          "y": 26,
+          "name": "Spawn1",
+          "user": "5a8466038f866773f59fa6c8",
+          "hits": 5000,
+          "hitsMax": 5000,
+          "spawning": {
+            "name": "902640",
+            "needTime": 144,
+            "spawnTime": 24577555
+          },
+          "notifyWhenAttacked": true,
+          "off": false,
+          "store": {
+            "energy": 300
+          },
+          "storeCapacityResource": {
+            "energy": 300
+          }
         });
 
         let mut obj = StructureSpawn::deserialize(json).unwrap();
@@ -141,58 +148,40 @@ mod test {
         assert_eq!(
             obj,
             StructureSpawn {
-                id: "58a23b6c4370e6302d758099".to_owned(),
-                room: RoomName::new("E4S61").unwrap(),
-                x: 24,
-                y: 6,
-                energy: 300,
-                energy_capacity: 300,
+                id: "5d25a0b8e52ab5700a3747ab".to_owned(),
+                room: RoomName::new("W44S12").unwrap(),
+                x: 28,
+                y: 26,
+                store: store! { Energy: 300 },
+                capacity_resource: store! { Energy: 300 },
                 hits: 5000,
                 hits_max: 5000,
-                name: "Spawn36".to_owned(),
+                name: "Spawn1".to_owned(),
                 notify_when_attacked: true,
                 disabled: false,
                 spawning: Some(SpawningCreep {
-                    name: "5599".to_owned(),
-                    total_time: 126,
-                    remaining_time: 5,
+                    name: "902640".to_owned(),
+                    total_time: 144,
+                    spawn_time: 24577555,
                 }),
-                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+                user: "5a8466038f866773f59fa6c8".to_owned(),
             }
         );
 
-        obj.update(
-            serde_json::from_value(json!({
-                "spawning": {
-                    "remainingTime": 4,
-                },
-            }))
-            .unwrap(),
-        );
+        obj.update(serde_json::from_value(json!({ "spawning": null })).unwrap());
+
+        assert_eq!(obj.spawning, None);
 
         obj.update(
             serde_json::from_value(json!({
-                "spawning": {
-                    "remainingTime": 3,
-                },
-            }))
-            .unwrap(),
-        );
-
-        obj.update(
-            serde_json::from_value(json!({
-                "spawning": {
-                    "remainingTime": 2,
-                },
-            }))
-            .unwrap(),
-        );
-
-        obj.update(
-            serde_json::from_value(json!({
-                "spawning": {
-                    "remainingTime": 1,
-                },
+              "spawning": {
+                "name": "8449040",
+                "needTime": 144,
+                "spawnTime": 24577699
+              },
+              "store": {
+                "energy": 0
+              }
             }))
             .unwrap(),
         );
@@ -200,19 +189,23 @@ mod test {
         assert_eq!(
             obj.spawning,
             Some(SpawningCreep {
-                name: "5599".to_owned(),
-                total_time: 126,
-                remaining_time: 1,
+                name: "8449040".to_owned(),
+                total_time: 144,
+                spawn_time: 24577699,
             })
         );
 
+        assert_eq!(obj.store, store! {});
+
         obj.update(
             serde_json::from_value(json!({
-                "spawning": null,
+              "store": {
+                "energy": 300
+              }
             }))
             .unwrap(),
         );
 
-        assert_eq!(obj.spawning, None);
+        assert_eq!(obj.store, store! { Energy: 300 });
     }
 }
