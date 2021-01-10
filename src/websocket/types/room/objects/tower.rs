@@ -1,4 +1,5 @@
 //! `StructureLink` data description.
+use super::super::resources::Store;
 use crate::data::RoomName;
 
 use super::ActionLogTarget;
@@ -15,9 +16,10 @@ with_structure_fields_and_update_struct! {
         #[serde(default, rename = "off")]
         pub disabled: bool,
         /// The current amount of energy held in this structure.
-        pub energy: i32,
+        pub store: Store,
         /// The maximum amount of energy that can be held in this structure.
-        pub energy_capacity: i32,
+        #[serde(rename = "storeCapacityResource")]
+        pub capacity_resource: Store,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
         pub notify_when_attacked: bool,
         /// A record of all actions this structure performed last tick.
@@ -31,8 +33,9 @@ with_structure_fields_and_update_struct! {
         - user: String,
         #[serde(rename = "off")]
         - disabled: bool,
-        - energy: i32,
-        - energy_capacity: i32,
+        - store: Store,
+        #[serde(rename = "storeCapacityResource")]
+        - capacity_resource: Store,
         - notify_when_attacked: bool,
         - action_log: StructureTowerActions,
     }
@@ -69,22 +72,29 @@ mod test {
     #[test]
     fn parse_tower_and_update() {
         let json = json!({
-            "_id": "57f1cc9d27e2c0520e93ba95",
-            "actionLog": {
-                "attack": null,
-                "heal": null,
-                "repair": null
+          "_id": "5d334cefdbfe1b628e862a0d",
+          "type": "tower",
+          "x": 26,
+          "y": 25,
+          "room": "W44S12",
+          "notifyWhenAttacked": true,
+          "user": "5a8466038f866773f59fa6c8",
+          "hits": 3000,
+          "hitsMax": 3000,
+          "actionLog": {
+            "attack": {
+              "x": 46,
+              "y": 7
             },
-            "energy": 920,
-            "energyCapacity": 1000,
-            "hits": 3000,
-            "hitsMax": 3000,
-            "notifyWhenAttacked": true,
-            "room": "E17N55",
-            "type": "tower",
-            "user": "57874d42d0ae911e3bd15bbc",
-            "x": 9,
-            "y": 19
+            "heal": null,
+            "repair": null
+          },
+          "store": {
+            "energy": 570
+          },
+          "storeCapacityResource": {
+            "energy": 1000
+          }
         });
 
         let mut obj = StructureTower::deserialize(json).unwrap();
@@ -92,34 +102,36 @@ mod test {
         assert_eq!(
             obj,
             StructureTower {
-                room: RoomName::new("E17N55").unwrap(),
-                x: 9,
-                y: 19,
-                id: "57f1cc9d27e2c0520e93ba95".to_owned(),
-                energy: 920,
-                energy_capacity: 1000,
+                room: RoomName::new("W44S12").unwrap(),
+                x: 26,
+                y: 25,
+                id: "5d334cefdbfe1b628e862a0d".to_owned(),
+                store: store! { Energy: 570 },
+                capacity_resource: store! { Energy: 1000 },
                 hits: 3000,
                 hits_max: 3000,
                 notify_when_attacked: true,
                 disabled: false,
                 action_log: StructureTowerActions {
-                    attack: None,
+                    attack: Some(ActionLogTarget { x: 46, y: 7 }),
                     heal: None,
                     repair: None,
                 },
-                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+                user: "5a8466038f866773f59fa6c8".to_owned(),
             }
         );
 
         obj.update(
             serde_json::from_value(json!({
-                "actionLog": {
-                    "attack": {
-                        "x": 10,
-                        "y": 10
-                    }
-                },
-                "energy": 820
+              "actionLog": {
+                "attack": {
+                  "x": 45,
+                  "y": 6
+                }
+              },
+              "store": {
+                "energy": 560
+              }
             }))
             .unwrap(),
         );
@@ -127,10 +139,50 @@ mod test {
         assert_eq!(
             obj.action_log,
             StructureTowerActions {
-                attack: Some(ActionLogTarget { x: 10, y: 10 }),
+                attack: Some(ActionLogTarget { x: 45, y: 6 }),
                 heal: None,
                 repair: None,
             }
+        );
+
+        assert_eq!(obj.store, store! { Energy: 560 });
+
+        obj.update(
+            serde_json::from_value(json!({
+              "store": {
+                "energy": 550
+              }
+            }))
+            .unwrap(),
+        );
+
+        assert_eq!(
+            obj.action_log,
+            StructureTowerActions {
+                attack: Some(ActionLogTarget { x: 45, y: 6 }),
+                heal: None,
+                repair: None,
+            }
+        );
+
+        assert_eq!(obj.store, store! { Energy: 550 });
+
+        obj.update(
+            serde_json::from_value(json!({
+              "actionLog": {
+                "attack": null
+              }
+            }))
+            .unwrap(),
+        );
+
+        assert_eq!(
+            obj.action_log,
+            StructureTowerActions {
+                attack: None,
+                heal: None,
+                repair: None,
+            },
         );
     }
 }
