@@ -125,7 +125,7 @@ pub fn transform_url<U: AsRef<str> + ?Sized>(url: &U) -> Result<Url, UrlError> {
     impl fmt::Display for GenServerAndSessionId {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             let mut rng = rand::thread_rng();
-            write!(f, "../socket/{:04}/", rng.gen_range(0, 1000))?;
+            write!(f, "../socket/{:04}/", rng.gen_range(0..1000))?;
 
             for _ in 0..8 {
                 write!(f, "{}", *VALID_CHARS.choose(&mut rng).unwrap() as char)?;

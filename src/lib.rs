@@ -141,7 +141,7 @@ pub struct Api<C> {
     /// The authentication token.
     auth_token: TokenStorage,
     /// The hyper client.
-    client: hyper::Client<C>,
+    client: hyper::client::Client<C>,
 }
 
 impl<C> Clone for Api<C>
@@ -173,7 +173,7 @@ impl<C> Api<C> {
     /// The returned instance can be used to make anonymous calls. Use [`Api::with_token`] or
     /// [`Api::set_token`] to enable authenticated access.
     #[inline]
-    pub fn new(client: hyper::Client<C>) -> Self {
+    pub fn new(client: hyper::client::Client<C>) -> Self {
         Api {
             url: default_url(),
             client: client,

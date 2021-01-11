@@ -18,7 +18,7 @@ pub enum ErrorKind {
     /// URL parsing error.
     Url(url::ParseError),
     /// Error connecting to the server, or error parsing a URL provided.
-    Hyper(hyper::error::Error),
+    Hyper(hyper::Error),
     /// IO error.
     Io(io::Error),
     /// Error for when the server responds with a non-success HTTP status code.
@@ -164,8 +164,8 @@ impl From<serde_json::error::Error> for Error {
     }
 }
 
-impl From<hyper::error::Error> for Error {
-    fn from(err: hyper::error::Error) -> Error {
+impl From<hyper::Error> for Error {
+    fn from(err: hyper::Error) -> Error {
         ErrorKind::Hyper(err).into()
     }
 }
