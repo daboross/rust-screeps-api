@@ -13,7 +13,7 @@ with_structure_fields_and_update_struct! {
         /// Whether or not this structure is non-functional due to a degraded controller.
         #[serde(default, rename = "off")]
         pub disabled: bool,
-        /// The amount of energy and the and a mineral or a compound that is stored in this structure.
+        /// The amount of energy and a mineral or a compound that is stored in this structure.
         pub store: Store,
         /// The total amount of each resource that can be stored in this structure.
         #[serde(rename = "storeCapacityResource")]

@@ -15,9 +15,9 @@ with_structure_fields_and_update_struct! {
         /// Whether or not this structure is non-functional due to a degraded controller.
         #[serde(default, rename = "off")]
         pub disabled: bool,
-        /// The current amount of energy held in this structure.
+        /// The current amount of resources held in this structure.
         pub store: Store,
-        /// The maximum amount of energy that can be held in this structure.
+        /// The maximum amount of resources that can be held in this structure.
         #[serde(rename = "storeCapacityResource")]
         pub capacity_resource: Store,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
