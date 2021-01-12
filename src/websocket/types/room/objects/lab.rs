@@ -16,8 +16,7 @@ with_structure_fields_and_update_struct! {
         /// The amount of energy and a mineral or a compound that is stored in this structure.
         pub store: Store,
         /// The total amount of each resource that can be stored in this structure.
-        #[serde(rename = "storeCapacityResource")]
-        pub capacity_resource: Store,
+        pub store_capacity_resource: Store,
         /// The tick until which this lab can't run any reactions.
         pub cooldown_time: i32,
         /// A record of all actions this structure performed last tick.
@@ -34,7 +33,7 @@ with_structure_fields_and_update_struct! {
         #[serde(rename = "off")]
         - disabled: bool,
         - store: Store,
-        - capacity_resource: Store,
+        - store_capacity_resource: Store,
         - cooldown_time: i32,
         - action_log: StructureLabActions,
         - notify_when_attacked: bool,
@@ -190,7 +189,7 @@ mod test {
                 y: 17,
                 id: "5aebc6e4ee797138fa7b4a4f".to_owned(),
                 store: store! { Energy: 2000, UtriumOxide: 45 },
-                capacity_resource: store! { Energy: 2000, UtriumOxide: 3000 },
+                store_capacity_resource: store! { Energy: 2000, UtriumOxide: 3000 },
                 hits: 500,
                 hits_max: 500,
                 cooldown_time: 30246725,
@@ -267,7 +266,7 @@ mod test {
                 y: 17,
                 id: "5aebc6e4ee797138fa7b4a4f".to_owned(),
                 store: store! { Energy: 2000, UtriumOxide: 50 },
-                capacity_resource: store! { Energy: 2000, UtriumOxide: 3000 },
+                store_capacity_resource: store! { Energy: 2000, UtriumOxide: 3000 },
                 hits: 500,
                 hits_max: 500,
                 cooldown_time: 30246735,
@@ -384,7 +383,7 @@ mod test {
                 y: 28,
                 id: "5d2aca5c5e41f216fb099492".to_owned(),
                 store: store! { Energy: 2000 },
-                capacity_resource: store! { Energy: 2000 },
+                store_capacity_resource: store! { Energy: 2000 },
                 hits: 500,
                 hits_max: 500,
                 notify_when_attacked: true,

@@ -17,8 +17,7 @@ with_structure_fields_and_update_struct! {
         /// The resources and amounts of each resource some game object holds.
         pub store: Store,
         /// The maximum amount of each resource that can be held in this structure.
-        #[serde(rename = "storeCapacityResource")]
-        pub capacity_resource: Store,
+        pub store_capacity_resource: Store,
         /// The number of ticks till this link can be used to send energy again.
         pub cooldown: i32,
         /// A record of all actions this structure performed last tick.
@@ -35,7 +34,7 @@ with_structure_fields_and_update_struct! {
         #[serde(rename = "off")]
         - disabled: bool,
         - store: Store,
-        - capacity_resource: Store,
+        - store_capacity_resource: Store,
         - cooldown: i32,
         - action_log: StructureLinkActions,
         - notify_when_attacked: bool,
@@ -100,7 +99,7 @@ mod test {
                 y: 6,
                 id: "57fdb3ea3dad49a17265ecea".to_owned(),
                 store: store! { Energy: 100 },
-                capacity_resource: store! { Energy: 800 },
+                store_capacity_resource: store! { Energy: 800 },
                 hits: 1000,
                 hits_max: 1000,
                 notify_when_attacked: true,
@@ -180,7 +179,7 @@ mod test {
                 y: 6,
                 id: "57fdb3ea3dad49a17265ecea".to_owned(),
                 store: store! { Energy: 50 },
-                capacity_resource: store! { Energy: 800 },
+                store_capacity_resource: store! { Energy: 800 },
                 hits: 1000,
                 hits_max: 1000,
                 notify_when_attacked: true,

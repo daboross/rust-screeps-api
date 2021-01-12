@@ -35,8 +35,7 @@ with_structure_fields_and_update_struct! {
         /// The current amount of resources held in this structure.
         pub store: Store,
         /// The maximum amount of resources that can be held in this structure.
-        #[serde(rename = "storeCapacityResource")]
-        pub capacity_resource: Store,
+        pub store_capacity_resource: Store,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
         pub notify_when_attacked: bool,
         /// The name of this spawn, unique per player.
@@ -53,8 +52,7 @@ with_structure_fields_and_update_struct! {
         #[serde(rename = "off")]
         - disabled: bool,
         - store: Store,
-        #[serde(rename = "storeCapacityResource")]
-        - capacity_resource: Store,
+        - store_capacity_resource: Store,
         - notify_when_attacked: bool,
         - name: String,
         - spawning: Option<SpawningCreep>,
@@ -104,7 +102,7 @@ mod test {
                 x: 26,
                 y: 28,
                 store: store! { Energy: 300 },
-                capacity_resource: store! { Energy: 300 },
+                store_capacity_resource: store! { Energy: 300 },
                 hits: 5000,
                 hits_max: 5000,
                 name: "Spawn1".to_owned(),
@@ -153,7 +151,7 @@ mod test {
                 x: 28,
                 y: 26,
                 store: store! { Energy: 300 },
-                capacity_resource: store! { Energy: 300 },
+                store_capacity_resource: store! { Energy: 300 },
                 hits: 5000,
                 hits_max: 5000,
                 name: "Spawn1".to_owned(),

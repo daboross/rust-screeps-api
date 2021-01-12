@@ -18,8 +18,7 @@ with_structure_fields_and_update_struct! {
         /// The current amount of resources held in this structure.
         pub store: Store,
         /// The maximum amount of resources that can be held in this structure.
-        #[serde(rename = "storeCapacityResource")]
-        pub capacity_resource: Store,
+        pub store_capacity_resource: Store,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
         pub notify_when_attacked: bool,
         /// A record of all actions this structure performed last tick.
@@ -34,8 +33,7 @@ with_structure_fields_and_update_struct! {
         #[serde(rename = "off")]
         - disabled: bool,
         - store: Store,
-        #[serde(rename = "storeCapacityResource")]
-        - capacity_resource: Store,
+        - store_capacity_resource: Store,
         - notify_when_attacked: bool,
         - action_log: StructureTowerActions,
     }
@@ -107,7 +105,7 @@ mod test {
                 y: 25,
                 id: "5d334cefdbfe1b628e862a0d".to_owned(),
                 store: store! { Energy: 570 },
-                capacity_resource: store! { Energy: 1000 },
+                store_capacity_resource: store! { Energy: 1000 },
                 hits: 3000,
                 hits_max: 3000,
                 notify_when_attacked: true,

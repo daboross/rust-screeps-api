@@ -16,8 +16,7 @@ with_structure_fields_and_update_struct! {
         /// The current amount of energy and ghodium held in this structure.
         pub store: Store,
         /// The maximum amount of energy and ghodium that can be held in this structure.
-        #[serde(rename = "storeCapacityResource")]
-        pub capacity_resource: Store,
+        pub store_capacity_resource: Store,
         /// The game time at which this nuker will next be able to launch a missile.
         pub cooldown_time: u32,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
@@ -32,8 +31,7 @@ with_structure_fields_and_update_struct! {
         #[serde(rename = "off")]
         - disabled: bool,
         - store: Store,
-        #[serde(rename = "storeCapacityResource")]
-        - capacity_resource: Store,
+        - store_capacity_resource: Store,
         - cooldown_time: u32,
         - notify_when_attacked: bool,
     }
@@ -85,7 +83,7 @@ mod test {
                     Energy: 300000,
                     Ghodium: 5000
                 },
-                capacity_resource: store! {
+                store_capacity_resource: store! {
                     Energy: 300000,
                     Ghodium: 5000
                 },

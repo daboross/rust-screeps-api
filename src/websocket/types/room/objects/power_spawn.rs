@@ -16,8 +16,7 @@ with_structure_fields_and_update_struct! {
         /// The current amount of energy and power held in this structure.
         pub store: Store,
         /// The maximum amount of energy and power that can be held in this structure.
-        #[serde(rename = "storeCapacityResource")]
-        pub capacity_resource: Store,
+        pub store_capacity_resource: Store,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
         pub notify_when_attacked: bool,
     }
@@ -30,8 +29,7 @@ with_structure_fields_and_update_struct! {
         #[serde(rename = "off")]
         - disabled: bool,
         - store: Store,
-        #[serde(rename = "storeCapacityResource")]
-        - capacity_resource: Store,
+        - store_capacity_resource: Store,
         - notify_when_attacked: bool,
     }
 }
@@ -79,7 +77,7 @@ mod test {
                     Energy: 369,
                     Power: 27
                 },
-                capacity_resource: store! {
+                store_capacity_resource: store! {
                     Energy: 5000,
                     Power: 100
                 },
