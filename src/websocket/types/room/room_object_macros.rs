@@ -49,53 +49,12 @@ pub(crate) mod vec_update {
     use super::Updatable;
 
     /// Update structure for a Vec.
-    #[derive(Debug, Clone)]
+    #[derive(Debug, Clone, serde_derive::Deserialize)]
+    #[serde(untagged)]
     pub(crate) enum VecUpdate<T> {
         Array(Vec<T>),
         PartialObj(VecPartialUpdate<T>),
     }
-    #[allow(non_upper_case_globals, unused_attributes, unused_qualifications)]
-    const _IMPL_DESERIALIZE_FOR_VecUpdate: () = {
-        extern crate serde as _serde;
-        impl<'de, T> _serde::Deserialize<'de> for VecUpdate<T>
-        where
-            T: _serde::Deserialize<'de>,
-        {
-            fn deserialize<__D>(__deserializer: __D) -> _serde::export::Result<Self, __D::Error>
-            where
-                __D: _serde::Deserializer<'de>,
-            {
-                let err1;
-                let err2;
-                let __content =
-                    <_serde::private::de::Content as Deserialize>::deserialize(__deserializer)?;
-                match Result::map(
-                    Vec::<T>::deserialize(
-                        _serde::private::de::ContentRefDeserializer::<__D::Error>::new(&__content),
-                    ),
-                    VecUpdate::Array,
-                ) {
-                    Ok(value) => return Ok(value),
-                    Err(e) => err1 = e,
-                }
-                match Result::map(
-                    VecPartialUpdate::<T>::deserialize(
-                        _serde::private::de::ContentRefDeserializer::<__D::Error>::new(&__content),
-                    ),
-                    VecUpdate::PartialObj,
-                ) {
-                    Ok(value) => return Ok(value),
-                    Err(e) => err2 = e,
-                }
-                _serde::export::Err(_serde::de::Error::custom(format!(
-                    "data did not match any variant of \
-                     untagged enum VecUpdate (error for \
-                     Array: {}, error for PartialObj: {})",
-                    err1, err2
-                )))
-            }
-        }
-    };
 
     #[derive(Debug, Clone)]
     pub struct VecPartialUpdate<T>(Vec<(u32, T)>);
