@@ -1,4 +1,5 @@
 //! Interpreting generic template calls.
+use serde::Deserialize;
 
 use crate::{
     data,
@@ -7,7 +8,7 @@ use crate::{
 };
 
 /// World start room raw result.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 pub(crate) struct Response {
     ok: i32,
     room: Vec<String>,

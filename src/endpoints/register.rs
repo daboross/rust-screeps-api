@@ -1,6 +1,8 @@
 //! Creating registration calls and interpreting registration results.
 use std::borrow::Cow;
 
+use serde::{Deserialize, Serialize};
+
 use crate::{
     data,
     error::{ApiError, Result},
@@ -47,7 +49,7 @@ impl<'a> RegistrationArgs<'a> {
 }
 
 /// Raw registration response.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 pub(crate) struct Response {
     ok: i32,
 }

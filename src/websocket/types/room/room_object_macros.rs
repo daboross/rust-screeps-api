@@ -49,7 +49,7 @@ pub(crate) mod vec_update {
     use super::Updatable;
 
     /// Update structure for a Vec.
-    #[derive(Debug, Clone, serde_derive::Deserialize)]
+    #[derive(Debug, Clone, serde::Deserialize)]
     #[serde(untagged)]
     pub(crate) enum VecUpdate<T> {
         Array(Vec<T>),
@@ -538,7 +538,7 @@ macro_rules! with_update_struct {
 }
 
 /// This macro creates the struct described within the invocation, but with an additional 4 fields common to all
-/// room objects, and with `#[derive(serde_derive::Deserialize)]`. The structure definition is then passed on to `with_update_struct`.
+/// room objects, and with `#[derive(serde::Deserialize)]`. The structure definition is then passed on to `with_update_struct`.
 macro_rules! with_base_fields_and_update_struct {
     (
         $( #[$struct_attr:meta] )*
@@ -592,7 +592,7 @@ macro_rules! with_base_fields_and_update_struct {
     ) => (
         with_update_struct! {
             $( #[$struct_attr] )*
-            #[derive(serde_derive::Deserialize)]
+            #[derive(serde::Deserialize)]
             pub struct $name {
                 /// Unique 'id' identifier for all game objects on a server.
                 #[serde(rename = "_id")]
@@ -613,7 +613,7 @@ macro_rules! with_base_fields_and_update_struct {
             }
 
             $( #[$update_struct_attr] )*
-            #[derive(serde_derive::Deserialize)]
+            #[derive(serde::Deserialize)]
             $( ($update_extra) )*
             pub struct $update_name {
                 #[serde(rename = "_id")]

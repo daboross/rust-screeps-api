@@ -1,7 +1,7 @@
 //! Parsing for user CPU/memory updates.
 
 /// Notification for Update for a user's last tick CPU usage and total memory usage.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 pub struct UserCpuUpdate {
     /// The CPU usage last tick.
     #[serde(rename = "cpu")]

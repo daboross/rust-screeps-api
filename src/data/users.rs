@@ -1,4 +1,5 @@
 //! User-related shared data structures.
+use serde::{Deserialize, Serialize};
 
 /// Badge type - what shape a badge should be.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Hash, Debug)]

@@ -1,18 +1,19 @@
 //! Interpreting leaderboard season list results.
+use serde::{Deserialize, Serialize};
 
 use crate::data;
 use crate::error::{ApiError, Result};
 use crate::EndpointResult;
 
 /// Call raw result.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub(crate) struct Response {
     ok: i32,
     seasons: Vec<Season>,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct Season {
     _id: String,
     name: String,

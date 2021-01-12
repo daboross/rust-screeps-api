@@ -1,6 +1,7 @@
 //! Interpreting user self information.
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
 use time::Timespec;
 
 use crate::{
@@ -11,7 +12,7 @@ use crate::{
 };
 
 /// User info raw result.
-#[derive(serde_derive::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct Response {
     ok: i32,

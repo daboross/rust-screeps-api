@@ -42,7 +42,7 @@ pub use self::{
 };
 
 /// Enum describing all known room objects.
-#[derive(serde_derive::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum KnownRoomObject {
     /// Source object.

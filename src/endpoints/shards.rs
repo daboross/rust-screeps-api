@@ -1,4 +1,5 @@
 //! Interpreting shard info calls.
+use serde::Deserialize;
 
 use crate::{
     data,
@@ -7,13 +8,13 @@ use crate::{
 };
 
 /// Shard info raw result.
-#[derive(serde_derive::Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 pub(crate) struct Response {
     ok: i32,
     shards: Vec<ShardResponse>,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 struct ShardResponse {
     users: u32,
     name: String,

@@ -3,7 +3,7 @@
 //! Note: currently only supports "owner0" stats, not any other statistic that can also be retrieved with the same API.
 use std::convert::AsRef;
 
-use serde::{Serialize, Serializer};
+use serde::{Deserialize, Serialize, Serializer};
 
 use crate::data::{self, RoomName};
 use crate::decoders::optional_timespec_seconds;
@@ -88,7 +88,7 @@ where
 }
 
 /// Map stats raw result.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub(crate) struct Response {
     ok: i32,
@@ -98,7 +98,7 @@ pub(crate) struct Response {
     users: Vec<(String, UserResponse)>,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
 struct RoomResponse {
     status: String,
@@ -115,7 +115,7 @@ struct RoomResponse {
     hard_sign: Option<data::HardSign>,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct UserResponse {
     badge: data::Badge,
     _id: String,

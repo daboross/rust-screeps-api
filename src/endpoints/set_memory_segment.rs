@@ -1,6 +1,8 @@
 //! Interpreting memory calls.
 use std::borrow::Cow;
 
+use serde::Serialize;
+
 use crate::{
     data,
     error::{ApiError, Result},
@@ -8,7 +10,7 @@ use crate::{
 };
 
 /// Call raw result.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub(crate) struct Response {
     ok: i32,

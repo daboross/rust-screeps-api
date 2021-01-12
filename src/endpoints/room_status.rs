@@ -1,4 +1,5 @@
 //! Interpreting room status results.
+use serde::{Deserialize, Serialize};
 
 use crate::{
     data::{self, RoomName, RoomState},
@@ -8,13 +9,13 @@ use crate::{
 };
 
 /// Room overview raw result.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 pub(crate) struct Response {
     ok: i32,
     room: Option<InnerRoom>,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 struct InnerRoom {
     /// The room's name
     _id: String,

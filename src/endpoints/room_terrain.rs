@@ -1,6 +1,6 @@
 //! Interpreting room terrain results.
-
 use arrayvec::ArrayVec;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     data,
@@ -9,13 +9,13 @@ use crate::{
 };
 
 /// Room overview raw result.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 pub(crate) struct Response {
     ok: i32,
     terrain: Option<Vec<InnerResponse>>,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 struct InnerResponse {
     // this is returned as part of the data, but what the heck is it even for?
     /// A cache key maybe?

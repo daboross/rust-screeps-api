@@ -1,6 +1,8 @@
 //! Interpreting login responses.
 use std::borrow::Cow;
 
+use serde::{Deserialize, Serialize};
+
 use crate::data;
 use crate::error::{ApiError, Result};
 
@@ -30,7 +32,7 @@ impl<'a> LoginArgs<'a> {
 }
 
 /// Login raw result.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 pub(crate) struct Response {
     ok: i32,
     token: Option<String>,

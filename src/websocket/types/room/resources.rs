@@ -1,7 +1,10 @@
 //! Managing and parsing resource
 use std::{cmp, collections::HashMap, fmt};
 
-use serde::de::{Deserialize, Deserializer, MapAccess, Visitor};
+use serde::{
+    de::{Deserializer, MapAccess, Visitor},
+    Deserialize, Serialize,
+};
 
 use crate::websocket::room_object_macros::Updatable;
 
