@@ -29,7 +29,8 @@ with_base_fields_and_update_struct! {
         #[serde(default)]
         pub cooldown_time: u32,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
-        pub notify_when_attacked: Option<bool>,
+        #[serde(default)]
+        pub notify_when_attacked: bool,
         /// The resources and amounts of each resource some game object holds.
         pub store: Store,
     }
@@ -46,7 +47,7 @@ with_base_fields_and_update_struct! {
         #[serde(rename = "energyCapacity")]
         - capacity: i32,
         - cooldown_time: u32,
-        - notify_when_attacked: Option<bool>,
+        - notify_when_attacked: bool,
         - store: Store,
     }
 }
@@ -93,7 +94,7 @@ mod test {
                 capacity: 300000,
                 hits: 3000,
                 hits_max: 3000,
-                notify_when_attacked: Some(true),
+                notify_when_attacked: true,
                 cooldown_time: 38432852,
                 disabled: false,
                 x: 4,
@@ -163,5 +164,6 @@ mod test {
         });
         let obj = StructureTerminal::deserialize(json).unwrap();
         assert_eq!(obj.store, store!());
+        assert_eq!(obj.notify_when_attacked, false);
     }
 }
