@@ -1,7 +1,7 @@
 //! Update parsing for user messages and conversation updates.
 
 /// Specification on whether a message is incoming or outgoing.
-#[derive(serde_derive::Deserialize, Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(serde::Deserialize, Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum MessageDirectionType {
     /// Incoming messages: messages sent by someone other than the subscribed user.
     #[serde(rename = "in")]
@@ -12,7 +12,7 @@ pub enum MessageDirectionType {
 }
 
 /// Content of a newly sent or received message update.
-#[derive(serde_derive::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, Clone, Debug)]
 pub struct Message {
     /// The unique identifier for this message.
     #[serde(rename = "_id")]
@@ -47,7 +47,7 @@ pub struct Message {
 }
 
 /// Update for a newly received message.
-#[derive(serde_derive::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, Clone, Debug)]
 pub struct MessageUpdate {
     /// The message.
     pub message: Message,
@@ -57,7 +57,7 @@ pub struct MessageUpdate {
 }
 
 /// Update on whether a message is unread or not.
-#[derive(serde_derive::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, Clone, Debug)]
 pub struct MessageUnreadUpdate {
     /// The unique identifier for this message.
     #[serde(rename = "_id")]
@@ -73,7 +73,7 @@ pub struct MessageUnreadUpdate {
 /// Update on a conversation between two specific users. This is either a new message sent by one of the users
 /// (either the subscribed one or the other one), or an update indicating that a message previously sent has now
 /// been read.
-#[derive(serde_derive::Deserialize, Clone, Debug)]
+#[derive(serde::Deserialize, Clone, Debug)]
 #[serde(untagged)]
 pub enum ConversationUpdate {
     /// A new message has been sent.

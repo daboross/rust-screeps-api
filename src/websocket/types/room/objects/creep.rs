@@ -8,7 +8,7 @@ with_update_struct! {
     /// A struct describing a creep part.
     ///
     /// TODO: parse creep part boosts.
-    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde::Deserialize, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct CreepPart {
         /// Part health, out of 100.
@@ -21,12 +21,14 @@ with_update_struct! {
     }
 
     /// The update structure for a `CreepPart`.
-    #[derive(serde_derive::Deserialize, Clone, Debug)]
+    #[derive(serde::Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct CreepPartUpdate { ... }
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    serde::Serialize, serde::Deserialize, Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 #[serde(rename_all = "snake_case")]
 /// A type of creep part.
 pub enum CreepPartType {
@@ -53,7 +55,7 @@ basic_updatable!(CreepPartType);
 
 with_update_struct! {
     /// A struct describing a creep's message conveyed with `say`.
-    #[derive(serde_derive::Deserialize, Default, Clone, Debug, PartialEq)]
+    #[derive(serde::Deserialize, Default, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct CreepMessage {
         /// If true, the message is visible to all players.
@@ -63,14 +65,14 @@ with_update_struct! {
     }
 
     /// The update structure for a `CreepMessage`.
-    #[derive(serde_derive::Deserialize, Clone, Debug)]
+    #[derive(serde::Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct CreepMessageUpdate { ... }
 }
 
 with_update_struct! {
     /// A struct describing a creep's actions.
-    #[derive(serde_derive::Deserialize, Default, Clone, Debug, PartialEq)]
+    #[derive(serde::Deserialize, Default, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct CreepActions {
         /// The location this creep harvested last tick.
@@ -102,7 +104,7 @@ with_update_struct! {
     }
 
     /// The update structure for a `CreepActions`.
-    #[derive(serde_derive::Deserialize, Clone, Debug)]
+    #[derive(serde::Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct CreepActionsUpdate { ... }
 }

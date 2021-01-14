@@ -6,7 +6,7 @@ use crate::{
 
 with_update_struct! {
     /// The destination for a portal structure.
-    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde::Deserialize, Clone, Debug, PartialEq)]
     pub struct PortalDestination {
         /// The room name the other side of this portal ends at.
         pub room: RoomName,
@@ -17,7 +17,7 @@ with_update_struct! {
     }
 
     /// The update structure for a portal destination.
-    #[derive(serde_derive::Deserialize, Clone, Debug)]
+    #[derive(serde::Deserialize, Clone, Debug)]
     pub struct PortalDestinationUpdate { ... }
 }
 

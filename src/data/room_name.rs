@@ -2,6 +2,8 @@
 use std::borrow::Cow;
 use std::{error, fmt, ops};
 
+use serde::{Deserialize, Serialize};
+
 /// A structure representing a room name.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct RoomName {
@@ -249,7 +251,7 @@ impl<'a> fmt::Display for RoomNameParseError<'a> {
     }
 }
 
-mod serde {
+mod _serde {
     use super::{parse_or_cheap_failure, RoomName};
 
     use std::fmt;

@@ -1,4 +1,6 @@
 //! Room result structures.
+use serde::{Deserialize, Serialize};
+
 use crate::{decoders::timespec_seconds, error};
 
 /// A room state, returned by room status.

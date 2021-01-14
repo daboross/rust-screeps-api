@@ -1,11 +1,12 @@
 //! Interpreting the result of finding the rank of a specific user.
+use serde::{Deserialize, Serialize};
 
 use crate::data;
 use crate::error::{ApiError, Result};
 use crate::EndpointResult;
 
 /// Raw result for when the API endpoint is called with a specific season id.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub(crate) struct SingleResponse {
     // I have no idea what this is for, so not including in the documented and expected response.
@@ -18,14 +19,14 @@ pub(crate) struct SingleResponse {
 }
 
 /// Raw result for when the API endpoint is called without a specific season id.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 #[doc(hidden)]
 pub(crate) struct AllSeasonRanksResponse {
     ok: i32,
     list: Vec<InnerAllSeasonsResponse>,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 struct InnerAllSeasonsResponse {
     // Again, no idea what this is for, so I'm not including it in the documented response.
     // _id: String,

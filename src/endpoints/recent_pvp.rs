@@ -1,4 +1,5 @@
 //! Interpreting rooms in which PvP recently occurred. This is an "experimental" endpoint.
+use serde::Deserialize;
 
 use crate::{
     data,
@@ -33,20 +34,20 @@ impl RecentPvpArgs {
 }
 
 /// Recent PvP raw result.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 pub(crate) struct Response {
     ok: i32,
     #[serde(with = "::tuple_vec_map")]
     pvp: Vec<(String, InnerShard)>,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct InnerShard {
     rooms: Vec<InnerRoom>,
     time: u32,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct InnerRoom {
     _id: String,
     #[serde(rename = "lastPvpTime")]

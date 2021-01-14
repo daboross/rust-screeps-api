@@ -6,7 +6,7 @@ use crate::{
 
 with_update_struct! {
     /// Describes the decay of a decaying wall.
-    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde::Deserialize, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct WallDecayTime {
         /// Unix timestamp of when this wall will decay.
@@ -15,7 +15,7 @@ with_update_struct! {
     }
 
     /// The update structure for a wall decay description.
-    #[derive(serde_derive::Deserialize, Clone, Debug)]
+    #[derive(serde::Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct WallDecayTimeUpdate {
         #[serde(with = "optional_timespec_seconds")]

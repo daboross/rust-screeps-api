@@ -37,13 +37,13 @@ impl UserConsoleUpdate {
 // Separate representation for deserializing needed in order to have 'Error' variant be a
 // struct-like variant rather than a tuple-like variant.
 
-#[derive(serde_derive::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug)]
 struct InnerUpdateInnerMessages {
     log: Vec<String>,
     results: Vec<String>,
 }
 
-#[derive(serde_derive::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug)]
 struct InnerUpdateRepresentation {
     error: Option<String>,
     messages: Option<InnerUpdateInnerMessages>,

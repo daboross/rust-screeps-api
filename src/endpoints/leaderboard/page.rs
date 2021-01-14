@@ -1,13 +1,15 @@
 //! Interpreting user leaderboard page results.
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
+
 use super::find_rank;
 use crate::data;
 use crate::error::{ApiError, Result};
 use crate::EndpointResult;
 
 /// Raw list results.
-#[derive(serde_derive::Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug)]
 #[doc(hidden)]
 pub(crate) struct Response {
     ok: i32,
@@ -16,7 +18,7 @@ pub(crate) struct Response {
     users: HashMap<String, ExtendedUserInfo>,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct ResponseRankedUser {
     //_id: String, // exists, but I don't know what it's for.
     rank: u32,
@@ -25,7 +27,7 @@ struct ResponseRankedUser {
     user: String,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(Deserialize, Clone, Hash, Debug)]
 struct ExtendedUserInfo {
     _id: String,
     username: String,

@@ -43,7 +43,7 @@ with_structure_fields_and_update_struct! {
 
 with_update_struct! {
     /// A struct describing a link's actions.
-    #[derive(serde_derive::Deserialize, Clone, Debug, PartialEq)]
+    #[derive(serde::Deserialize, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureLinkActions {
         /// The x,y position the link last transfered energy to.
@@ -51,7 +51,7 @@ with_update_struct! {
     }
 
     /// The update structure for StructureLinkActions.
-    #[derive(serde_derive::Deserialize, Clone, Debug)]
+    #[derive(serde::Deserialize, Clone, Debug)]
     #[serde(rename_all = "camelCase")]
     pub struct StructureLinkActionsUpdate { ... }
 }

@@ -1,4 +1,5 @@
 //! Interpreting room overview results.
+use serde::{Deserialize, Serialize};
 
 use crate::{
     data::{self, Badge},
@@ -7,7 +8,7 @@ use crate::{
 };
 
 /// Room overview raw result.
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct Response {
     ok: i32,
@@ -16,13 +17,13 @@ pub(crate) struct Response {
     stats_max: Option<RoomTotalStatsResponse>,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 struct OwnerResponse {
     username: String,
     badge: Badge,
 }
 
-#[derive(serde_derive::Deserialize, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
 struct RoomStatsResponse {
     energy_harvested: Vec<StatPointResponse>,
@@ -33,14 +34,14 @@ struct RoomStatsResponse {
     creeps_lost: Vec<StatPointResponse>,
 }
 
-#[derive(serde_derive::Deserialize, Copy, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Copy, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
 struct StatPointResponse {
     value: u32,
     end_time: u32,
 }
 
-#[derive(serde_derive::Deserialize, Copy, Clone, Hash, Debug)]
+#[derive(serde::Deserialize, Copy, Clone, Hash, Debug)]
 #[serde(rename_all = "camelCase")]
 struct RoomTotalStatsResponse {
     energy_8: u32,

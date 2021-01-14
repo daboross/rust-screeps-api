@@ -6,7 +6,7 @@ use std::{
 };
 
 use hyper::client::HttpConnector;
-use hyper::{self, Client};
+use hyper::{self, client::Client};
 use hyper_tls::HttpsConnector;
 
 use crate::{

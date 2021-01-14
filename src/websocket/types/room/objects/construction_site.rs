@@ -4,7 +4,7 @@ use crate::data::RoomName;
 /// Type of structure (not general room object).
 ///
 /// Currently only used when decoding ConstructionSites.
-#[derive(Clone, Debug, PartialEq, Eq, serde_derive::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum StructureType {
     /// StructureSpawn structure type

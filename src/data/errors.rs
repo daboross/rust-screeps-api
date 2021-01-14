@@ -2,7 +2,7 @@
 use crate::error;
 
 /// JSON API error result from the server.
-#[derive(serde_derive::Deserialize, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(serde::Deserialize, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct ApiError {
     /// The error string.
     pub error: String,
