@@ -301,7 +301,7 @@ impl<'de> Deserialize<'de> for StoreUpdate {
 }
 
 impl Updatable for Store {
-    type Update = Store;
+    type Update = StoreUpdate;
     fn apply_update(&mut self, update: Self::Update) {
         for (key, value) in update.0 {
             if value == 0 {

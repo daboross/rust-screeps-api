@@ -1,5 +1,5 @@
 //! `StructureLab` data description.
-use super::super::resources::ResourceType;
+use super::super::resources::Store;
 use crate::data::RoomName;
 
 with_structure_fields_and_update_struct! {
@@ -13,18 +13,12 @@ with_structure_fields_and_update_struct! {
         /// Whether or not this structure is non-functional due to a degraded controller.
         #[serde(default, rename = "off")]
         pub disabled: bool,
-        /// The current amount of energy held in this structure.
-        pub energy: i32,
-        /// The maximum amount of energy that can be held in this structure.
-        pub energy_capacity: i32,
-        /// The type of mineral stored in this lab.
-        pub mineral_type: Option<ResourceType>,
-        /// The amount of whatever mineral is stored in this lab.
-        pub mineral_amount: i32,
-        /// The maximum amount of any mineral that can be held in this structure.
-        pub mineral_capacity: i32,
-        /// The number of ticks till this lab can run a reaction again.
-        pub cooldown: i32,
+        /// The amount of energy and a mineral or a compound that is stored in this structure.
+        pub store: Store,
+        /// The total amount of each resource that can be stored in this structure.
+        pub store_capacity_resource: Store,
+        /// The tick until which this lab can't run any reactions.
+        pub cooldown_time: i32,
         /// A record of all actions this structure performed last tick.
         pub action_log: StructureLabActions,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
@@ -38,12 +32,9 @@ with_structure_fields_and_update_struct! {
         - user: String,
         #[serde(rename = "off")]
         - disabled: bool,
-        - energy: i32,
-        - energy_capacity: i32,
-        - mineral_type: Option<ResourceType>,
-        - mineral_amount: i32,
-        - mineral_capacity: i32,
-        - cooldown: i32,
+        - store: Store,
+        - store_capacity_resource: Store,
+        - cooldown_time: i32,
         - action_log: StructureLabActions,
         - notify_when_attacked: bool,
     }
@@ -90,29 +81,102 @@ mod test {
 
     use crate::data::RoomName;
 
-    use super::{LabActionTarget, ResourceType, StructureLab, StructureLabActions};
+    use super::{LabActionTarget, StructureLab, StructureLabActions};
 
     #[test]
     fn parse_lab_and_updates() {
         let json = json!({
-            "_id": "58228250580b9e752863fd95",
-            "actionLog": {
-                "runReaction": null
-            },
-            "cooldown": 6,
-            "energy": 2000,
-            "energyCapacity": 2000,
+            "_id": "5aebc6e4ee797138fa7b4a4f",
+            "type": "lab",
+            "x": 24,
+            "y": 17,
+            "room": "E9S32",
+            "notifyWhenAttacked": false,
+            "user": "589f5265d25357e8253e3ee8",
             "hits": 500,
             "hitsMax": 500,
-            "mineralAmount": 155,
-            "mineralCapacity": 3000,
-            "mineralType": "KHO2",
-            "notifyWhenAttacked": true,
-            "room": "E9N23",
-            "type": "lab",
-            "user": "561e4d4645f3f7244a7622e8",
-            "x": 17,
-            "y": 8
+            "cooldown": 10,
+            "actionLog": {
+              "runReaction": {
+                "x1": 24,
+                "y1": 16,
+                "x2": 23,
+                "y2": 15
+              },
+              "reverseReaction": null
+            },
+            "store": {
+              "energy": 2000,
+              "XZHO2": 0,
+              "XKHO2": 0,
+              "KHO2": 0,
+              "KO": 0,
+              "XLHO2": 0,
+              "XUH2O": 0,
+              "ZO": 0,
+              "G": 0,
+              "UL": 0,
+              "ZK": 0,
+              "LO": 0,
+              "UH2O": 0,
+              "UH": 0,
+              "OH": 0,
+              "LHO2": 0,
+              "ZHO2": 0,
+              "ZH2O": 0,
+              "GHO2": 0,
+              "XGHO2": 0,
+              "LH2O": 0,
+              "LH": 0,
+              "ZH": 0,
+              "XZH2O": 0,
+              "GO": 0,
+              "XLH2O": 0,
+              "UO": 45,
+              "X": 0,
+              "H": 0
+            },
+            "storeCapacityResource": {
+              "energy": 2000,
+              "XZHO2": null,
+              "XKHO2": null,
+              "KHO2": null,
+              "KO": null,
+              "XLHO2": null,
+              "XUH2O": null,
+              "ZO": null,
+              "G": null,
+              "UL": null,
+              "ZK": null,
+              "LO": null,
+              "UH2O": null,
+              "UH": null,
+              "OH": null,
+              "LHO2": null,
+              "ZHO2": null,
+              "ZH2O": null,
+              "GHO2": null,
+              "XGHO2": null,
+              "LH2O": null,
+              "LH": null,
+              "ZH": null,
+              "XZH2O": null,
+              "GO": null,
+              "XLH2O": null,
+              "UO": 3000,
+              "X": null,
+              "H": null
+            },
+            "cooldownTime": 30246725,
+            "storeCapacity": null,
+            "effects": {
+              "0": {
+                "effect": 5,
+                "power": 5,
+                "level": 4,
+                "endTime": 29752073
+              }
+            }
         });
 
         let mut obj = StructureLab::deserialize(json).unwrap();
@@ -120,80 +184,54 @@ mod test {
         assert_eq!(
             obj,
             StructureLab {
-                room: RoomName::new("E9N23").unwrap(),
-                x: 17,
-                y: 8,
-                id: "58228250580b9e752863fd95".to_owned(),
-                energy: 2000,
-                energy_capacity: 2000,
-                mineral_amount: 155,
-                mineral_capacity: 3000,
-                mineral_type: Some(ResourceType::KeaniumAlkalide),
+                room: RoomName::new("E9S32").unwrap(),
+                x: 24,
+                y: 17,
+                id: "5aebc6e4ee797138fa7b4a4f".to_owned(),
+                store: store! { Energy: 2000, UtriumOxide: 45 },
+                store_capacity_resource: store! { Energy: 2000, UtriumOxide: 3000 },
                 hits: 500,
                 hits_max: 500,
-                notify_when_attacked: true,
+                cooldown_time: 30246725,
+                notify_when_attacked: false,
                 disabled: false,
-                cooldown: 6,
-                action_log: StructureLabActions { run_reaction: None },
-                user: "561e4d4645f3f7244a7622e8".to_owned(),
+                action_log: StructureLabActions {
+                    run_reaction: Some(LabActionTarget {
+                        x1: 24,
+                        y1: 16,
+                        x2: 23,
+                        y2: 15,
+                    })
+                },
+                user: "589f5265d25357e8253e3ee8".to_owned(),
             }
         );
 
         obj.update(
             serde_json::from_value(json!({
-                "cooldown": 5
+              "actionLog": {
+                "runReaction": null
+              }
             }))
             .unwrap(),
         );
 
-        obj.update(
-            serde_json::from_value(json!({
-                "cooldown": 4
-            }))
-            .unwrap(),
-        );
+        assert_eq!(obj.action_log.run_reaction, None);
 
         obj.update(
             serde_json::from_value(json!({
-                "cooldown": 3
-            }))
-            .unwrap(),
-        );
-
-        obj.update(
-            serde_json::from_value(json!({
-                "cooldown": 2
-            }))
-            .unwrap(),
-        );
-
-        obj.update(
-            serde_json::from_value(json!({
-                "cooldown": 1
-            }))
-            .unwrap(),
-        );
-        obj.update(
-            serde_json::from_value(json!({
-                "cooldown": 0
-            }))
-            .unwrap(),
-        );
-
-        assert_eq!(obj.cooldown, 0);
-
-        obj.update(
-            serde_json::from_value(json!({
-                "actionLog": {
-                    "runReaction": {
-                        "x1": 18,
-                        "x2": 17,
-                        "y1": 9,
-                        "y2": 10
-                    }
-                },
-                "cooldown": 9,
-                "mineralAmount": 160
+              "actionLog": {
+                "runReaction": {
+                  "x1": 24,
+                  "y1": 16,
+                  "x2": 23,
+                  "y2": 15
+                }
+              },
+              "store": {
+                "UO": 50
+              },
+              "cooldownTime": 30246735
             }))
             .unwrap(),
         );
@@ -202,10 +240,10 @@ mod test {
             obj.action_log,
             StructureLabActions {
                 run_reaction: Some(LabActionTarget {
-                    x1: 18,
-                    y1: 9,
-                    x2: 17,
-                    y2: 10,
+                    x1: 24,
+                    y1: 16,
+                    x2: 23,
+                    y2: 15,
                 }),
             }
         );
@@ -223,22 +261,19 @@ mod test {
         assert_eq!(
             obj,
             StructureLab {
-                room: RoomName::new("E9N23").unwrap(),
-                x: 17,
-                y: 8,
-                id: "58228250580b9e752863fd95".to_owned(),
-                energy: 2000,
-                energy_capacity: 2000,
-                mineral_amount: 160,
-                mineral_capacity: 3000,
-                mineral_type: Some(ResourceType::KeaniumAlkalide),
+                room: RoomName::new("E9S32").unwrap(),
+                x: 24,
+                y: 17,
+                id: "5aebc6e4ee797138fa7b4a4f".to_owned(),
+                store: store! { Energy: 2000, UtriumOxide: 50 },
+                store_capacity_resource: store! { Energy: 2000, UtriumOxide: 3000 },
                 hits: 500,
                 hits_max: 500,
-                notify_when_attacked: true,
+                cooldown_time: 30246735,
+                notify_when_attacked: false,
                 disabled: false,
-                cooldown: 8,
                 action_log: StructureLabActions { run_reaction: None },
-                user: "561e4d4645f3f7244a7622e8".to_owned(),
+                user: "589f5265d25357e8253e3ee8".to_owned(),
             }
         );
     }
@@ -246,24 +281,96 @@ mod test {
     #[test]
     fn parse_empty_lab() {
         let json = json!({
-            "_id": "5968055177adbb592b9c2e4e",
+            "_id": "5d2aca5c5e41f216fb099492",
             "type": "lab",
-            "x": 32,
-            "y": 34,
-            "room": "W65N19",
+            "x": 24,
+            "y": 28,
+            "room": "W44S12",
             "notifyWhenAttacked": true,
-            "user": "57874d42d0ae911e3bd15bbc",
+            "user": "5a8466038f866773f59fa6c8",
             "hits": 500,
             "hitsMax": 500,
-            "mineralAmount": 0,
             "cooldown": 0,
-            "mineralType": null,
-            "mineralCapacity": 3000,
-            "energy": 2000,
-            "energyCapacity": 2000,
             "actionLog": {
-                "runReaction": null
-            }
+              "runReaction": null,
+              "reverseReaction": null
+            },
+            "store": {
+              "energy": 2000,
+              "ZH": 0,
+              "UH": 0,
+              "KO": 0,
+              "LO": 0,
+              "LH": 0,
+              "ZK": 0,
+              "UL": 0,
+              "G": 0,
+              "ZO": 0,
+              "GO": 0,
+              "UO": 0,
+              "OH": 0,
+              "UH2O": 0,
+              "XUH2O": 0,
+              "KHO2": 0,
+              "LHO2": 0,
+              "XKHO2": 0,
+              "GH": 0,
+              "XLHO2": 0,
+              "ZHO2": 0,
+              "KH": 0,
+              "GHO2": 0,
+              "XZHO2": 0,
+              "LH2O": 0,
+              "XGHO2": 0,
+              "ZH2O": 0,
+              "XLH2O": 0,
+              "XZH2O": 0,
+              "KH2O": 0,
+              "GH2O": 0,
+              "XKH2O": 0,
+              "UHO2": 0,
+              "XGH2O": 0,
+              "XUHO2": 0
+            },
+            "storeCapacity": 5000,
+            "storeCapacityResource": {
+              "energy": 2000,
+              "ZH": null,
+              "UH": null,
+              "KO": null,
+              "LO": null,
+              "LH": null,
+              "ZK": null,
+              "UL": null,
+              "G": null,
+              "ZO": null,
+              "GO": null,
+              "UO": null,
+              "OH": null,
+              "UH2O": null,
+              "XUH2O": null,
+              "KHO2": null,
+              "LHO2": null,
+              "XKHO2": null,
+              "GH": null,
+              "XLHO2": null,
+              "ZHO2": null,
+              "KH": null,
+              "GHO2": null,
+              "XZHO2": null,
+              "LH2O": null,
+              "XGHO2": null,
+              "ZH2O": null,
+              "XLH2O": null,
+              "XZH2O": null,
+              "KH2O": null,
+              "GH2O": null,
+              "XKH2O": null,
+              "UHO2": null,
+              "XGH2O": null,
+              "XUHO2": null
+            },
+            "cooldownTime": 23464205
         });
 
         let obj = StructureLab::deserialize(json).unwrap();
@@ -271,22 +378,19 @@ mod test {
         assert_eq!(
             obj,
             StructureLab {
-                room: RoomName::new("W65N19").unwrap(),
-                x: 32,
-                y: 34,
-                id: "5968055177adbb592b9c2e4e".to_owned(),
-                energy: 2000,
-                energy_capacity: 2000,
-                mineral_amount: 0,
-                mineral_capacity: 3000,
-                mineral_type: None,
+                room: RoomName::new("W44S12").unwrap(),
+                x: 24,
+                y: 28,
+                id: "5d2aca5c5e41f216fb099492".to_owned(),
+                store: store! { Energy: 2000 },
+                store_capacity_resource: store! { Energy: 2000 },
                 hits: 500,
                 hits_max: 500,
                 notify_when_attacked: true,
                 disabled: false,
-                cooldown: 0,
+                cooldown_time: 23464205,
                 action_log: StructureLabActions { run_reaction: None },
-                user: "57874d42d0ae911e3bd15bbc".to_owned(),
+                user: "5a8466038f866773f59fa6c8".to_owned(),
             }
         );
     }
