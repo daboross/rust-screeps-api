@@ -8,203 +8,228 @@ use serde::{
 
 use crate::websocket::room_object_macros::Updatable;
 
-/// All possible resource identifiers in the game.
-#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum ResourceType {
-    /// RESOURCE_ENERGY: "energy",
-    #[serde(rename = "energy")]
-    Energy,
-    /// RESOURCE_POWER: "power",
-    #[serde(rename = "power")]
-    Power,
-    /// RESOURCE_HYDROGEN: "H",
-    #[serde(rename = "H")]
-    Hydrogen,
-    /// RESOURCE_OXYGEN: "O",
-    #[serde(rename = "O")]
-    Oxygen,
-    /// RESOURCE_UTRIUM: "U",
-    #[serde(rename = "U")]
-    Utrium,
-    /// RESOURCE_LEMERGIUM: "L",
-    #[serde(rename = "L")]
-    Lemergium,
-    /// RESOURCE_KEANIUM: "K",
-    #[serde(rename = "K")]
-    Keanium,
-    /// RESOURCE_ZYNTHIUM: "Z",
-    #[serde(rename = "Z")]
-    Zynthium,
-    /// RESOURCE_CATALYST: "X",
-    #[serde(rename = "X")]
-    Catalyst,
-    /// RESOURCE_GHODIUM: "G",
-    #[serde(rename = "G")]
-    Ghodium,
-    /// RESOURCE_HYDROXIDE: "OH",
-    #[serde(rename = "OH")]
-    Hydroxide,
-    /// RESOURCE_ZYNTHIUM_KEANITE: "ZK",
-    #[serde(rename = "ZK")]
-    ZynthiumKeanite,
-    /// RESOURCE_UTRIUM_LEMERGITE: "UL",
-    #[serde(rename = "UL")]
-    UtriumLemergite,
-    /// RESOURCE_UTRIUM_HYDRIDE: "UH",
-    #[serde(rename = "UH")]
-    UtriumHydride,
-    /// RESOURCE_UTRIUM_OXIDE: "UO",
-    #[serde(rename = "UO")]
-    UtriumOxide,
-    /// RESOURCE_KEANIUM_HYDRIDE: "KH",
-    #[serde(rename = "KH")]
-    KeaniumHydride,
-    /// RESOURCE_KEANIUM_OXIDE: "KO",
-    #[serde(rename = "KO")]
-    KeaniumOxide,
-    /// RESOURCE_LEMERGIUM_HYDRIDE: "LH",
-    #[serde(rename = "LH")]
-    LemergiumHydride,
-    /// RESOURCE_LEMERGIUM_OXIDE: "LO",
-    #[serde(rename = "LO")]
-    LemergiumOxide,
-    /// RESOURCE_ZYNTHIUM_HYDRIDE: "ZH",
-    #[serde(rename = "ZH")]
-    ZynthiumHydride,
-    /// RESOURCE_ZYNTHIUM_OXIDE: "ZO",
-    #[serde(rename = "ZO")]
-    ZynthiumOxide,
-    /// RESOURCE_GHODIUM_HYDRIDE: "GH",
-    #[serde(rename = "GH")]
-    GhodiumHydride,
-    /// RESOURCE_GHODIUM_OXIDE: "GO",
-    #[serde(rename = "GO")]
-    GhodiumOxide,
-    /// RESOURCE_UTRIUM_ACID: "UH2O",
-    #[serde(rename = "UH2O")]
-    UtriumAcid,
-    /// RESOURCE_UTRIUM_ALKALIDE: "UHO2",
-    #[serde(rename = "UHO2")]
-    UtriumAlkalide,
-    /// RESOURCE_KEANIUM_ACID: "KH2O",
-    #[serde(rename = "KH2O")]
-    KeaniumAcid,
-    /// RESOURCE_KEANIUM_ALKALIDE: "KHO2",
-    #[serde(rename = "KHO2")]
-    KeaniumAlkalide,
-    /// RESOURCE_LEMERGIUM_ACID: "LH2O",
-    #[serde(rename = "LH2O")]
-    LemergiumAcid,
-    /// RESOURCE_LEMERGIUM_ALKALIDE: "LHO2",
-    #[serde(rename = "LHO2")]
-    LemergiumAlkalide,
-    /// RESOURCE_ZYNTHIUM_ACID: "ZH2O",
-    #[serde(rename = "ZH2O")]
-    ZynthiumAcid,
-    /// RESOURCE_ZYNTHIUM_ALKALIDE: "ZHO2",
-    #[serde(rename = "ZHO2")]
-    ZynthiumAlkalide,
-    /// RESOURCE_GHODIUM_ACID: "GH2O",
-    #[serde(rename = "GH2O")]
-    GhodiumAcid,
-    /// RESOURCE_GHODIUM_ALKALIDE: "GHO2",
-    #[serde(rename = "GHO2")]
-    GhodiumAlkalide,
-    /// RESOURCE_CATALYZED_UTRIUM_ACID: "XUH2O",
-    #[serde(rename = "XUH2O")]
-    CatalyzedUtriumAcid,
-    /// RESOURCE_CATALYZED_UTRIUM_ALKALIDE: "XUHO2",
-    #[serde(rename = "XUHO2")]
-    CatalyzedUtriumAlkalide,
-    /// RESOURCE_CATALYZED_KEANIUM_ACID: "XKH2O",
-    #[serde(rename = "XKH2O")]
-    CatalyzedKeaniumAcid,
-    /// RESOURCE_CATALYZED_KEANIUM_ALKALIDE: "XKHO2",
-    #[serde(rename = "XKHO2")]
-    CatalyzedKeaniumAlkalide,
-    /// RESOURCE_CATALYZED_LEMERGIUM_ACID: "XLH2O",
-    #[serde(rename = "XLH2O")]
-    CatalyzedLemergiumAcid,
-    /// RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE: "XLHO2",
-    #[serde(rename = "XLHO2")]
-    CatalyzedLemergiumAlkalide,
-    /// RESOURCE_CATALYZED_ZYNTHIUM_ACID: "XZH2O",
-    #[serde(rename = "XZH2O")]
-    CatalyzedZynthiumAcid,
-    /// RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE: "XZHO2",
-    #[serde(rename = "XZHO2")]
-    CatalyzedZynthiumAlkalide,
-    /// RESOURCE_CATALYZED_GHODIUM_ACID: "XGH2O",
-    #[serde(rename = "XGH2O")]
-    CatalyzedGhodiumAcid,
-    /// RESOURCE_CATALYZED_GHODIUM_ALKALIDE: "XGHO2",
-    #[serde(rename = "XGHO2")]
-    CatalyzedGhodiumAlkalide,
-}
-
-basic_updatable!(ResourceType);
-
-impl ResourceType {
-    // created by replacing:
-    // `s#/// [A-Z_]+: "(\w+)",\n            (\w+),#ResourceType::$2 => "$1",#g`
-    // (original is the definition for the enum)
-
-    /// Finds the in-game resource type string for this resource type.
-    ///
-    /// Example:
-    ///
-    /// ```
-    /// # use screeps_api::websocket::resources::ResourceType;
-    /// assert_eq!(ResourceType::Utrium.to_resource_string(), "U")
-    /// ```
-    pub fn to_resource_string(&self) -> &'static str {
-        match *self {
-            ResourceType::Energy => "energy",
-            ResourceType::Power => "power",
-            ResourceType::Hydrogen => "H",
-            ResourceType::Oxygen => "O",
-            ResourceType::Utrium => "U",
-            ResourceType::Lemergium => "L",
-            ResourceType::Keanium => "K",
-            ResourceType::Zynthium => "Z",
-            ResourceType::Catalyst => "X",
-            ResourceType::Ghodium => "G",
-            ResourceType::Hydroxide => "OH",
-            ResourceType::ZynthiumKeanite => "ZK",
-            ResourceType::UtriumLemergite => "UL",
-            ResourceType::UtriumHydride => "UH",
-            ResourceType::UtriumOxide => "UO",
-            ResourceType::KeaniumHydride => "KH",
-            ResourceType::KeaniumOxide => "KO",
-            ResourceType::LemergiumHydride => "LH",
-            ResourceType::LemergiumOxide => "LO",
-            ResourceType::ZynthiumHydride => "ZH",
-            ResourceType::ZynthiumOxide => "ZO",
-            ResourceType::GhodiumHydride => "GH",
-            ResourceType::GhodiumOxide => "GO",
-            ResourceType::UtriumAcid => "UH2O",
-            ResourceType::UtriumAlkalide => "UHO2",
-            ResourceType::KeaniumAcid => "KH2O",
-            ResourceType::KeaniumAlkalide => "KHO2",
-            ResourceType::LemergiumAcid => "LH2O",
-            ResourceType::LemergiumAlkalide => "LHO2",
-            ResourceType::ZynthiumAcid => "ZH2O",
-            ResourceType::ZynthiumAlkalide => "ZHO2",
-            ResourceType::GhodiumAcid => "GH2O",
-            ResourceType::GhodiumAlkalide => "GHO2",
-            ResourceType::CatalyzedUtriumAcid => "XUH2O",
-            ResourceType::CatalyzedUtriumAlkalide => "XUHO2",
-            ResourceType::CatalyzedKeaniumAcid => "XKH2O",
-            ResourceType::CatalyzedKeaniumAlkalide => "XKHO2",
-            ResourceType::CatalyzedLemergiumAcid => "XLH2O",
-            ResourceType::CatalyzedLemergiumAlkalide => "XLHO2",
-            ResourceType::CatalyzedZynthiumAcid => "XZH2O",
-            ResourceType::CatalyzedZynthiumAlkalide => "XZHO2",
-            ResourceType::CatalyzedGhodiumAcid => "XGH2O",
-            ResourceType::CatalyzedGhodiumAlkalide => "XGHO2",
+macro_rules! resource_types {
+    ({
+        $(
+            $(#[$attrs:meta])*
+            $name:ident: $repl:tt,
+        )*
+    }) => {
+        /// All possible resource identifiers in the game.
+        #[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[serde(rename_all = "camelCase")]
+        pub enum ResourceType {
+            $(
+                $(#[$attrs])*
+                #[serde(rename = $repl)]
+                $name,
+            )*
         }
-    }
+        basic_updatable!(ResourceType);
+
+        impl ResourceType {
+            /// Finds the in-game resource type string for this resource type.
+            ///
+            /// Example:
+            ///
+            /// ```
+            /// # use screeps_api::websocket::resources::ResourceType;
+            /// assert_eq!(ResourceType::Utrium.to_resource_string(), "U")
+            /// ```
+            pub fn to_resource_string(&self) -> &'static str {
+                match *self {
+                    $(
+                        ResourceType::$name => $repl,
+                    )*
+                }
+            }
+        }
+    };
 }
+
+resource_types!({
+    /// RESOURCE_ENERGY: "energy"
+    RESOURCE_ENERGY: "energy",
+    /// RESOURCE_POWER: "power"
+    RESOURCE_POWER: "power",
+
+    /// RESOURCE_HYDROGEN: "H"
+    RESOURCE_HYDROGEN: "H",
+    /// RESOURCE_OXYGEN: "O"
+    RESOURCE_OXYGEN: "O",
+    /// RESOURCE_UTRIUM: "U"
+    RESOURCE_UTRIUM: "U",
+    /// RESOURCE_LEMERGIUM: "L"
+    RESOURCE_LEMERGIUM: "L",
+    /// RESOURCE_KEANIUM: "K"
+    RESOURCE_KEANIUM: "K",
+    /// RESOURCE_ZYNTHIUM: "Z"
+    RESOURCE_ZYNTHIUM: "Z",
+    /// RESOURCE_CATALYST: "X"
+    RESOURCE_CATALYST: "X",
+    /// RESOURCE_GHODIUM: "G"
+    RESOURCE_GHODIUM: "G",
+
+    /// RESOURCE_SILICON: "silicon"
+    RESOURCE_SILICON: "silicon",
+    /// RESOURCE_METAL: "metal"
+    RESOURCE_METAL: "metal",
+    /// RESOURCE_BIOMASS: "biomass"
+    RESOURCE_BIOMASS: "biomass",
+    /// RESOURCE_MIST: "mist"
+    RESOURCE_MIST: "mist",
+
+    /// RESOURCE_HYDROXIDE: "OH"
+    RESOURCE_HYDROXIDE: "OH",
+    /// RESOURCE_ZYNTHIUM_KEANITE: "ZK"
+    RESOURCE_ZYNTHIUM_KEANITE: "ZK",
+    /// RESOURCE_UTRIUM_LEMERGITE: "UL"
+    RESOURCE_UTRIUM_LEMERGITE: "UL",
+
+    /// RESOURCE_UTRIUM_HYDRIDE: "UH"
+    RESOURCE_UTRIUM_HYDRIDE: "UH",
+    /// RESOURCE_UTRIUM_OXIDE: "UO"
+    RESOURCE_UTRIUM_OXIDE: "UO",
+    /// RESOURCE_KEANIUM_HYDRIDE: "KH"
+    RESOURCE_KEANIUM_HYDRIDE: "KH",
+    /// RESOURCE_KEANIUM_OXIDE: "KO"
+    RESOURCE_KEANIUM_OXIDE: "KO",
+    /// RESOURCE_LEMERGIUM_HYDRIDE: "LH"
+    RESOURCE_LEMERGIUM_HYDRIDE: "LH",
+    /// RESOURCE_LEMERGIUM_OXIDE: "LO"
+    RESOURCE_LEMERGIUM_OXIDE: "LO",
+    /// RESOURCE_ZYNTHIUM_HYDRIDE: "ZH"
+    RESOURCE_ZYNTHIUM_HYDRIDE: "ZH",
+    /// RESOURCE_ZYNTHIUM_OXIDE: "ZO"
+    RESOURCE_ZYNTHIUM_OXIDE: "ZO",
+    /// RESOURCE_GHODIUM_HYDRIDE: "GH"
+    RESOURCE_GHODIUM_HYDRIDE: "GH",
+    /// RESOURCE_GHODIUM_OXIDE: "GO"
+    RESOURCE_GHODIUM_OXIDE: "GO",
+
+    /// RESOURCE_UTRIUM_ACID: "UH2O"
+    RESOURCE_UTRIUM_ACID: "UH2O",
+    /// RESOURCE_UTRIUM_ALKALIDE: "UHO2"
+    RESOURCE_UTRIUM_ALKALIDE: "UHO2",
+    /// RESOURCE_KEANIUM_ACID: "KH2O"
+    RESOURCE_KEANIUM_ACID: "KH2O",
+    /// RESOURCE_KEANIUM_ALKALIDE: "KHO2"
+    RESOURCE_KEANIUM_ALKALIDE: "KHO2",
+    /// RESOURCE_LEMERGIUM_ACID: "LH2O"
+    RESOURCE_LEMERGIUM_ACID: "LH2O",
+    /// RESOURCE_LEMERGIUM_ALKALIDE: "LHO2"
+    RESOURCE_LEMERGIUM_ALKALIDE: "LHO2",
+    /// RESOURCE_ZYNTHIUM_ACID: "ZH2O"
+    RESOURCE_ZYNTHIUM_ACID: "ZH2O",
+    /// RESOURCE_ZYNTHIUM_ALKALIDE: "ZHO2"
+    RESOURCE_ZYNTHIUM_ALKALIDE: "ZHO2",
+    /// RESOURCE_GHODIUM_ACID: "GH2O"
+    RESOURCE_GHODIUM_ACID: "GH2O",
+    /// RESOURCE_GHODIUM_ALKALIDE: "GHO2"
+    RESOURCE_GHODIUM_ALKALIDE: "GHO2",
+
+    /// RESOURCE_CATALYZED_UTRIUM_ACID: "XUH2O"
+    RESOURCE_CATALYZED_UTRIUM_ACID: "XUH2O",
+    /// RESOURCE_CATALYZED_UTRIUM_ALKALIDE: "XUHO2"
+    RESOURCE_CATALYZED_UTRIUM_ALKALIDE: "XUHO2",
+    /// RESOURCE_CATALYZED_KEANIUM_ACID: "XKH2O"
+    RESOURCE_CATALYZED_KEANIUM_ACID: "XKH2O",
+    /// RESOURCE_CATALYZED_KEANIUM_ALKALIDE: "XKHO2"
+    RESOURCE_CATALYZED_KEANIUM_ALKALIDE: "XKHO2",
+    /// RESOURCE_CATALYZED_LEMERGIUM_ACID: "XLH2O"
+    RESOURCE_CATALYZED_LEMERGIUM_ACID: "XLH2O",
+    /// RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE: "XLHO2"
+    RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE: "XLHO2",
+    /// RESOURCE_CATALYZED_ZYNTHIUM_ACID: "XZH2O"
+    RESOURCE_CATALYZED_ZYNTHIUM_ACID: "XZH2O",
+    /// RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE: "XZHO2"
+    RESOURCE_CATALYZED_ZYNTHIUM_ALKALIDE: "XZHO2",
+    /// RESOURCE_CATALYZED_GHODIUM_ACID: "XGH2O"
+    RESOURCE_CATALYZED_GHODIUM_ACID: "XGH2O",
+    /// RESOURCE_CATALYZED_GHODIUM_ALKALIDE: "XGHO2"
+    RESOURCE_CATALYZED_GHODIUM_ALKALIDE: "XGHO2",
+
+    /// RESOURCE_OPS: "ops"
+    RESOURCE_OPS: "ops",
+
+    /// RESOURCE_UTRIUM_BAR: "utrium_bar"
+    RESOURCE_UTRIUM_BAR: "utrium_bar",
+    /// RESOURCE_LEMERGIUM_BAR: "lemergium_bar"
+    RESOURCE_LEMERGIUM_BAR: "lemergium_bar",
+    /// RESOURCE_ZYNTHIUM_BAR: "zynthium_bar"
+    RESOURCE_ZYNTHIUM_BAR: "zynthium_bar",
+    /// RESOURCE_KEANIUM_BAR: "keanium_bar"
+    RESOURCE_KEANIUM_BAR: "keanium_bar",
+    /// RESOURCE_GHODIUM_MELT: "ghodium_melt"
+    RESOURCE_GHODIUM_MELT: "ghodium_melt",
+    /// RESOURCE_OXIDANT: "oxidant"
+    RESOURCE_OXIDANT: "oxidant",
+    /// RESOURCE_REDUCTANT: "reductant"
+    RESOURCE_REDUCTANT: "reductant",
+    /// RESOURCE_PURIFIER: "purifier"
+    RESOURCE_PURIFIER: "purifier",
+    /// RESOURCE_BATTERY: "battery"
+    RESOURCE_BATTERY: "battery",
+
+    /// RESOURCE_COMPOSITE: "composite"
+    RESOURCE_COMPOSITE: "composite",
+    /// RESOURCE_CRYSTAL: "crystal"
+    RESOURCE_CRYSTAL: "crystal",
+    /// RESOURCE_LIQUID: "liquid"
+    RESOURCE_LIQUID: "liquid",
+
+    /// RESOURCE_WIRE: "wire"
+    RESOURCE_WIRE: "wire",
+    /// RESOURCE_SWITCH: "switch"
+    RESOURCE_SWITCH: "switch",
+    /// RESOURCE_TRANSISTOR: "transistor"
+    RESOURCE_TRANSISTOR: "transistor",
+    /// RESOURCE_MICROCHIP: "microchip"
+    RESOURCE_MICROCHIP: "microchip",
+    /// RESOURCE_CIRCUIT: "circuit"
+    RESOURCE_CIRCUIT: "circuit",
+    /// RESOURCE_DEVICE: "device"
+    RESOURCE_DEVICE: "device",
+
+    /// RESOURCE_CELL: "cell"
+    RESOURCE_CELL: "cell",
+    /// RESOURCE_PHLEGM: "phlegm"
+    RESOURCE_PHLEGM: "phlegm",
+    /// RESOURCE_TISSUE: "tissue"
+    RESOURCE_TISSUE: "tissue",
+    /// RESOURCE_MUSCLE: "muscle"
+    RESOURCE_MUSCLE: "muscle",
+    /// RESOURCE_ORGANOID: "organoid"
+    RESOURCE_ORGANOID: "organoid",
+    /// RESOURCE_ORGANISM: "organism"
+    RESOURCE_ORGANISM: "organism",
+
+    /// RESOURCE_ALLOY: "alloy"
+    RESOURCE_ALLOY: "alloy",
+    /// RESOURCE_TUBE: "tube"
+    RESOURCE_TUBE: "tube",
+    /// RESOURCE_FIXTURES: "fixtures"
+    RESOURCE_FIXTURES: "fixtures",
+    /// RESOURCE_FRAME: "frame"
+    RESOURCE_FRAME: "frame",
+    /// RESOURCE_HYDRAULICS: "hydraulics"
+    RESOURCE_HYDRAULICS: "hydraulics",
+    /// RESOURCE_MACHINE: "machine"
+    RESOURCE_MACHINE: "machine",
+
+    /// RESOURCE_CONDENSATE: "condensate"
+    RESOURCE_CONDENSATE: "condensate",
+    /// RESOURCE_CONCENTRATE: "concentrate"
+    RESOURCE_CONCENTRATE: "concentrate",
+    /// RESOURCE_EXTRACT: "extract"
+    RESOURCE_EXTRACT: "extract",
+    /// RESOURCE_SPIRIT: "spirit"
+    RESOURCE_SPIRIT: "spirit",
+    /// RESOURCE_EMANATION: "emanation"
+    RESOURCE_EMANATION: "emanation",
+    /// RESOURCE_ESSENCE: "essence"
+    RESOURCE_ESSENCE: "essence",
+});
 
 /// The resources and amounts of each resource some game object holds.
 #[derive(Serialize, Clone, Debug, Default, PartialEq, Eq)]
