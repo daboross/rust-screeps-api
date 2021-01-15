@@ -18,7 +18,7 @@ with_structure_fields_and_update_struct! {
         /// The total amount of each resource that can be stored in this structure.
         pub store_capacity_resource: Store,
         /// The tick until which this lab can't run any reactions.
-        pub cooldown_time: i32,
+        pub cooldown_time: Option<i32>,
         /// A record of all actions this structure performed last tick.
         pub action_log: StructureLabActions,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
@@ -34,7 +34,7 @@ with_structure_fields_and_update_struct! {
         - disabled: bool,
         - store: Store,
         - store_capacity_resource: Store,
-        - cooldown_time: i32,
+        - cooldown_time: Option<i32>,
         - action_log: StructureLabActions,
         - notify_when_attacked: bool,
     }
@@ -192,7 +192,7 @@ mod test {
                 store_capacity_resource: store! { Energy: 2000, UtriumOxide: 3000 },
                 hits: 500,
                 hits_max: 500,
-                cooldown_time: 30246725,
+                cooldown_time: Some(30246725),
                 notify_when_attacked: false,
                 disabled: false,
                 action_log: StructureLabActions {
@@ -269,7 +269,7 @@ mod test {
                 store_capacity_resource: store! { Energy: 2000, UtriumOxide: 3000 },
                 hits: 500,
                 hits_max: 500,
-                cooldown_time: 30246735,
+                cooldown_time: Some(30246735),
                 notify_when_attacked: false,
                 disabled: false,
                 action_log: StructureLabActions { run_reaction: None },
@@ -388,10 +388,58 @@ mod test {
                 hits_max: 500,
                 notify_when_attacked: true,
                 disabled: false,
-                cooldown_time: 23464205,
+                cooldown_time: Some(23464205),
                 action_log: StructureLabActions { run_reaction: None },
                 user: "5a8466038f866773f59fa6c8".to_owned(),
             }
         );
+    }
+
+    #[test]
+    fn parse_lab_null_cooldown() {
+        let json = json!({
+          "_id": "583f5dba29a7bf89761d7511",
+          "actionLog": {
+            "reverseReaction": null,
+            "runReaction": null
+          },
+          "cooldown": 0,
+          "hits": 500,
+          "hitsMax": 500,
+          "notifyWhenAttacked": true,
+          "room": "W31N48",
+          "store": {
+            "energy": 2000
+          },
+          "storeCapacity": 5000,
+          "storeCapacityResource": {
+            "energy": 2000
+          },
+          "type": "lab",
+          "user": "57cd3be0559868c84d297d87",
+          "x": 28,
+          "y": 31
+        });
+
+        let obj = StructureLab::deserialize(json).unwrap();
+
+        assert_eq!(
+            obj,
+            StructureLab {
+                room: RoomName::new("W31N48").unwrap(),
+                x: 28,
+                y: 31,
+                id: "583f5dba29a7bf89761d7511".to_owned(),
+                store: store! { Energy: 2000 },
+                store_capacity_resource: store! { Energy: 2000 },
+                hits: 500,
+                hits_max: 500,
+                notify_when_attacked: true,
+                disabled: false,
+                cooldown_time: None,
+                action_log: StructureLabActions { run_reaction: None },
+                user: "57cd3be0559868c84d297d87".to_owned()
+            }
+        )
     }
 }

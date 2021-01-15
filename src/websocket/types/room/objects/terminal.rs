@@ -18,7 +18,7 @@ with_base_fields_and_update_struct! {
         #[serde(default)]
         pub hits_max: i32,
         /// The user ID of the owner of this structure.
-        pub user: String,
+        pub user: Option<String>,
         /// Whether or not this structure is non-functional due to a degraded controller.
         #[serde(default, rename = "off")]
         pub disabled: bool,
@@ -29,6 +29,7 @@ with_base_fields_and_update_struct! {
         #[serde(default)]
         pub cooldown_time: u32,
         /// Whether or not an attack on this structure will send an email to the owner automatically.
+        #[serde(default)]
         pub notify_when_attacked: bool,
         /// The resources and amounts of each resource some game object holds.
         pub store: Store,
@@ -40,7 +41,7 @@ with_base_fields_and_update_struct! {
     pub struct StructureTerminalUpdate {
         - hits: i32,
         - hits_max: i32,
-        - user: String,
+        - user: Option<String>,
         #[serde(rename = "off")]
         - disabled: bool,
         #[serde(rename = "energyCapacity")]
@@ -102,7 +103,7 @@ mod test {
                 ref id,
                 ref store,
                 ..
-            } if user == "5788389e3fd9069e6b546e2d"
+            } if *user == Some("5788389e3fd9069e6b546e2d".to_string())
                 && id == "59a5cc4f4733bb4c785ec4e7"
                 && *store == store! {Energy: 25000, Catalyst: 50189} =>
             {
@@ -163,5 +164,6 @@ mod test {
         });
         let obj = StructureTerminal::deserialize(json).unwrap();
         assert_eq!(obj.store, store!());
+        assert_eq!(obj.notify_when_attacked, false);
     }
 }
