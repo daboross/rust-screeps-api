@@ -15,11 +15,14 @@ pub(crate) struct Response {
 }
 
 #[derive(Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 struct ShardResponse {
     users: u32,
     name: String,
     tick: f64,
     rooms: u32,
+    cpu_limit: i32,
+    last_ticks: Vec<u32>,
 }
 
 /// Structure describing information about a single game shard.
@@ -33,6 +36,10 @@ pub struct ShardInfo {
     pub user_count: u32,
     /// The average millisecond tick this shard has for some past period of time (TODO: more detail).
     pub tick_avg_milliseconds: f64,
+    /// Cpu limit
+    pub cpu_limit: i32,
+    /// Last ticks
+    pub last_ticks: Vec<u32>,
     /// Phantom data in order to allow adding any additional fields in the future.
     _non_exhaustive: (),
 }
@@ -40,6 +47,12 @@ pub struct ShardInfo {
 impl AsRef<str> for ShardInfo {
     fn as_ref(&self) -> &str {
         &self.name
+    }
+}
+
+impl Into<String> for ShardInfo {
+    fn into(self) -> String {
+        self.name.into()
     }
 }
 
@@ -62,12 +75,16 @@ impl EndpointResult for Vec<ShardInfo> {
                     name,
                     tick,
                     rooms,
+                    cpu_limit,
+                    last_ticks,
                 } = response;
                 ShardInfo {
                     name: name,
                     room_count: rooms,
                     user_count: users,
                     tick_avg_milliseconds: tick,
+                    cpu_limit,
+                    last_ticks,
                     _non_exhaustive: (),
                 }
             })
@@ -95,13 +112,17 @@ mod tests {
                     "users": 1246,
                     "rooms": 28858,
                     "name": "shard0",
-                    "tick": 5726.411601456489
+                    "tick": 5726.411601456489,
+                    "cpuLimit": 20,
+                    "lastTicks":[1111, 2222, 3333],
                 },
                 {
                     "users": 584,
                     "rooms": 4816,
                     "name": "shard1",
-                    "tick": 2153.4476171877614
+                    "tick": 2153.4476171877614,
+                    "cpuLimit": 20,
+                    "lastTicks":[],
                 }
             ],
             "ok": 1

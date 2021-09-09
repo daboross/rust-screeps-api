@@ -12,7 +12,8 @@ use hyper_tls::HttpsConnector;
 use crate::{
     error::Error, Api, FoundUserRank, LeaderboardPage, LeaderboardSeason, LeaderboardType,
     MapStats, MyInfo, RecentPvp, RecentPvpArgs, RegistrationArgs, RegistrationSuccess,
-    RoomOverview, RoomStatus, RoomTerrain, ShardInfo, Token, WorldStartRoom,
+    RoomOverview, RoomStatus, RoomTerrain, RoomsTerrain, ShardInfo, Token, WorldSizeInfo,
+    WorldStartRoom,
 };
 
 type TokioRuntime = tokio::runtime::Runtime;
@@ -186,6 +187,11 @@ where
         self.runtime.block_on(self.client.world_start_room()?)
     }
 
+    /// Gets the size of a world
+    pub fn world_size(&mut self, shard: impl Into<String>) -> Result<WorldSizeInfo, Error> {
+        self.runtime.block_on(self.client.world_size(shard))
+    }
+
     /// Gets the room name the server thinks the client should start with viewing for a particular shard.
     ///
     /// See [`Api::world_start_room`](../struct.Api.html#method.world_start_room) for more information.
@@ -241,6 +247,25 @@ where
     {
         self.runtime
             .block_on(self.client.room_terrain(shard, room_name))
+    }
+
+    /// Gets the terrain of given rooms
+    ///
+    /// See [`Api::rooms_terrain`](../struct.Api.html#method.rooms_terrain) for more information.
+    pub fn rooms_terrain(
+        &mut self,
+        shard: impl Into<String>,
+        rooms: &[impl AsRef<str>],
+    ) -> Result<RoomsTerrain, Error> {
+        self.runtime
+            .block_on(self.client.rooms_terrain(shard, rooms))
+    }
+
+    /// Gets the terrain of all rooms
+    ///
+    /// See [`Api::all_rooms_terrain`](../struct.Api.html#method.all_rooms_terrain) for more information.
+    pub fn all_rooms_terrain(&mut self, shard: impl Into<String>) -> Result<RoomsTerrain, Error> {
+        self.runtime.block_on(self.client.all_rooms_terrain(shard))
     }
 
     /// Gets a list of shards available on this server. Errors with a `404` error when connected to a

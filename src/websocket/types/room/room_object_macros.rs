@@ -591,8 +591,8 @@ macro_rules! with_base_fields_and_update_struct {
         }
     ) => (
         with_update_struct! {
-            $( #[$struct_attr] )*
             #[derive(serde::Deserialize)]
+            $( #[$struct_attr] )*
             pub struct $name {
                 /// Unique 'id' identifier for all game objects on a server.
                 #[serde(rename = "_id")]
@@ -612,8 +612,8 @@ macro_rules! with_base_fields_and_update_struct {
                 )*
             }
 
-            $( #[$update_struct_attr] )*
             #[derive(serde::Deserialize)]
+            $( #[$update_struct_attr] )*
             $( ($update_extra) )*
             pub struct $update_name {
                 #[serde(rename = "_id")]

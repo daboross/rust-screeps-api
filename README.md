@@ -37,7 +37,8 @@ Unofficial API documentation for:
 
 - Logging in
 - Getting all leaderboard information
-- Getting room terrain
+- Getting world size
+- Getting room terrain (batch mode supported)
 - Checking room status
 - Getting room overview info
 - Getting logged in user's info

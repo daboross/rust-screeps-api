@@ -59,7 +59,7 @@ fn main() {
             "not set"
         },
         my_info.cpu,
-        my_info.gcl_points,
+        my_info.gcl_points.unwrap_or_default(),
         my_info.credits
     );
     println!("{:#?}", my_info);

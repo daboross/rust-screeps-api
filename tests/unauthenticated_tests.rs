@@ -3,6 +3,48 @@ use screeps_api::error::{ApiError, ErrorKind};
 use screeps_api::SyncApi;
 
 #[test]
+fn test_world_size() -> anyhow::Result<()> {
+    let mut api = SyncApi::new()?;
+    let size = api.world_size("shard0")?;
+    assert!(size.width > 0);
+    assert!(size.height > 0);
+    Ok(())
+}
+
+#[test]
+fn test_rooms_terrain() -> anyhow::Result<()> {
+    let mut api = SyncApi::new()?;
+    let shard = "shard3";
+    let rooms = ["W3N2", "E4S0"];
+    let result = api.rooms_terrain(shard, &rooms)?;
+    // Invalid rooms in request will be omitted in response
+    assert!(result.rooms.len() == rooms.len());
+    Ok(())
+}
+
+#[test]
+fn test_rooms_terrain_with_invalid() -> anyhow::Result<()> {
+    let mut api = SyncApi::new()?;
+    let rooms = api.rooms_terrain("shard3", &["W2S1", "whatever"])?;
+    // Invalid rooms in request will be omitted in response
+    assert!(rooms.rooms.len() == 1);
+    Ok(())
+}
+
+#[test]
+fn test_all_rooms_terrain() -> anyhow::Result<()> {
+    let mut api = SyncApi::new()?;
+    let shard = "shard3";
+    let size = api.world_size(shard)?;
+    assert!(size.width > 0);
+    assert!(size.height > 0);
+    let rooms = api.all_rooms_terrain(shard)?;
+    // Invalid rooms in request will be omitted in response
+    assert!(rooms.rooms.len() == size.width * size.height);
+    Ok(())
+}
+
+#[test]
 fn test_room_terrain() {
     let mut api = SyncApi::new().unwrap();
 

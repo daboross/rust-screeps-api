@@ -321,6 +321,16 @@ where
         self.get("user/world-start-room").auth().send()
     }
 
+    /// Gets the size of a world.
+    pub fn world_size(
+        &self,
+        shard: impl Into<String>,
+    ) -> impl Future<Output = Result<WorldSizeInfo, Error>> {
+        self.get("game/world-size")
+            .params(&[("shard", shard.into())])
+            .send()
+    }
+
     /// Gets the room name the server thinks the client should start with viewing for a particular
     /// shard.
     pub fn shard_start_room<'b, U>(
@@ -408,6 +418,36 @@ where
                 ])
                 .send(),
         }
+    }
+
+    /// Get terrain info of given rooms in a shard
+    pub fn rooms_terrain(
+        &self,
+        shard: impl Into<String>,
+        rooms: &[impl AsRef<str>],
+    ) -> impl Future<Output = Result<RoomsTerrain, Error>> {
+        let rooms: Vec<&str> = rooms.iter().map(|x| x.as_ref()).collect();
+        let req = RoomsTerrainRequest { rooms: &rooms };
+        self.request("game/rooms")
+            .params(&[("shard", shard.into()), ("encoded", true.to_string())])
+            .post(&req)
+            .send()
+    }
+
+    /// Get terrain info of all rooms in a shard
+    pub async fn all_rooms_terrain(&self, shard: impl Into<String>) -> Result<RoomsTerrain, Error> {
+        let shard = shard.into();
+        let size = self.world_size(&shard).await?;
+        let mut all_rooms = Vec::with_capacity(size.width * size.height);
+        for y in 0..(size.height / 2) {
+            for x in 0..(size.width / 2) {
+                all_rooms.push(format!("W{}N{}", x, y));
+                all_rooms.push(format!("E{}N{}", x, y));
+                all_rooms.push(format!("W{}S{}", x, y));
+                all_rooms.push(format!("E{}S{}", x, y));
+            }
+        }
+        self.rooms_terrain(shard, all_rooms.as_slice()).await
     }
 
     /// Gets a list of shards available on this server. Errors with a `404` error when connected to
