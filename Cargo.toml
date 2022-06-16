@@ -1,20 +1,20 @@
 [package]
 name = "screeps-api"
 # Ensure html_root_url in src/lib.rs is updated for each version.
-version = "0.6.0"
 authors = ["David Ross <daboross@daboross.net>"]
+version = "0.6.0"
 
 categories = ["api-bindings"]
 documentation = "https://docs.rs/screeps-api/"
 edition = "2018"
 include = [
-    "Cargo.toml",
-    "LICENSE",
-    "README.md",
-    "src/**/*",
-    "tests/**/*",
-    "examples/**/*",
-    "protocol-docs/**/*"
+  "Cargo.toml",
+  "LICENSE",
+  "README.md",
+  "src/**/*",
+  "tests/**/*",
+  "examples/**/*",
+  "protocol-docs/**/*",
 ]
 keywords = ["screeps"]
 license = "MIT"
@@ -27,49 +27,51 @@ description = "Fully typed and tested wrapper over the Screeps Game's HTTP API"
 all-features = true
 
 [badges]
-travis-ci = { repository = "daboross/rust-screeps-api", branch = "master" }
-appveyor = { service = "github", repository = "daboross/rust-screeps-api", branch = "master" }
+appveyor = {service = "github", repository = "daboross/rust-screeps-api", branch = "master"}
+travis-ci = {repository = "daboross/rust-screeps-api", branch = "master"}
 
 [dependencies]
 # Logging
 log = "0.4"
 # Parsing
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-serde_ignored = "0.1"
-serde-tuple-vec-map = "1.0"
 arrayvec = "0.5"
+serde = {version = "1.0", features = ["derive"]}
+serde-tuple-vec-map = "1.0"
+serde_ignored = "0.1"
+serde_json = "1.0"
 time = "0.1"
 # HTTP
-futures = "0.3"
-url = "2.0"
-hyper = { version = "0.14", features = ["client", "http1", "stream"] }
 bytes = "1.0"
+futures = "0.3"
+hyper = {version = "0.14", features = ["client", "http1", "stream"]}
+url = "2.0"
 # Sync HTTP wrapper
-tokio = { version = "1.0", optional = true }
-hyper-tls = { version = "0.5", optional = true }
+hyper-tls = {version = "0.5", optional = true}
+tokio = {version = "1.0", optional = true}
 # Websockets
+num = {version = "0.3", default-features = false}
 rand = "0.8"
-num = { version = "0.3", default-features = false }
 
 [features]
-sync = ["tokio", "hyper-tls", "tokio/rt-multi-thread"]
-protocol-docs = []
 default = ["sync"]
+protocol-docs = []
+sync = ["tokio", "hyper-tls", "tokio/rt-multi-thread"]
 # enables tests which modify game state (temporarily, but still)
 destructive-tests = []
 
 [dev-dependencies]
+# error
+anyhow = "1.0"
 # .env parsing
 dotenv = "0.15"
 # logging in examples
-fern = "0.6"
 chrono = "0.4"
+fern = "0.6"
 # cli options in examples
 clap = "2"
 # socket connections in ws-debug example
-futures01 = { package = "futures", version = "0.1" }
-tokio01 = { package = "tokio", version = "0.1" }
+futures01 = {package = "futures", version = "0.1"}
+tokio01 = {package = "tokio", version = "0.1"}
 websocket = "0.26"
 # pretty printing in ws-debug.
 serde_json = "1"

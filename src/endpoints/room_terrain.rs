@@ -16,7 +16,7 @@ pub(crate) struct Response {
 }
 
 #[derive(serde::Deserialize, Clone, Hash, Debug)]
-struct InnerResponse {
+pub(crate) struct InnerResponse {
     // this is returned as part of the data, but what the heck is it even for?
     /// A cache key maybe?
     _id: String,
@@ -50,7 +50,7 @@ pub type TerrainRow = ArrayVec<[TerrainType; 50]>;
 pub type TerrainGrid = ArrayVec<[TerrainRow; 50]>;
 
 /// Structure describing the terrain of a room
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct RoomTerrain {
     /// The name of the room
     pub room_name: data::RoomName,
@@ -66,34 +66,14 @@ pub struct RoomTerrain {
     _non_exhaustive: (),
 }
 
-impl EndpointResult for RoomTerrain {
-    type RequestResult = Response;
-    type ErrorResult = data::ApiError;
-
-    fn from_raw(raw: Response) -> Result<RoomTerrain> {
-        let Response {
-            ok,
-            terrain: terrain_array,
-        } = raw;
-
-        if ok != 1 {
-            return Err(ApiError::NotOk(ok).into());
-        }
-
-        let terrain_data = match terrain_array {
-            Some(v) => match v.into_iter().next() {
-                Some(v) => v,
-                None => return Err(ApiError::MissingField("terrain.0").into()),
-            },
-            None => return Err(ApiError::MissingField("terrain").into()),
-        };
-
+impl InnerResponse {
+    pub(crate) fn into_terrain(self) -> Result<RoomTerrain> {
         let InnerResponse {
             response_type,
             room: room_string,
             _id: response_id,
             terrain,
-        } = terrain_data;
+        } = self;
 
         if terrain.len() != 2500 {
             return Err(ApiError::MalformedResponse(format!(
@@ -141,6 +121,32 @@ impl EndpointResult for RoomTerrain {
                 .collect::<Result<_>>()?,
             _non_exhaustive: (),
         })
+    }
+}
+
+impl EndpointResult for RoomTerrain {
+    type RequestResult = Response;
+    type ErrorResult = data::ApiError;
+
+    fn from_raw(raw: Response) -> Result<RoomTerrain> {
+        let Response {
+            ok,
+            terrain: terrain_array,
+        } = raw;
+
+        if ok != 1 {
+            return Err(ApiError::NotOk(ok).into());
+        }
+
+        let terrain_data = match terrain_array {
+            Some(v) => match v.into_iter().next() {
+                Some(v) => v,
+                None => return Err(ApiError::MissingField("terrain.0").into()),
+            },
+            None => return Err(ApiError::MissingField("terrain").into()),
+        };
+
+        terrain_data.into_terrain()
     }
 }
 

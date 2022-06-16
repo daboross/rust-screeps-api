@@ -23,7 +23,7 @@ pub(crate) struct Response {
     email: Option<String>,
     password: bool,
     cpu: i32,
-    gcl: u64,
+    gcl: Option<u64>,
     money: f64,
     // These can be added if needed
     // lastChargeTime: Option<String>,
@@ -52,7 +52,7 @@ pub struct MyInfo {
     /// This user's current CPU allowance.
     pub cpu: i32,
     /// This user's current total count of GCL points (perform calculation to find actual gcl level).
-    pub gcl_points: u64,
+    pub gcl_points: Option<u64>,
     /// This user's current credit balance.
     pub credits: f64,
     /// Information on per-shard allocation. Unavailable on non-sharded servers.

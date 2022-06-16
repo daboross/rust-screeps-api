@@ -96,7 +96,11 @@ mod test {
                 ref id,
                 ref store,
                 ..
-            } if id == "5c229f613f9ca9206752338c" && *store == store! {Energy: 447, Zynthium: 5} => (),
+            } if id == "5c229f613f9ca9206752338c"
+                && *store == store! {Energy: 447, Zynthium: 5} =>
+            {
+                ()
+            }
             other => panic!(
                 "expected pre-set StructureContainer to match, found {:#?}",
                 other
